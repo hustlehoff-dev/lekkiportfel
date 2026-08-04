@@ -146,3 +146,129 @@
   .selected-instrument { grid-template-columns: 34px 1fr; }
   .selected-instrument > b { grid-column: 2; }
 }
+
+/* High-contrast dark theme */
+:root {
+  color-scheme: dark;
+  --ink: #f5fff8;
+  --muted: #b5c4ba;
+  --line: #31483a;
+  --paper: #070a08;
+  --card: #101713;
+  --green: #55f59a;
+  --amber: #ffd84d;
+  --red: #ff7770;
+}
+
+html, body { background: #070a08; color: #f5fff8; }
+::selection { background: #55f59a; color: #031008; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid #ffd84d; outline-offset: 2px; }
+.sidebar { background: #050806; border-right: 1px solid #26382e; }
+.brand { color: #fff; }
+.brand small { color: #9db0a3; }
+.brand-mark { background: #ffd84d; color: #050806; box-shadow: 0 0 0 1px #fff4b3; }
+nav button { color: #b8c6bd; }
+nav button span { color: #8ea397; }
+nav button:hover, nav button.active { background: #15251c; color: #fff; box-shadow: inset 3px 0 #55f59a; }
+nav button.active span { color: #ffd84d; }
+.privacy { background: #0d1510; border-color: #375342; }
+.privacy > span { color: #55f59a; }
+.privacy strong { color: #f5fff8; }
+.privacy p, .text-button { color: #a7b7ad; }
+.eyebrow { color: #a9bbb0; }
+h1, h2, h3, h4, strong, b { color: #f8fffa; }
+.as-of { color: #c2cec6; }
+.account-select, .add-asset-button { background: #0e1611; border-color: #43604d; color: #f5fff8; }
+.add-asset-button { color: #74ffad; }
+.account-select:hover, .add-asset-button:hover { background: #17271d; border-color: #55f59a; }
+.import-button { background: #55f59a; color: #041009; box-shadow: 0 0 0 1px #9affc3, 0 8px 22px rgba(85, 245, 154, .17); }
+.import-button:hover { background: #82ffb7; }
+.price-status { background: #0b1a11; border-color: #356f4c; }
+.price-status strong { color: #83ffb7; }
+.price-status small { color: #bbcbc1; }
+.price-status button { background: #111c15; border-color: #42604d; color: #f5fff8; }
+.price-status button:hover { border-color: #55f59a; color: #55f59a; }
+.live-dot { background: #55f59a; box-shadow: 0 0 0 4px rgba(85, 245, 154, .16), 0 0 12px #55f59a; }
+.notice { background: #102219; border-color: #3a7651; color: #dfffea; }
+.notice > span { background: #55f59a; color: #041009; }
+.notice button { color: #fff; }
+.value-card, .metric-card, .panel, .dividend-summary { background: #101713; border-color: #31483a; box-shadow: 0 8px 28px rgba(0, 0, 0, .22); }
+.value-card { background: linear-gradient(145deg, #0d1d14, #0b110d); border-color: #3d6e50; }
+.value-card > p, .metric-card > p { color: #b8c8be; }
+.value-card small, .metric-card small { color: #aebdb4; }
+.profit-pill { color: #78ffad; background: #142a1d; border: 1px solid #306f49; }
+.profit-pill.negative { color: #ff8c86; border-color: #78413e; background: #261414; }
+.profit-pill span { color: #d2ddd6; }
+.sparkline i { background: #28704a; }
+.sparkline i:nth-child(10) { background: #ffd84d; }
+.metric-icon.green { background: #163222; color: #72ffac; border: 1px solid #2f7048; }
+.metric-icon.amber { background: #342b0d; color: #ffd84d; border: 1px solid #6f5a17; }
+.metric-icon.dark { background: #222c26; color: #f5fff8; border: 1px solid #44564b; }
+.micro { border-color: #2d4035; color: #b6c4bb; }
+.segmented { background: #09100c; border: 1px solid #2e4336; }
+.segmented button { color: #b7c4bc; }
+.segmented button.active { background: #213229; color: #fff; box-shadow: inset 0 0 0 1px #4d755f; }
+.donut-hole { background: #101713; box-shadow: 0 0 0 2px #263a2f; }
+.donut-hole span, .legend > div > span:last-child { color: #bdcac2; }
+.arrow-button { background: #131d17; border-color: #3e5848; color: #f5fff8; }
+.arrow-button:hover { border-color: #55f59a; color: #55f59a; }
+.forecast-list > div, .full-list > div, .timeline > div { border-color: #293c31; }
+.date-tile { background: #1a2820; border: 1px solid #344e3e; }
+.date-tile span, .forecast-list small, .full-list small, .timeline time, .timeline small, .empty-inline { color: #aebdb4; }
+.count-pill, .account-pill { background: #1b2a21; color: #d9e8df; border: 1px solid #385242; }
+th { color: #c0cdc5; }
+td { border-color: #293d31; }
+tbody tr:hover { background: #131f18; }
+.asset > span { background: #1b2b21; color: #75ffae; border: 1px solid #375340; }
+.asset small { color: #aebcb3; }
+td select { background: #18241d; color: #f5fff8; border: 1px solid #3b5545; }
+.positive { color: #67f5a0; }
+.negative-text, .red { color: #ff7770 !important; }
+.weight { background: #28382f; }
+.weight span { background: #55f59a; }
+.dropzone { border-color: #4b6756; color: #d8e4dc; background: #0c120e; }
+.dropzone:hover, .dropzone.dragging { background: #102419; border-color: #55f59a; }
+.upload-icon { background: #183222; color: #6dffa8; border: 1px solid #35704a; }
+.dropzone p { color: #aebdb4; }
+.dropzone button { background: #19251e; color: #fff; border-color: #425c4b; }
+.empty-positions > div { background: #193123; color: #67f5a0; }
+.empty-positions p { color: #b6c4bb; }
+.empty-positions button { background: #55f59a; color: #041009; }
+.empty-positions button.secondary { background: #1d2a22; color: #fff; border: 1px solid #405749; }
+.dividend-summary, .history-summary { background: #0b130e; }
+.dividend-summary > p:nth-child(3), .dividend-summary span, .history-summary span { color: #b5c4ba; }
+.dividend-summary span, .history-summary > div { border-color: #31463a; }
+.status-dot { background: #55f59a; box-shadow: 0 0 8px rgba(85, 245, 154, .45); }
+.status-dot.forecast { background: #ffd84d; box-shadow: 0 0 8px rgba(255, 216, 77, .38); }
+.timeline-dot { border-color: #55f59a; }
+footer, .content footer > span { color: #9faf9f; }
+.content footer b { color: #67f5a0; }
+
+.modal-backdrop { background: rgba(0, 0, 0, .78); backdrop-filter: blur(8px); }
+.asset-modal { background: #0d1410; border-color: #45604e; box-shadow: 0 28px 90px rgba(0, 0, 0, .72); }
+.modal-close { background: #1d2922; color: #fff; border: 1px solid #405749; }
+.asset-type-tabs { background: #070c09; border: 1px solid #2e4236; }
+.asset-type-tabs button { color: #b8c6bd; }
+.asset-type-tabs button.active { background: #213429; color: #fff; box-shadow: inset 0 0 0 1px #4b765e; }
+.field > span { color: #d0dcd4; }
+.field input, .field select { background: #080d0a; border-color: #405749; color: #fff; }
+.field input::placeholder { color: #748179; opacity: 1; }
+.field input:focus, .field select:focus { border-color: #55f59a; box-shadow: 0 0 0 3px rgba(85, 245, 154, .18); }
+.form-hint, .search-empty { color: #aebdb4; }
+.secondary-action { background: #172119; border-color: #43594a; color: #fff; }
+.primary-action { background: #55f59a; border-color: #8affb8; color: #041009; }
+.primary-action:hover { background: #82ffb7; }
+.search-input > b { color: #aebdb4; }
+.search-results { background: #0c130f; border-color: #45604e; box-shadow: 0 20px 46px rgba(0, 0, 0, .65); }
+.search-results button { background: #0c130f; color: #fff; }
+.search-results button:hover, .search-results button.active { background: #193023; box-shadow: inset 3px 0 #55f59a; }
+.result-mark { background: #1b3022; color: #6affa6; border: 1px solid #3c644b; }
+.search-results small, .selected-instrument small { color: #b5c4ba; }
+.search-results button > b, .selected-instrument > b { color: #72ffab; }
+.selected-instrument { background: #102219; border-color: #42805b; }
+.manual-assets { border-color: #304439; }
+.manual-assets > div { border-color: #27392f; }
+.manual-assets small { color: #b3c0b8; }
+.manual-assets button { background: #321817; color: #ff8f89; border: 1px solid #673936; }
+
+* { scrollbar-color: #466251 #0b110d; }
