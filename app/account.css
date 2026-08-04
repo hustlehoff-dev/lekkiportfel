@@ -18,6 +18,80 @@
   font-weight: 750;
 }
 
+.add-asset-button {
+  border: 1px solid #cad5cd;
+  background: #fff;
+  color: #2e6b4f;
+  border-radius: 9px;
+  padding: 10px 13px;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.add-asset-button span { margin-right: 6px; font-size: 14px; }
+.add-asset-button:hover { background: #edf4ef; border-color: #9db9a7; }
+
+.modal-backdrop {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: rgba(13, 22, 17, .58);
+  backdrop-filter: blur(5px);
+  overflow-y: auto;
+}
+
+.asset-modal {
+  width: min(620px, 100%);
+  max-height: calc(100vh - 44px);
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #dfe3dc;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 24px 70px rgba(11, 22, 16, .28);
+}
+
+.asset-modal > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.asset-modal h2 { margin: 0; font-size: 22px; letter-spacing: -.03em; }
+.modal-close { border: 0; background: #f0f2ee; color: #59645e; width: 33px; height: 33px; border-radius: 9px; font-size: 20px; }
+.asset-type-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding: 4px; margin: 20px 0; background: #eff1ed; border-radius: 10px; }
+.asset-type-tabs button { border: 0; padding: 9px 12px; color: #6a746e; background: transparent; border-radius: 7px; font-size: 11px; font-weight: 650; }
+.asset-type-tabs button.active { background: #fff; color: #21593f; box-shadow: 0 2px 8px rgba(29, 41, 35, .09); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.field { display: grid; gap: 6px; }
+.field > span { color: #657069; font-size: 10px; font-weight: 700; }
+.field input, .field select { width: 100%; border: 1px solid #d8ddd8; border-radius: 9px; background: #fff; color: #202a24; padding: 11px 12px; font: inherit; font-size: 12px; outline: none; }
+.field input:focus, .field select:focus { border-color: #579071; box-shadow: 0 0 0 3px rgba(46, 107, 79, .11); }
+.full-field { grid-column: 1 / -1; }
+.form-hint { color: #818a84; font-size: 10px; line-height: 1.5; margin: 13px 0 0; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 20px; }
+.modal-actions button { border-radius: 9px; padding: 10px 14px; font-size: 11px; font-weight: 750; }
+.secondary-action { border: 1px solid #d8ddd8; background: #fff; color: #626d66; }
+.primary-action { border: 1px solid #2e6b4f; background: #2e6b4f; color: #fff; }
+.primary-action:hover { background: #245b41; }
+.manual-assets { border-top: 1px solid #e7eae6; margin-top: 22px; padding-top: 17px; }
+.manual-assets > div { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 9px 0; border-bottom: 1px solid #f0f2ef; }
+.manual-assets strong, .manual-assets small { display: block; }
+.manual-assets strong { font-size: 11px; }
+.manual-assets small { color: #858e88; font-size: 9px; margin-top: 3px; }
+.manual-assets button { border: 0; background: #f8ece9; color: #a74436; border-radius: 7px; padding: 7px 9px; font-size: 9px; font-weight: 700; }
+
 @media (max-width: 760px) {
   .account-select { max-width: 112px; padding: 8px 24px 8px 9px; }
+  .top-actions { gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .add-asset-button { padding: 8px 10px; }
+  .add-asset-button span { margin-right: 2px; }
+  .modal-backdrop { align-items: end; padding: 0; }
+  .asset-modal { width: 100%; max-height: 92vh; border-radius: 18px 18px 0 0; padding: 20px 16px 24px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .full-field { grid-column: auto; }
 }
