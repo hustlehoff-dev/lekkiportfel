@@ -13,6 +13,9 @@ test("dashboard exposes real monthly performance and benchmark controls", async 
   assert.match(page, /type OpenLot/);
   assert.match(page, /openDate:/);
   assert.match(page, /purchaseValue:/);
+  assert.match(page, /\/api\/fx/);
+  assert.match(page, /kapital-currency/);
+  assert.match(page, /aria-label="Waluta prezentacji"/);
 });
 
 test("metric cards stay dense at desktop and mobile widths", async () => {

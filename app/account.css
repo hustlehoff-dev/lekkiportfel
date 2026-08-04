@@ -444,6 +444,8 @@ footer, .content footer > span { color: #68757e; }
 }
 
 /* Dense dashboard metrics and auditable monthly performance */
+.currency-select { min-height: 38px; padding: 9px 28px 9px 11px; background: #17211f; border: 1px solid #456451; border-radius: 7px; color: #a9d8bd; font-size: 11px; font-weight: 700; box-shadow: none; }
+.currency-select:hover { background: #1b2924; border-color: #67b58f; color: #dff3e8; }
 .hero-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .value-card, .metric-card { min-height: 126px; padding: 17px 18px; }
 .value-card h2 { margin-bottom: 9px; font-size: clamp(21px, 2vw, 27px); }
@@ -492,6 +494,7 @@ footer, .content footer > span { color: #68757e; }
 }
 
 @media (max-width: 760px) {
+  .currency-select { max-width: 88px; padding: 8px 22px 8px 8px; }
   .hero-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .value-card, .metric-card { min-height: 120px; padding: 15px; }
   .value-card h2 { font-size: 20px; }

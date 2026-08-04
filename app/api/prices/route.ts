@@ -32,12 +32,17 @@ const suffixes: Array<[string, string]> = [
 ];
 
 let cached: { key: string; expires: number; payload: unknown } | null = null;
+let fxCached: { expires: number; rates: Map<string, number> } | null = null;
 
 function yahooSymbol(input: string) {
   const symbol = input.trim().toUpperCase();
   if (symbol.endsWith(".US")) return symbol.slice(0, -3).replace(".", "-");
   for (const [xtb, yahoo] of suffixes) if (symbol.endsWith(xtb)) return `${symbol.slice(0, -xtb.length)}${yahoo}`;
   return symbol;
+}
+
+function isCashAsset(assetClass: string) {
+  return /got|cash/i.test(assetClass);
 }
 
 async function yahooMeta(symbol: string) {
@@ -61,7 +66,17 @@ async function yahooMeta(symbol: string) {
 async function getFx(currency: string, rates: Map<string, Promise<number>>) {
   const normalized = currency === "GBp" ? "GBP" : currency.toUpperCase();
   if (normalized === "PLN") return currency === "GBp" ? 0.01 : 1;
-  if (!rates.has(normalized)) rates.set(normalized, yahooMeta(`${normalized}PLN=X`).then(result => result.price));
+  if (!rates.has(normalized)) rates.set(normalized, (async () => {
+    if (!fxCached || fxCached.expires <= Date.now()) {
+      const response = await fetch("https://api.nbp.pl/api/exchangerates/tables/A/?format=json", { headers: { accept: "application/json", "user-agent": "Kapital-Portfolio/1.0" } });
+      if (!response.ok) throw new Error(`NBP ${response.status}`);
+      const table = await response.json() as Array<{ rates?: Array<{ code: string; mid: number }> }>;
+      fxCached = { expires: Date.now() + 15 * 60_000, rates: new Map((table[0]?.rates || []).map(rate => [rate.code, rate.mid])) };
+    }
+    const officialRate = fxCached.rates.get(normalized);
+    if (officialRate && officialRate > 0) return officialRate;
+    return yahooMeta(`${normalized}PLN=X`).then(result => result.price);
+  })());
   const rate = await rates.get(normalized)!;
   return currency === "GBp" ? rate / 100 : rate;
 }
@@ -108,11 +123,11 @@ export async function POST(request: Request) {
 
     await Promise.all(market.map(async item => {
       try {
-        if (item.assetClass === "Gotówka" && item.symbol.toUpperCase() === "PLN") {
+        if (isCashAsset(item.assetClass) && item.symbol.toUpperCase() === "PLN") {
           quotes.push({ id: item.id, symbol: item.symbol, pricePln: 1, nativePrice: 1, nativeCurrency: "PLN", changePct: 0, updatedAt: new Date().toISOString(), provider: "Yahoo Finance" });
           return;
         }
-        if (item.assetClass === "Gotówka") {
+        if (isCashAsset(item.assetClass)) {
           const rate = await getFx(item.symbol.toUpperCase(), rates);
           quotes.push({ id: item.id, symbol: item.symbol, pricePln: rate, nativePrice: rate, nativeCurrency: "PLN", changePct: null, updatedAt: new Date().toISOString(), provider: "Yahoo Finance" });
           return;
