@@ -85,7 +85,7 @@
 
 .asset-modal h2 { margin: 0; font-size: 22px; letter-spacing: -.03em; }
 .modal-close { border: 0; background: #f0f2ee; color: #59645e; width: 33px; height: 33px; border-radius: 9px; font-size: 20px; }
-.asset-type-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding: 4px; margin: 20px 0; background: #eff1ed; border-radius: 10px; }
+.asset-type-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 4px; margin: 20px 0; background: #eff1ed; border-radius: 10px; }
 .asset-type-tabs button { border: 0; padding: 9px 12px; color: #6a746e; background: transparent; border-radius: 7px; font-size: 11px; font-weight: 650; }
 .asset-type-tabs button.active { background: #fff; color: #21593f; box-shadow: 0 2px 8px rgba(29, 41, 35, .09); }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -100,6 +100,28 @@
 .secondary-action { border: 1px solid #d8ddd8; background: #fff; color: #626d66; }
 .primary-action { border: 1px solid #2e6b4f; background: #2e6b4f; color: #fff; }
 .primary-action:hover { background: #245b41; }
+.primary-action:disabled { opacity: .45; cursor: not-allowed; }
+.instrument-search { position: relative; }
+.search-input { position: relative; }
+.search-input > b { position: absolute; z-index: 1; left: 12px; top: 50%; transform: translateY(-50%); color: #738078; font-size: 17px; font-weight: 500; }
+.search-input input { padding-left: 37px; padding-right: 36px; }
+.search-input > i { position: absolute; right: 13px; top: 50%; width: 14px; height: 14px; margin-top: -7px; }
+.search-spinner { border: 2px solid #d8dfda; border-top-color: #2e6b4f; border-radius: 50%; animation: search-spin .7s linear infinite; }
+@keyframes search-spin { to { transform: rotate(360deg); } }
+.search-results { position: absolute; z-index: 4; left: 0; right: 0; top: calc(100% + 6px); max-height: 285px; overflow-y: auto; padding: 5px; background: #fff; border: 1px solid #d9dfda; border-radius: 11px; box-shadow: 0 16px 38px rgba(20, 34, 26, .18); }
+.search-results button { width: 100%; display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 10px; padding: 9px; border: 0; border-radius: 8px; background: #fff; color: #26322b; text-align: left; }
+.search-results button:hover, .search-results button.active { background: #edf4ef; }
+.result-mark { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 9px; background: #e7eee9; color: #2f684d; font-size: 9px; font-weight: 800; }
+.search-results strong, .search-results small { display: block; }
+.search-results strong { font-size: 11px; }
+.search-results small { margin-top: 3px; color: #808a84; font-size: 9px; }
+.search-results button > b { color: #344f40; font-size: 10px; white-space: nowrap; }
+.search-empty { color: #8b938e; font-size: 9px; padding: 5px 2px 0; }
+.selected-instrument { display: grid; grid-template-columns: 38px 1fr auto; align-items: center; gap: 11px; padding: 11px; border: 1px solid #bad1c1; border-radius: 10px; background: #f0f7f2; }
+.selected-instrument strong, .selected-instrument small { display: block; }
+.selected-instrument strong { font-size: 11px; }
+.selected-instrument small { margin-top: 3px; color: #738078; font-size: 9px; }
+.selected-instrument > b { color: #285f45; font-size: 10px; }
 .manual-assets { border-top: 1px solid #e7eae6; margin-top: 22px; padding-top: 17px; }
 .manual-assets > div { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 9px 0; border-bottom: 1px solid #f0f2ef; }
 .manual-assets strong, .manual-assets small { display: block; }
@@ -117,7 +139,10 @@
   .add-asset-button span { margin-right: 2px; }
   .modal-backdrop { align-items: end; padding: 0; }
   .asset-modal { width: 100%; max-height: 92vh; border-radius: 18px 18px 0 0; padding: 20px 16px 24px; }
+  .asset-type-tabs { grid-template-columns: repeat(2, 1fr); }
   .form-grid { grid-template-columns: 1fr; }
   .full-field { grid-column: auto; }
   .price-status { margin-top: -6px; }
+  .selected-instrument { grid-template-columns: 34px 1fr; }
+  .selected-instrument > b { grid-column: 2; }
 }
