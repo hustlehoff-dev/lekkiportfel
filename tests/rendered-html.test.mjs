@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { calculateTaxSummary } from "../lib/tax-calculator.ts";
+import { auditTradesWithNbp, calculateTaxSummary } from "../lib/tax-calculator.ts";
 
 const root = new URL("../", import.meta.url);
 
@@ -112,6 +112,7 @@ test("tax calculator separates ordinary accounts from IKE and IKZE", () => {
   assert.equal(result.trades.revenue, 1200);
   assert.equal(result.trades.costs, 1010);
   assert.equal(result.trades.taxableBase, 90);
+  assert.equal(result.trades.taxBeforeCredit, 17.1);
   assert.equal(result.trades.tax, 17);
   assert.equal(result.foreignDividends.taxDue, 4);
   assert.equal(result.domesticDividends.gross, 80);
@@ -121,14 +122,37 @@ test("tax calculator separates ordinary accounts from IKE and IKZE", () => {
 });
 
 test("tax view has a local PIT-38 route and data-quality warnings", async () => {
-  const [page, route] = await Promise.all([
+  const [page, route, nbpRoute] = await Promise.all([
     readFile(new URL("app/page.tsx", root), "utf8"),
     readFile(new URL("app/podatki/page.tsx", root), "utf8"),
+    readFile(new URL("app/api/tax/nbp/route.ts", root), "utf8"),
   ]);
 
   assert.match(page, /podatki:"\/podatki"/);
   assert.match(page, /Szacowany podatek do zapłaty/);
   assert.match(page, /Wiarygodność wyliczenia/);
   assert.match(page, /Ręcznie dodane krypto nie ma historii transakcji/);
+  assert.match(page, /Zgodne z NBP/);
+  assert.match(page, /Mapa pól PIT-38/);
+  assert.match(page, /PIT-38\(18\)/);
+  assert.match(page, /\["23","Inne przychody"/);
+  assert.match(page, /\["50","Łączny podatek do zapłaty"/);
+  assert.match(page, /Oficjalne API NBP/);
   assert.match(route, /initialView="podatki"/);
+  assert.match(nbpRoute, /https:\/\/api\.nbp\.pl\/api\/exchangerates\/rates\/a\//);
+  assert.match(nbpRoute, /end\.setUTCDate\(end\.getUTCDate\(\) - 1\)/);
+});
+
+test("NBP audit recalculates foreign purchase and sale independently", () => {
+  const trade = { id: "trade-1", date: "2025-06-10", openDate: "2025-01-10", symbol: "TEST.US", volume: 2, openPrice: 10, closePrice: 12, purchaseValue: 80, saleValue: 98.4, result: 18.4, account: "PLN" };
+  const rates = [
+    { currency: "USD", transactionDate: "2025-01-10", effectiveDate: "2025-01-09", rate: 4, tableNo: "006/A/NBP/2025", source: "NBP tabela A" },
+    { currency: "USD", transactionDate: "2025-06-10", effectiveDate: "2025-06-09", rate: 4.1, tableNo: "110/A/NBP/2025", source: "NBP tabela A" },
+  ];
+  const result = auditTradesWithNbp([trade], rates);
+
+  assert.equal(result.audit[0].status, "verified");
+  assert.equal(result.auditedTrades[0].purchaseValue, 80);
+  assert.equal(result.auditedTrades[0].saleValue, 98.4);
+  assert.ok(Math.abs(result.auditedTrades[0].result - 18.4) < 1e-9);
 });

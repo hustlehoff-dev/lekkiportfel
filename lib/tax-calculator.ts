@@ -1,5 +1,11 @@
 export type TaxTrade = {
+  id?: string;
   date: string;
+  openDate?: string;
+  symbol?: string;
+  volume?: number;
+  openPrice?: number;
+  closePrice?: number;
   result?: number;
   saleValue?: number;
   purchaseValue?: number;
@@ -7,11 +13,35 @@ export type TaxTrade = {
 };
 
 export type TaxCashEvent = {
+  id?: string;
   date: string;
   type: string;
   symbol?: string;
   amount: number;
   account?: string;
+};
+
+export type NbpRate = {
+  currency: string;
+  transactionDate: string;
+  effectiveDate: string;
+  rate: number;
+  tableNo: string;
+  source: "NBP tabela A";
+};
+
+export type TradeTaxAudit = {
+  id: string;
+  currency?: string;
+  status: "verified" | "difference" | "missing" | "unsupported" | "pln";
+  importedPurchase: number;
+  importedSale: number;
+  nbpPurchase?: number;
+  nbpSale?: number;
+  purchaseDifference?: number;
+  saleDifference?: number;
+  openRate?: NbpRate;
+  closeRate?: NbpRate;
 };
 
 export type TaxSummary = {
@@ -23,6 +53,7 @@ export type TaxSummary = {
     result: number;
     eligiblePriorLoss: number;
     taxableBase: number;
+    taxBeforeCredit: number;
     tax: number;
     incompleteValues: number;
   };
@@ -53,6 +84,68 @@ const isDividend = (type: string) => /divident|dividend|dywidend/i.test(type);
 const isWithholding = (type: string) => /withholding|wht|podatek.*zrodl/i.test(type.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
 const isPolishInstrument = (symbol = "") => /\.PL$/i.test(symbol.trim());
 export const isRetirementAccount = (account = "") => /^(IKE|IKZE)$/i.test(account.trim());
+export const rateKey = (currency: string, date: string) => `${currency.toUpperCase()}-${date}`;
+
+export function inferInstrumentCurrency(symbol = "") {
+  const normalized = symbol.trim().toUpperCase();
+  if (!normalized || /^[A-Z]{6}$/.test(normalized)) return undefined;
+  if (/\.PL$/.test(normalized)) return "PLN";
+  if (/\.(US)$/.test(normalized)) return "USD";
+  if (/\.(DE|FR|ES|IT|NL|BE|AT|FI|PT|IE)$/.test(normalized)) return "EUR";
+  if (/\.DK$/.test(normalized)) return "DKK";
+  if (/\.SE$/.test(normalized)) return "SEK";
+  if (/\.NO$/.test(normalized)) return "NOK";
+  if (/\.CH$/.test(normalized)) return "CHF";
+  if (/\.CA$/.test(normalized)) return "CAD";
+  if (/\.AU$/.test(normalized)) return "AUD";
+  if (/\.JP$/.test(normalized)) return "JPY";
+  return undefined;
+}
+
+export function auditTradesWithNbp(trades: TaxTrade[], rates: NbpRate[]) {
+  const byKey = new Map(rates.map(rate => [rateKey(rate.currency, rate.transactionDate), rate]));
+  const auditedTrades: TaxTrade[] = [];
+  const audit: TradeTaxAudit[] = [];
+
+  for (const trade of trades) {
+    const id = trade.id || `${trade.symbol || "trade"}-${trade.date}`;
+    const currency = inferInstrumentCurrency(trade.symbol);
+    const importedPurchase = Math.abs(value(trade.purchaseValue));
+    const importedSale = Math.abs(value(trade.saleValue));
+    const baseAudit = { id, importedPurchase, importedSale };
+    if (currency === "PLN") {
+      auditedTrades.push(trade);
+      audit.push({ ...baseAudit, currency, status: "pln" });
+      continue;
+    }
+    if (!currency || !trade.openDate || !trade.openPrice || !trade.closePrice || !trade.volume) {
+      auditedTrades.push(trade);
+      audit.push({ ...baseAudit, currency, status: currency ? "missing" : "unsupported" });
+      continue;
+    }
+
+    const openRate = byKey.get(rateKey(currency, trade.openDate));
+    const closeRate = byKey.get(rateKey(currency, trade.date));
+    if (!openRate || !closeRate) {
+      auditedTrades.push(trade);
+      audit.push({ ...baseAudit, currency, status: "missing", openRate, closeRate });
+      continue;
+    }
+
+    const quantity = Math.abs(trade.volume);
+    const nbpPurchase = Math.round(Math.abs(trade.openPrice) * quantity * openRate.rate * 100) / 100;
+    const nbpSale = Math.round(Math.abs(trade.closePrice) * quantity * closeRate.rate * 100) / 100;
+    const purchaseDifference = Math.round((nbpPurchase - importedPurchase) * 100) / 100;
+    const saleDifference = Math.round((nbpSale - importedSale) * 100) / 100;
+    const tolerance = (amount: number) => Math.max(0.08, amount * 0.001);
+    const status = Math.abs(purchaseDifference) <= tolerance(importedPurchase) && Math.abs(saleDifference) <= tolerance(importedSale) ? "verified" : "difference";
+    const audited = { ...trade, purchaseValue: nbpPurchase, saleValue: nbpSale, result: nbpSale - nbpPurchase };
+    auditedTrades.push(audited);
+    audit.push({ ...baseAudit, currency, status, nbpPurchase, nbpSale, purchaseDifference, saleDifference, openRate, closeRate });
+  }
+
+  return { auditedTrades, audit };
+}
 
 export function taxYears(trades: TaxTrade[], cash: TaxCashEvent[], currentYear = new Date().getFullYear()) {
   const years = [currentYear, currentYear - 1];
@@ -110,7 +203,8 @@ export function calculateTaxSummary({
   const result = revenue - costs;
   const eligibleLoss = Math.min(Math.max(0, value(eligiblePriorLoss)), Math.max(0, result));
   const taxableBase = Math.round(Math.max(0, result - eligibleLoss));
-  const securitiesTax = Math.round(taxableBase * 0.19);
+  const securitiesTaxBeforeCredit = Math.round(taxableBase * 0.19 * 100) / 100;
+  const securitiesTax = Math.round(securitiesTaxBeforeCredit);
 
   const ordinaryCash = cash.filter(item => yearOf(item.date) === year && !isRetirementAccount(item.account));
   const foreignDividends = ordinaryCash.filter(item => isDividend(item.type) && !isPolishInstrument(item.symbol));
@@ -118,7 +212,7 @@ export function calculateTaxSummary({
   const foreignWithholdingEvents = ordinaryCash.filter(item => isWithholding(item.type) && !isPolishInstrument(item.symbol));
   const foreignGross = foreignDividends.reduce((sum, item) => sum + Math.max(0, value(item.amount)), 0);
   const foreignWithholdingTax = foreignWithholdingEvents.reduce((sum, item) => sum + Math.abs(Math.min(0, value(item.amount))), 0);
-  const polishTaxBeforeCredit = foreignGross * 0.19;
+  const polishTaxBeforeCredit = Math.ceil(foreignGross * 0.19 * 100) / 100;
   const foreignTaxCredit = Math.min(foreignWithholdingTax, polishTaxBeforeCredit);
   const foreignDividendTaxDue = Math.round(Math.max(0, polishTaxBeforeCredit - foreignTaxCredit));
 
@@ -134,6 +228,7 @@ export function calculateTaxSummary({
       result,
       eligiblePriorLoss: eligibleLoss,
       taxableBase,
+      taxBeforeCredit: securitiesTaxBeforeCredit,
       tax: securitiesTax,
       incompleteValues,
     },
