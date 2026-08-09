@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import { headers } from "next/headers";
 import "./globals.css";
 import "./account.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const jakarta = Plus_Jakarta_Sans({ variable: "--font-jakarta", subsets: ["latin"] });
 
-export const viewport: Viewport = { themeColor: "#070a08", colorScheme: "dark" };
+export const viewport: Viewport = { themeColor: "#f3f6fb", colorScheme: "light dark" };
 
 export async function generateMetadata(): Promise<Metadata> {
   const incoming = await headers();
@@ -23,5 +24,5 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="pl"><body className={`${geistSans.variable} ${geistMono.variable}`}>{children}</body></html>;
+  return <html lang="pl" data-portfolio-theme="lekka"><body className={`${geistSans.variable} ${geistMono.variable} ${jakarta.variable}`}>{children}</body></html>;
 }

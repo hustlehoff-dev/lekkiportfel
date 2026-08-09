@@ -446,6 +446,8 @@ footer, .content footer > span { color: #68757e; }
 /* Dense dashboard metrics and auditable monthly performance */
 .currency-select { min-height: 38px; padding: 9px 28px 9px 11px; background: #17211f; border: 1px solid #456451; border-radius: 7px; color: #a9d8bd; font-size: 11px; font-weight: 700; box-shadow: none; }
 .currency-select:hover { background: #1b2924; border-color: #67b58f; color: #dff3e8; }
+.theme-select { min-height: 38px; padding: 9px 28px 9px 11px; background: #12191d; border: 1px solid #2c3840; border-radius: 7px; color: #c1cbd1; font-size: 11px; font-weight: 700; box-shadow: none; }
+.theme-select:hover { background: #18211f; border-color: #4e6c5d; color: #f1f5f3; }
 .hero-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .value-card, .metric-card { min-height: 126px; padding: 17px 18px; }
 .value-card h2 { margin-bottom: 9px; font-size: clamp(21px, 2vw, 27px); }
@@ -494,6 +496,7 @@ footer, .content footer > span { color: #68757e; }
 }
 
 @media (max-width: 760px) {
+  .theme-select { max-width: 78px; padding: 8px 21px 8px 8px; }
   .currency-select { max-width: 88px; padding: 8px 22px 8px 8px; }
   .hero-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .value-card, .metric-card { min-height: 120px; padding: 15px; }
@@ -509,4 +512,228 @@ footer, .content footer > span { color: #68757e; }
   .performance-chart { grid-template-columns: 52px minmax(0, 1fr); padding-right: 10px; }
   .performance-foot { align-items: flex-start; flex-wrap: wrap; padding-inline: 15px; }
   .performance-foot p { flex-basis: 100%; text-align: left; line-height: 1.45; }
+}
+
+/* LekkaFaktura-inspired light interface. The dark theme above remains intact. */
+html[data-portfolio-theme="lekka"] {
+  color-scheme: light;
+  --ink: #101828;
+  --muted: #667085;
+  --line: #e2e8f0;
+  --paper: #f3f6fb;
+  --card: #ffffff;
+  --green: #18864b;
+  --amber: #f7c400;
+  --red: #d94a4a;
+}
+
+html[data-portfolio-theme="lekka"],
+html[data-portfolio-theme="lekka"] body {
+  background: #f3f6fb;
+  color: #101828;
+}
+
+html[data-portfolio-theme="lekka"] body {
+  font-family: var(--font-jakarta), var(--font-geist-sans), Inter, system-ui, sans-serif;
+}
+
+html[data-portfolio-theme="lekka"] ::selection { background: rgba(247, 196, 0, .35); color: #0f1722; }
+html[data-portfolio-theme="lekka"] button:focus-visible,
+html[data-portfolio-theme="lekka"] select:focus-visible,
+html[data-portfolio-theme="lekka"] input:focus-visible { outline: 3px solid rgba(247, 196, 0, .38); outline-offset: 2px; }
+html[data-portfolio-theme="lekka"] .app-shell { grid-template-columns: 256px minmax(0, 1fr); background: linear-gradient(180deg, #f8f9fc 0%, #f3f6fb 100%); }
+html[data-portfolio-theme="lekka"] .sidebar { width: auto; padding: 20px 16px; background: #fff; color: #101828; border-right: 1px solid #e2e8f0; box-shadow: 8px 0 40px rgba(76, 29, 149, .04); }
+html[data-portfolio-theme="lekka"] .brand { gap: 10px; padding: 0 8px 34px; color: #475569; font-size: 14px; letter-spacing: .08em; }
+html[data-portfolio-theme="lekka"] .brand small { color: #98a2b3; }
+html[data-portfolio-theme="lekka"] .brand-mark { width: 38px; height: 38px; border-radius: 10px; background: #f7c400; color: #0f1722; box-shadow: none; }
+html[data-portfolio-theme="lekka"] nav button { min-height: 42px; padding: 10px 12px; color: #475569; border: 1px solid transparent; border-radius: 8px; font-size: 13px; font-weight: 650; }
+html[data-portfolio-theme="lekka"] nav button span { color: #94a3b8; }
+html[data-portfolio-theme="lekka"] nav button:hover { background: #f8fafc; color: #0f172a; box-shadow: none; }
+html[data-portfolio-theme="lekka"] nav button.active { background: #fff9da; color: #0f172a; border-color: #f1e3a3; box-shadow: inset 3px 0 #f7c400; }
+html[data-portfolio-theme="lekka"] nav button.active span { color: #9a7800; }
+html[data-portfolio-theme="lekka"] .privacy { background: #fffdf3; border-color: #eee4b6; }
+html[data-portfolio-theme="lekka"] .privacy > span { color: #9a7800; }
+html[data-portfolio-theme="lekka"] .privacy strong { color: #344054; }
+html[data-portfolio-theme="lekka"] .privacy p,
+html[data-portfolio-theme="lekka"] .text-button { color: #667085; }
+html[data-portfolio-theme="lekka"] .content { max-width: 1440px; padding: 32px 36px 24px; }
+html[data-portfolio-theme="lekka"] .topbar { margin-bottom: 24px; }
+html[data-portfolio-theme="lekka"] .eyebrow { color: #737373; font-size: 10px; }
+html[data-portfolio-theme="lekka"] h1 { color: #101828; font-size: 27px; font-weight: 800; letter-spacing: 0; }
+html[data-portfolio-theme="lekka"] h2,
+html[data-portfolio-theme="lekka"] h3,
+html[data-portfolio-theme="lekka"] h4,
+html[data-portfolio-theme="lekka"] strong,
+html[data-portfolio-theme="lekka"] b { color: #101828; }
+html[data-portfolio-theme="lekka"] .as-of { color: #667085; }
+html[data-portfolio-theme="lekka"] .theme-select,
+html[data-portfolio-theme="lekka"] .currency-select,
+html[data-portfolio-theme="lekka"] .account-select,
+html[data-portfolio-theme="lekka"] .add-asset-button { min-height: 40px; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; color: #475569; box-shadow: 0 8px 24px rgba(15, 23, 34, .04); }
+html[data-portfolio-theme="lekka"] .theme-select,
+html[data-portfolio-theme="lekka"] .currency-select { color: #344054; font-weight: 750; }
+html[data-portfolio-theme="lekka"] .theme-select:hover,
+html[data-portfolio-theme="lekka"] .currency-select:hover,
+html[data-portfolio-theme="lekka"] .account-select:hover,
+html[data-portfolio-theme="lekka"] .add-asset-button:hover { background: #f8fafc; border-color: #cbd5e1; color: #101828; }
+html[data-portfolio-theme="lekka"] .add-asset-button span { color: #806400; }
+html[data-portfolio-theme="lekka"] .import-button { min-height: 40px; background: #f7c400; border: 1px solid #e4b600; border-radius: 999px; color: #0f1722; font-weight: 800; box-shadow: none; }
+html[data-portfolio-theme="lekka"] .import-button:hover { background: #d8ab00; }
+html[data-portfolio-theme="lekka"] .price-status { background: rgba(255, 255, 255, .88); border-color: #e2e8f0; border-radius: 12px; box-shadow: 0 8px 30px rgba(76, 29, 149, .04); }
+html[data-portfolio-theme="lekka"] .live-dot { background: #22a35a; }
+html[data-portfolio-theme="lekka"] .price-status strong { color: #344054; }
+html[data-portfolio-theme="lekka"] .price-status small { color: #667085; }
+html[data-portfolio-theme="lekka"] .price-status button { background: #fff; border-color: #e2e8f0; color: #475569; }
+html[data-portfolio-theme="lekka"] .price-status button:hover { border-color: #f7c400; color: #0f1722; }
+html[data-portfolio-theme="lekka"] .notice { background: #fff9da; border-color: #eee0a0; color: #5f4b00; }
+html[data-portfolio-theme="lekka"] .notice > span { background: #f7c400; color: #0f1722; }
+html[data-portfolio-theme="lekka"] .notice button { color: #75621b; }
+
+html[data-portfolio-theme="lekka"] .value-card,
+html[data-portfolio-theme="lekka"] .metric-card,
+html[data-portfolio-theme="lekka"] .panel,
+html[data-portfolio-theme="lekka"] .dividend-summary { background: rgba(255, 255, 255, .94); border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 12px 30px rgba(15, 23, 34, .045); }
+html[data-portfolio-theme="lekka"] .value-card { background: #fff; border-color: #e5e5e5; }
+html[data-portfolio-theme="lekka"] .value-card::before { background: #f7c400; }
+html[data-portfolio-theme="lekka"] .value-card > p,
+html[data-portfolio-theme="lekka"] .metric-card > p { color: #667085; }
+html[data-portfolio-theme="lekka"] .value-card h2,
+html[data-portfolio-theme="lekka"] .metric-card h3 { color: #101828; font-weight: 850; letter-spacing: -.025em; }
+html[data-portfolio-theme="lekka"] .value-card small,
+html[data-portfolio-theme="lekka"] .metric-card small { color: #667085; }
+html[data-portfolio-theme="lekka"] .profit-pill { color: #147a43; background: #edf9f2; border-color: #ccebd9; }
+html[data-portfolio-theme="lekka"] .profit-pill.negative { color: #b23d38; background: #fff0ef; border-color: #f1d0cd; }
+html[data-portfolio-theme="lekka"] .profit-pill span { color: #667085; }
+html[data-portfolio-theme="lekka"] .micro { color: #667085; border-color: #eaecf0; }
+html[data-portfolio-theme="lekka"] .panel-head h3,
+html[data-portfolio-theme="lekka"] .performance-head h3 { color: #101828; font-weight: 800; }
+html[data-portfolio-theme="lekka"] .performance-head small { color: #667085; }
+html[data-portfolio-theme="lekka"] .segmented { background: #f8fafc; border-color: #e2e8f0; }
+html[data-portfolio-theme="lekka"] .segmented button { color: #667085; }
+html[data-portfolio-theme="lekka"] .segmented button.active { background: #fff; color: #101828; box-shadow: 0 1px 4px rgba(15, 23, 42, .08); }
+html[data-portfolio-theme="lekka"] .performance-summary,
+html[data-portfolio-theme="lekka"] .performance-foot { background: #f8fafc; border-color: #e2e8f0; }
+html[data-portfolio-theme="lekka"] .performance-summary > div { border-color: #e2e8f0; }
+html[data-portfolio-theme="lekka"] .performance-summary span { color: #667085; }
+html[data-portfolio-theme="lekka"] .performance-summary strong { color: #101828; }
+html[data-portfolio-theme="lekka"] .performance-scale,
+html[data-portfolio-theme="lekka"] .month-label,
+html[data-portfolio-theme="lekka"] .performance-empty { color: #667085; }
+html[data-portfolio-theme="lekka"] .zero-axis { background: #cbd5e1; }
+html[data-portfolio-theme="lekka"] .bar-field { border-color: rgba(148, 163, 184, .14); }
+html[data-portfolio-theme="lekka"] .bar-field i { background: #f7c400; }
+html[data-portfolio-theme="lekka"] .bar-field i.negative { background: #d94a4a; }
+html[data-portfolio-theme="lekka"] .performance-chart.market .bar-field i.benchmark { background: #7c3aed; }
+html[data-portfolio-theme="lekka"] .performance-chart.market .bar-field i.benchmark.negative { background: #9f7aea; }
+html[data-portfolio-theme="lekka"] .performance-foot > span { color: #475569; }
+html[data-portfolio-theme="lekka"] .performance-foot p { color: #667085; }
+html[data-portfolio-theme="lekka"] .legend-swatch { background: #f7c400; }
+html[data-portfolio-theme="lekka"] .legend-swatch.benchmark { background: #7c3aed; }
+html[data-portfolio-theme="lekka"] .loading-ring { border-color: #e2e8f0; border-top-color: #f7c400; }
+
+html[data-portfolio-theme="lekka"] .donut-hole { background: #fff; box-shadow: 0 0 0 1px #e2e8f0; }
+html[data-portfolio-theme="lekka"] .donut-hole span,
+html[data-portfolio-theme="lekka"] .legend > div > span:last-child { color: #667085; }
+html[data-portfolio-theme="lekka"] .legend > div > strong { color: #344054; }
+html[data-portfolio-theme="lekka"] .arrow-button { background: #fff; border-color: #e2e8f0; color: #475569; }
+html[data-portfolio-theme="lekka"] .arrow-button:hover { border-color: #f7c400; color: #0f1722; }
+html[data-portfolio-theme="lekka"] .forecast-list > div,
+html[data-portfolio-theme="lekka"] .full-list > div,
+html[data-portfolio-theme="lekka"] .timeline > div { border-color: #eaecf0; }
+html[data-portfolio-theme="lekka"] .date-tile { background: #fff9da; border-color: #eee0a0; }
+html[data-portfolio-theme="lekka"] .date-tile span,
+html[data-portfolio-theme="lekka"] .forecast-list small,
+html[data-portfolio-theme="lekka"] .full-list small,
+html[data-portfolio-theme="lekka"] .timeline time,
+html[data-portfolio-theme="lekka"] .timeline small,
+html[data-portfolio-theme="lekka"] .empty-inline { color: #667085; }
+html[data-portfolio-theme="lekka"] .positions-panel .panel-head { border-bottom-color: #e2e8f0; }
+html[data-portfolio-theme="lekka"] .count-pill,
+html[data-portfolio-theme="lekka"] .account-pill { background: #f8fafc; color: #475569; border-color: #e2e8f0; }
+html[data-portfolio-theme="lekka"] .table-wrap { border-color: #e2e8f0; }
+html[data-portfolio-theme="lekka"] th { background: #f8fafc; color: #667085; border-color: #e2e8f0; }
+html[data-portfolio-theme="lekka"] td { color: #344054; border-color: #eaecf0; }
+html[data-portfolio-theme="lekka"] tbody tr:hover { background: #fffcf0; }
+html[data-portfolio-theme="lekka"] .asset > span { background: #fff9da; color: #806400; border-color: #eee0a0; }
+html[data-portfolio-theme="lekka"] .asset strong,
+html[data-portfolio-theme="lekka"] .market-price strong { color: #101828; }
+html[data-portfolio-theme="lekka"] .asset small { color: #667085; }
+html[data-portfolio-theme="lekka"] td select { background: #fff; color: #475569; border-color: #e2e8f0; }
+html[data-portfolio-theme="lekka"] .positive { color: #18864b; }
+html[data-portfolio-theme="lekka"] .negative-text,
+html[data-portfolio-theme="lekka"] .red { color: #d94a4a !important; }
+html[data-portfolio-theme="lekka"] .weight { background: #eef2f6; }
+html[data-portfolio-theme="lekka"] .weight span { background: #f7c400; }
+html[data-portfolio-theme="lekka"] .dropzone { background: rgba(255, 255, 255, .75); border-color: #cbd5e1; color: #475569; }
+html[data-portfolio-theme="lekka"] .dropzone:hover,
+html[data-portfolio-theme="lekka"] .dropzone.dragging { background: #fffdf3; border-color: #f7c400; }
+html[data-portfolio-theme="lekka"] .upload-icon { background: #fff9da; color: #806400; border-color: #eee0a0; }
+html[data-portfolio-theme="lekka"] .dropzone p { color: #667085; }
+html[data-portfolio-theme="lekka"] .dropzone button { background: #fff; color: #475569; border-color: #e2e8f0; }
+html[data-portfolio-theme="lekka"] .dividend-summary,
+html[data-portfolio-theme="lekka"] .history-summary { background: #fff; color: #101828; }
+html[data-portfolio-theme="lekka"] .dividend-summary > p:nth-child(3),
+html[data-portfolio-theme="lekka"] .dividend-summary span,
+html[data-portfolio-theme="lekka"] .history-summary span { color: #667085; }
+html[data-portfolio-theme="lekka"] .dividend-summary span,
+html[data-portfolio-theme="lekka"] .history-summary > div { border-color: #e2e8f0; }
+html[data-portfolio-theme="lekka"] .status-dot { background: #18864b; }
+html[data-portfolio-theme="lekka"] .status-dot.forecast { background: #f7c400; }
+html[data-portfolio-theme="lekka"] .timeline-dot { border-color: #f7c400; }
+html[data-portfolio-theme="lekka"] footer,
+html[data-portfolio-theme="lekka"] .content footer > span { color: #98a2b3; }
+html[data-portfolio-theme="lekka"] .content footer b { color: #806400; }
+
+html[data-portfolio-theme="lekka"] .modal-backdrop { background: rgba(15, 23, 34, .36); backdrop-filter: blur(4px); }
+html[data-portfolio-theme="lekka"] .asset-modal { background: #fff; border-color: #e2e8f0; box-shadow: 0 24px 80px rgba(15, 23, 42, .18); }
+html[data-portfolio-theme="lekka"] .modal-close { background: #f8fafc; color: #475569; border-color: #e2e8f0; }
+html[data-portfolio-theme="lekka"] .asset-type-tabs { background: #f8fafc; border-color: #e2e8f0; }
+html[data-portfolio-theme="lekka"] .asset-type-tabs button { color: #667085; }
+html[data-portfolio-theme="lekka"] .asset-type-tabs button.active { background: #fff; color: #101828; box-shadow: 0 1px 4px rgba(15, 23, 42, .08); }
+html[data-portfolio-theme="lekka"] .field > span { color: #344054; }
+html[data-portfolio-theme="lekka"] .field input,
+html[data-portfolio-theme="lekka"] .field select { background: #fff; border-color: #d0d5dd; color: #101828; }
+html[data-portfolio-theme="lekka"] .field input::placeholder { color: #98a2b3; }
+html[data-portfolio-theme="lekka"] .field input:focus,
+html[data-portfolio-theme="lekka"] .field select:focus { border-color: #f7c400; box-shadow: 0 0 0 4px rgba(247, 196, 0, .14); }
+html[data-portfolio-theme="lekka"] .form-hint,
+html[data-portfolio-theme="lekka"] .search-empty { color: #667085; }
+html[data-portfolio-theme="lekka"] .secondary-action { background: #fff; border-color: #d0d5dd; color: #475569; }
+html[data-portfolio-theme="lekka"] .primary-action { background: #f7c400; border-color: #e4b600; color: #0f1722; font-weight: 800; }
+html[data-portfolio-theme="lekka"] .primary-action:hover { background: #d8ab00; }
+html[data-portfolio-theme="lekka"] .search-results { background: #fff; border-color: #e2e8f0; box-shadow: 0 22px 70px rgba(15, 23, 42, .16); }
+html[data-portfolio-theme="lekka"] .search-results button { background: #fff; color: #101828; }
+html[data-portfolio-theme="lekka"] .search-results button:hover,
+html[data-portfolio-theme="lekka"] .search-results button.active { background: #f8fafc; box-shadow: inset 3px 0 #f7c400; }
+html[data-portfolio-theme="lekka"] .result-mark { background: #fff9da; color: #806400; border-color: #eee0a0; }
+html[data-portfolio-theme="lekka"] .search-results small,
+html[data-portfolio-theme="lekka"] .selected-instrument small { color: #667085; }
+html[data-portfolio-theme="lekka"] .search-results button > b,
+html[data-portfolio-theme="lekka"] .selected-instrument > b { color: #18864b; }
+html[data-portfolio-theme="lekka"] .selected-instrument { background: #fffdf3; border-color: #eee0a0; }
+html[data-portfolio-theme="lekka"] .manual-assets { border-color: #e2e8f0; }
+html[data-portfolio-theme="lekka"] .manual-assets > div { border-color: #eaecf0; }
+html[data-portfolio-theme="lekka"] .manual-assets small { color: #667085; }
+html[data-portfolio-theme="lekka"] .manual-assets button { background: #fff1f0; color: #b23d38; border-color: #f0d1ce; }
+html[data-portfolio-theme="lekka"] * { scrollbar-color: #cbd5e1 transparent; }
+
+@media (max-width: 1100px) {
+  html[data-portfolio-theme="lekka"] .app-shell { grid-template-columns: 76px minmax(0, 1fr); }
+  html[data-portfolio-theme="lekka"] .sidebar { width: 76px; padding-inline: 12px; }
+}
+
+@media (max-width: 760px) {
+  html[data-portfolio-theme="lekka"] .app-shell { display: block; }
+  html[data-portfolio-theme="lekka"] .sidebar { width: auto; height: 66px; padding: 7px 10px; background: #fff; border: 1px solid #e2e8f0; border-radius: 18px 18px 0 0; box-shadow: 0 -10px 35px rgba(76, 29, 149, .09); }
+  html[data-portfolio-theme="lekka"] .sidebar nav button,
+  html[data-portfolio-theme="lekka"] .sidebar nav button:not(.active) { color: #64748b; }
+  html[data-portfolio-theme="lekka"] .sidebar nav button.active { background: #fff9da; color: #0f172a; box-shadow: none; }
+  html[data-portfolio-theme="lekka"] .content { padding: 18px 13px 88px; }
+  html[data-portfolio-theme="lekka"] .topbar { gap: 12px; }
+  html[data-portfolio-theme="lekka"] h1 { font-size: 21px; }
+  html[data-portfolio-theme="lekka"] .theme-select,
+  html[data-portfolio-theme="lekka"] .currency-select,
+  html[data-portfolio-theme="lekka"] .account-select { min-height: 36px; box-shadow: none; }
+  html[data-portfolio-theme="lekka"] .performance-summary > div:nth-child(-n+2) { border-bottom-color: #e2e8f0; }
+  html[data-portfolio-theme="lekka"] .asset-modal { border-radius: 18px 18px 0 0; }
 }
