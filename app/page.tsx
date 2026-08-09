@@ -6,8 +6,10 @@ import { unzipSync } from "fflate";
 import {
   ArrowRight,
   ArrowUpRight,
+  BellRing,
   CalendarClock,
   CalendarDays,
+  CheckCircle2,
   CircleHelp,
   Database,
   Ellipsis,
@@ -17,6 +19,8 @@ import {
   Plus,
   RefreshCw,
   Search,
+  ServerCog,
+  ShieldAlert,
   ShieldCheck,
   Sigma,
   Trash2,
@@ -263,8 +267,8 @@ export default function Home(){
       <button onClick={()=>{setMobileMoreOpen(false);fileRef.current?.click()}}><span><Upload size={18}/></span><div><strong>Importuj XTB</strong><small>ZIP, XLSX, XLS lub CSV</small></div></button>
     </section></>}
     <section className="content"><header className="topbar"><div className="topbar-title"><p className="eyebrow">{viewCopy[view].eyebrow}</p><h1>{viewCopy[view].title}</h1></div><div className="mobile-brand"><span className="brand-mark"><WalletCards size={17} strokeWidth={2}/></span><strong>KAPITAŁ</strong></div><label className="topbar-search"><span aria-hidden="true"><Search size={18} strokeWidth={1.8}/></span><input ref={portfolioSearchRef} value={portfolioQuery} onChange={e=>setPortfolioQuery(e.target.value)} placeholder="Szukaj aktywa, symbolu lub rachunku…" aria-label="Szukaj w portfelu"/><kbd>Ctrl K</kbd></label><div className="top-actions"><select className="theme-select" value={designTheme} onChange={e=>changeDesignTheme(e.target.value as DesignTheme)} aria-label="Wygląd aplikacji"><option value="lekka">Lekka</option><option value="dark">Dark</option></select><select className="currency-select" value={displayCurrency} onChange={e=>changeCurrency(e.target.value as CurrencyCode)} aria-label="Waluta prezentacji"><option value="PLN">PLN zł</option><option value="USD">USD $</option><option value="EUR">EUR €</option><option value="GBP">GBP £</option></select>{accounts.length>1&&<select className="account-select" value={account} onChange={e=>setAccount(e.target.value)} aria-label="Rachunek">{accounts.map(item=><option key={item}>{item}</option>)}</select>}<button className="add-asset-button" onClick={openAssetModal}><span><Plus size={18} strokeWidth={2.4}/></span><b>Dodaj aktywo</b></button><span className="as-of">Stan na dziś</span><button className="import-button" onClick={()=>fileRef.current?.click()} disabled={importing}><span><Upload size={18} strokeWidth={1.9}/></span><b>{importing?"Wczytuję…":"Importuj XTB"}</b></button></div><input ref={fileRef} className="sr-only" type="file" accept=".zip,.xlsx,.xls,.csv" onChange={e=>importFile(e.target.files?.[0])}/></header>
-    <div className="main-shell"><div className="main-content"><section className="dashboard-intro"><p>{viewCopy[view].eyebrow}</p><h1>{viewCopy[view].title}</h1><span>{viewCopy[view].description}</span></section>
-    <div className={`price-status ${priceStatus.loading?"loading":priceStatus.missing.length?"partial":"live"}`} role="status"><span className="live-dot"/><div><strong>{priceStatus.loading?"Pobieram aktualne ceny…":priceStatus.updatedAt?"Notowania są aktualne":"Oczekiwanie na notowania"}</strong><small>{priceStatus.updatedAt?`${priceStatus.updated} instrumentów · aktualizacja ${new Intl.DateTimeFormat("pl-PL",{hour:"2-digit",minute:"2-digit"}).format(new Date(priceStatus.updatedAt))}${priceStatus.missing.length?` · ${new Set(priceStatus.missing).size} bez ceny`:""}`:"Ceny odświeżą się automatycznie"}</small></div><button type="button" onClick={()=>void refreshPrices(undefined,true)} disabled={priceStatus.loading}><RefreshCw size={13} strokeWidth={1.9}/> Odśwież</button></div>
+    <div className="main-shell"><div className="main-content">{view!=="bezpieczenstwo"&&<section className="dashboard-intro"><p>{viewCopy[view].eyebrow}</p><h1>{viewCopy[view].title}</h1><span>{viewCopy[view].description}</span></section>}
+    {view!=="bezpieczenstwo"&&<div className={`price-status ${priceStatus.loading?"loading":priceStatus.missing.length?"partial":"live"}`} role="status"><span className="live-dot"/><div><strong>{priceStatus.loading?"Pobieram aktualne ceny…":priceStatus.updatedAt?"Notowania są aktualne":"Oczekiwanie na notowania"}</strong><small>{priceStatus.updatedAt?`${priceStatus.updated} instrumentów · aktualizacja ${new Intl.DateTimeFormat("pl-PL",{hour:"2-digit",minute:"2-digit"}).format(new Date(priceStatus.updatedAt))}${priceStatus.missing.length?` · ${new Set(priceStatus.missing).size} bez ceny`:""}`:"Ceny odświeżą się automatycznie"}</small></div><button type="button" onClick={()=>void refreshPrices(undefined,true)} disabled={priceStatus.loading}><RefreshCw size={13} strokeWidth={1.9}/> Odśwież</button></div>}
     {notice&&<div className="notice" role="status"><span><Info size={14} strokeWidth={2}/></span>{notice}<button onClick={()=>setNotice("")} aria-label="Zamknij"><X size={15} strokeWidth={2}/></button></div>}
     {view==="pulpit"&&<><section className="hero-grid"><article className="value-card"><div className="metric-icon yellow"><WalletCards size={18} strokeWidth={1.9}/></div><p>Wartość portfela</p><h2>{money(totalValue)}</h2><div className={`profit-pill ${openProfit<0?"negative":""}`}>{openProfit>=0?"↑":"↓"} {money(Math.abs(openProfit),2)} <span>({totalCost?number(openProfit/totalCost*100):"0,00"}%)</span></div><small>Niezrealizowany wynik na aktywach</small></article><article className="metric-card"><div className="metric-icon green"><ArrowUpRight size={18} strokeWidth={1.9}/></div><p>Dywidendy netto</p><h3>{money(divNet,2)}</h3><small>Zebrane · cała historia</small><span className="micro">Brutto {money(divGross,2)}</span></article><article className="metric-card"><div className="metric-icon amber"><CalendarClock size={18} strokeWidth={1.9}/></div><p>Prognoza 12 mies.</p><h3>{money(forecastTotal,2)}</h3><small>Na bazie poprzednich wypłat</small><span className="micro">{forecast.length} przewidywanych wypłat</span></article><article className="metric-card"><div className="metric-icon dark"><Sigma size={18} strokeWidth={1.9}/></div><p>Wynik zrealizowany</p><h3 className={realized<0?"red":""}>{money(realized,2)}</h3><small>Zamknięte transakcje</small><span className="micro">{trades.length} operacje</span></article></section>
     <section className="panel performance-panel"><div className="performance-head"><div><p className="eyebrow">Rzeczywista historia</p><h3>{performanceMode==="value"?"Miesięczny wynik na wzroście aktywów":`Portfel vs ${performance.benchmark.name}`}</h3><small>{performanceMode==="value"?"Zmiana wyceny partii + rzeczywisty wynik sprzedaży z raportu XTB":"Miesięczna stopa zwrotu liczona w PLN"}</small></div><div className="performance-controls"><div className="segmented mode-switch"><button className={performanceMode==="value"?"active":""} onClick={()=>setPerformanceMode("value")}>Wynik PLN</button><button className={performanceMode==="market"?"active":""} onClick={()=>setPerformanceMode("market")}>vs rynek</button></div><div className="segmented period-switch">{(["6M","1R","3L","MAX"] as const).map(period=><button key={period} className={performancePeriod===period?"active":""} onClick={()=>setPerformancePeriod(period)}>{period}</button>)}</div></div></div>
@@ -287,21 +291,48 @@ export default function Home(){
         <details><summary>Jak działa zmiana waluty widoku?<span><Plus size={18}/></span></summary><p>PLN, USD, EUR i GBP zmieniają walutę prezentacji całego portfela. Dane źródłowe pozostają bez zmian, a wartości są przeliczane według aktualnych kursów NBP.</p></details>
       </div>
     </section>}
-    {view==="bezpieczenstwo"&&<section className="support-page security-page" aria-label="Bezpieczeństwo">
-      <article className="security-hero">
-        <div className="security-badge"><ShieldCheck size={14}/>Prywatny tracker majątku</div>
-        <h2>Raport inwestycyjny zostaje pod Twoją kontrolą.</h2>
-        <p>Import odbywa się w przeglądarce. Kapitał odczytuje pozycje, transakcje i przepływy, ale nie wysyła pełnego pliku XTB do zewnętrznych serwisów notowań.</p>
-        <div className="security-pills"><span><LockKeyhole size={14}/>Import lokalny</span><span><Database size={14}/>Tylko symbole do cen</span><span><UserCheck size={14}/>Dane na urządzeniu</span><span><Upload size={14}/>Eksport pod kontrolą</span></div>
-      </article>
+    {view==="bezpieczenstwo"&&<article className="support-page security-page" aria-label="Bezpieczeństwo">
+      <header className="security-hero">
+        <h1 className="security-eyebrow">Bezpieczeństwo</h1>
+        <div className="security-badge"><ShieldCheck size={14}/>Ochrona danych inwestycyjnych</div>
+        <h2>Co przechowujemy, w jakim celu i jak możesz to usunąć.</h2>
+        <p>Raporty XTB zawierają pozycje, historię transakcji, przepływy oraz dywidendy. Poniżej opisujemy, jak Kapitał przetwarza te dane, co trafia do serwisów notowań i jak możesz zarządzać swoim portfelem.</p>
+        <div className="security-pills" aria-label="Najważniejsze zabezpieczenia"><span><LockKeyhole size={14}/>Import w przeglądarce</span><span><Database size={14}/>Dane na urządzeniu</span><span><ShieldCheck size={14}/>Tylko symbole do cen</span><span><Upload size={14}/>Usuwanie pod kontrolą</span></div>
+      </header>
+
       <div className="security-grid">
-        <article><span className="support-icon"><LockKeyhole size={21}/></span><h3>Import raportu</h3><p>ZIP, XLSX i CSV są analizowane w aplikacji. Z raportu powstaje lokalny obraz portfela: aktywa, historia transakcji i dywidendy.</p></article>
-        <article><span className="support-icon"><Database size={21}/></span><h3>Aktualne notowania</h3><p>Do dostawców danych rynkowych trafiają symbole instrumentów potrzebne do znalezienia ceny. Nie wysyłamy liczby posiadanych jednostek ani pełnej historii rachunku.</p></article>
-        <article><span className="support-icon"><UserCheck size={21}/></span><h3>Dane własne</h3><p>Ręcznie dodane krypto, gotówka i inne aktywa są zapisywane lokalnie w tej przeglądarce. Nie wymagają konta użytkownika.</p></article>
-        <article><span className="support-icon"><Trash2 size={21}/></span><h3>Usuwanie danych</h3><p>Dane możesz zastąpić kolejnym importem lub przywrócić portfel demonstracyjny. Wyczyszczenie danych strony w przeglądarce usuwa również zapis lokalny.</p></article>
+        <section><span className="support-icon"><LockKeyhole size={21}/></span><h2>Import raportu</h2><p>ZIP, XLSX, XLS i CSV są analizowane w aplikacji. Z raportu powstaje obraz portfela: pozycje, transakcje, przepływy oraz historia dywidend. Kapitał nie prosi o hasło do XTB ani dostęp do rachunku.</p></section>
+        <section><span className="support-icon"><Database size={21}/></span><h2>Dane bez konta</h2><p>Zaimportowany portfel i ręcznie dodane aktywa są zapisane lokalnie w tej przeglądarce. Nie synchronizują się na inne urządzenia i nie wymagają zakładania konta użytkownika.</p></section>
+        <section><span className="support-icon"><UserCheck size={21}/></span><h2>Aktualne notowania</h2><p>Do dostawców danych rynkowych trafiają symbole potrzebne do znalezienia ceny. Nie wysyłamy liczby jednostek, kosztów zakupu, wartości portfela ani historii rachunku.</p></section>
+        <section><span className="support-icon"><Trash2 size={21}/></span><h2>Usuwanie i zastępowanie</h2><p>Dane możesz zastąpić kolejnym importem albo przywrócić portfel demonstracyjny. Wyczyszczenie danych tej strony w przeglądarce usuwa również lokalny zapis portfela.</p></section>
       </div>
-      <article className="security-note"><span><Info size={15}/></span><div><strong>Ważne</strong><p>Kapitał jest narzędziem informacyjnym. Nie prosi o hasło do XTB, kod SMS ani dostęp do rachunku maklerskiego.</p></div></article>
-    </section>}
+
+      <section className="security-wide-card">
+        <div className="security-section-head"><CheckCircle2 size={22}/><h2>Zabezpieczenia techniczne</h2></div>
+        <div className="security-feature-grid">
+          <div><ShieldCheck size={18}/><p>Połączenie z aplikacją jest szyfrowane przez HTTPS podczas korzystania z wersji hostowanej.</p></div>
+          <div><LockKeyhole size={18}/><p>Import nie wymaga loginu, hasła, kodu SMS ani połączenia z rachunkiem maklerskim.</p></div>
+          <div><Database size={18}/><p>Pełny raport jest odczytywany w aplikacji i nie trafia do zewnętrznych serwisów notowań.</p></div>
+          <div><ServerCog size={18}/><p>Zapytania o ceny zawierają symbole instrumentów, bez stanu posiadania i kosztów zakupu.</p></div>
+          <div><BellRing size={18}/><p>Brak jednoznacznego symbolu kończy się informacją o braku ceny, a nie przypadkowym dopasowaniem.</p></div>
+          <div><CheckCircle2 size={18}/><p>Waluta prezentacji zmienia wyłącznie widok; źródłowe wartości i historia pozostają bez zmian.</p></div>
+        </div>
+      </section>
+
+      <section className="security-wide-card">
+        <div className="security-section-head"><ServerCog size={22}/><h2>Dostawcy danych rynkowych</h2></div>
+        <p className="security-provider-copy">Kapitał korzysta z zewnętrznych źródeł notowań i kursów walut, aby wycenić akcje, ETF-y, kryptowaluty oraz gotówkę. Do tych usług wysyłane są wyłącznie identyfikatory instrumentów potrzebne do pobrania ceny.</p>
+        <p className="security-provider-copy">Raport XTB, liczba posiadanych jednostek, koszt zakupu, wartość całego majątku i historia operacji nie są częścią zapytania o notowanie.</p>
+        <div className="security-links"><button onClick={()=>selectView("faq")}>Jak działa import</button><button onClick={()=>selectView("pulpit")}>Wróć do portfela</button></div>
+      </section>
+
+      <div className="security-grid security-bottom-grid">
+        <section><span className="support-icon"><ShieldCheck size={21}/></span><h2>Ochrona Twojego portfela</h2><p>Przechowuj raport XTB jak dokument finansowy i korzystaj z aplikacji na zaufanym urządzeniu. Nie udostępniaj archiwum osobom trzecim.</p><div className="security-links"><button onClick={()=>selectView("faq")}>Najczęstsze pytania</button></div></section>
+        <section><span className="support-icon"><ShieldAlert size={21}/></span><h2>Zgłaszanie problemów</h2><p>Jeżeli zauważysz błędne dopasowanie instrumentu albo nieprawidłową wycenę, zachowaj nazwę symbolu i rodzaj raportu. Nie przesyłaj publicznie pełnej historii rachunku.</p></section>
+      </div>
+
+      <p className="security-note">Ten opis odzwierciedla aktualny sposób działania aplikacji. Po dodaniu kont użytkowników, synchronizacji między urządzeniami albo nowych integracji ta strona zostanie zaktualizowana.</p>
+    </article>}
     {addingAsset&&<div className="modal-backdrop" role="presentation" tabIndex={-1} onKeyDown={e=>{if(e.key==="Escape")setAddingAsset(false)}} onMouseDown={e=>{if(e.currentTarget===e.target)setAddingAsset(false)}}>
       <section className="asset-modal" role="dialog" aria-modal="true" aria-labelledby="asset-modal-title">
         <header><div><p className="eyebrow">Poza XTB</p><h2 id="asset-modal-title">Dodaj własne aktywo</h2></div><button className="modal-close" type="button" onClick={()=>setAddingAsset(false)} aria-label="Zamknij"><X size={18} strokeWidth={2}/></button></header>
@@ -315,7 +346,7 @@ export default function Home(){
         {data.positions.some(item=>item.manual)&&<div className="manual-assets"><p className="eyebrow">Dodane ręcznie</p>{data.positions.filter(item=>item.manual).map(item=><div key={item.id}><span><strong>{item.symbol}</strong><small>{item.account} · {money(item.value)}</small></span><button type="button" onClick={()=>removeManualAsset(item)} aria-label={`Usuń ${item.name}`}>Usuń</button></div>)}</div>}
       </section>
     </div>}
-    <footer><span>Kapitał</span><p>To narzędzie informacyjne — nie stanowi porady inwestycyjnej. Notowania mogą być opóźnione względem rynku.</p><b>Notowania online</b></footer></div></div></section>
+    {view!=="bezpieczenstwo"&&<footer><span>Kapitał</span><p>To narzędzie informacyjne — nie stanowi porady inwestycyjnej. Notowania mogą być opóźnione względem rynku.</p><b>Notowania online</b></footer>}</div></div></section>
   </main>
 }
 
