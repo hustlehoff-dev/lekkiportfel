@@ -242,8 +242,8 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
     pulpit:{eyebrow:data.source,title:"Twój majątek",description:"Wszystkie aktywa, wyniki i przepływy w jednym prostym widoku."},
     dywidendy:{eyebrow:data.source,title:"Dywidendy",description:"Zebrane wpływy i prognoza kolejnych wypłat."},
     historia:{eyebrow:data.source,title:"Historia konta",description:"Pełna historia operacji ze wszystkich rachunków."},
-    faq:{eyebrow:"Pomoc",title:"Najczęstsze pytania",description:"Krótkie odpowiedzi o imporcie XTB, cenach, dywidendach i własnych aktywach."},
-    bezpieczenstwo:{eyebrow:"Prywatność",title:"Bezpieczeństwo",description:"Co dzieje się z raportem XTB i jakie dane opuszczają Twoje urządzenie."},
+    faq:{eyebrow:"Pomoc",title:"Najczęstsze pytania",description:"Krótkie odpowiedzi o imporcie danych, cenach, dywidendach i własnych aktywach."},
+    bezpieczenstwo:{eyebrow:"Prywatność",title:"Bezpieczeństwo",description:"Jak chronimy dane całego portfela i co trafia do zewnętrznych dostawców."},
   };
   useEffect(()=>{const syncView=()=>{setView(viewFromPath(window.location.pathname));setMobileMoreOpen(false);window.scrollTo({top:0,left:0,behavior:"auto"})};window.addEventListener("popstate",syncView);return()=>window.removeEventListener("popstate",syncView)},[]);
   const selectView=(next:AppView)=>{const path=viewPaths[next];if(window.location.pathname!==path)window.history.pushState({},"",path);setView(next);setMobileMoreOpen(false);window.scrollTo({top:0,left:0,behavior:"auto"})};
@@ -267,7 +267,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
       <header><strong>Więcej</strong><button onClick={()=>setMobileMoreOpen(false)} aria-label="Zamknij"><X size={18}/></button></header>
       <button onClick={()=>{setMobileMoreOpen(false);openAssetModal()}}><span><Plus size={18}/></span><div><strong>Dodaj aktywo</strong><small>Akcje, ETF, krypto, gotówka lub inne</small></div></button>
       <button onClick={()=>selectView("faq")}><span><CircleHelp size={18}/></span><div><strong>Najczęstsze pytania</strong><small>Import, ceny i działanie aplikacji</small></div></button>
-      <button onClick={()=>selectView("bezpieczenstwo")}><span><ShieldCheck size={18}/></span><div><strong>Bezpieczeństwo</strong><small>Raport XTB i prywatność danych</small></div></button>
+      <button onClick={()=>selectView("bezpieczenstwo")}><span><ShieldCheck size={18}/></span><div><strong>Bezpieczeństwo</strong><small>Dane portfela i prywatność</small></div></button>
       <button onClick={()=>{setMobileMoreOpen(false);fileRef.current?.click()}}><span><Upload size={18}/></span><div><strong>Importuj XTB</strong><small>ZIP, XLSX, XLS lub CSV</small></div></button>
     </section></>}
     <section className="content"><header className="topbar"><div className="topbar-title"><p className="eyebrow">{viewCopy[view].eyebrow}</p><h1>{viewCopy[view].title}</h1></div><div className="mobile-brand"><span className="brand-mark"><WalletCards size={17} strokeWidth={2}/></span><strong>KAPITAŁ</strong></div><label className="topbar-search"><span aria-hidden="true"><Search size={18} strokeWidth={1.8}/></span><input ref={portfolioSearchRef} value={portfolioQuery} onChange={e=>setPortfolioQuery(e.target.value)} placeholder="Szukaj aktywa, symbolu lub rachunku…" aria-label="Szukaj w portfelu"/><kbd>Ctrl K</kbd></label><div className="top-actions"><select className="theme-select" value={designTheme} onChange={e=>changeDesignTheme(e.target.value as DesignTheme)} aria-label="Wygląd aplikacji"><option value="lekka">Lekka</option><option value="dark">Dark</option></select><select className="currency-select" value={displayCurrency} onChange={e=>changeCurrency(e.target.value as CurrencyCode)} aria-label="Waluta prezentacji"><option value="PLN">PLN zł</option><option value="USD">USD $</option><option value="EUR">EUR €</option><option value="GBP">GBP £</option></select>{accounts.length>1&&<select className="account-select" value={account} onChange={e=>setAccount(e.target.value)} aria-label="Rachunek">{accounts.map(item=><option key={item}>{item}</option>)}</select>}<button className="add-asset-button" onClick={openAssetModal}><span><Plus size={18} strokeWidth={2.4}/></span><b>Dodaj aktywo</b></button><span className="as-of">Stan na dziś</span><button className="import-button" onClick={()=>fileRef.current?.click()} disabled={importing}><span><Upload size={18} strokeWidth={1.9}/></span><b>{importing?"Wczytuję…":"Importuj XTB"}</b></button></div><input ref={fileRef} className="sr-only" type="file" accept=".zip,.xlsx,.xls,.csv" onChange={e=>importFile(e.target.files?.[0])}/></header>
@@ -300,13 +300,13 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
         <h1 className="security-eyebrow">Bezpieczeństwo</h1>
         <div className="security-badge"><ShieldCheck size={14}/>Ochrona danych portfela</div>
         <h2>Co przechowujemy, w jakim celu i jak możesz to usunąć.</h2>
-        <p>Raport XTB zawiera otwarte pozycje, historię transakcji, przepływy gotówki, dywidendy i informacje o rachunkach. Poniżej opisujemy, gdzie zapisujemy te dane i jakie informacje przekazujemy dostawcom notowań.</p>
-        <div className="security-pills" aria-label="Najważniejsze zabezpieczenia"><span><LockKeyhole size={14}/>Import pliku w przeglądarce</span><span><Database size={14}/>Zapis w bazie aplikacji</span><span><ShieldCheck size={14}/>Bez dostępu do konta XTB</span><span><Upload size={14}/>Nadpisanie danych importem</span></div>
+        <p>Portfel może zawierać akcje, ETF-y, kryptowaluty, gotówkę, inne składniki majątku oraz historię operacji i dywidend. Poniżej opisujemy, gdzie zapisujemy te dane i jakie informacje przekazujemy dostawcom notowań.</p>
+        <div className="security-pills" aria-label="Najważniejsze zabezpieczenia"><span><LockKeyhole size={14}/>Import pliku w przeglądarce</span><span><Database size={14}/>Zapis w bazie aplikacji</span><span><ShieldCheck size={14}/>Bez dostępu do rachunków</span><span><Upload size={14}/>Nadpisanie danych importem</span></div>
       </header>
 
       <div className="security-grid">
-        <section><span className="support-icon"><LockKeyhole size={21}/></span><h2>Logowanie i sesja</h2><p>Obecna wersja nie ma jeszcze systemu kont, hasła ani sesji użytkownika. Aplikacja otwiera się bez logowania i korzysta z jednego technicznego profilu „user-1”. Nie podajesz jej loginu ani hasła do XTB.</p></section>
-        <section><span className="support-icon"><Database size={21}/></span><h2>Dane bez konta</h2><p>Plik ZIP, XLSX, XLS albo CSV odczytuje przeglądarka. Po imporcie przetworzony portfel trafia do bazy aplikacji i wraca po odświeżeniu strony. Oryginalnego pliku nie przechowujemy.</p></section>
+        <section><span className="support-icon"><LockKeyhole size={21}/></span><h2>Logowanie i sesja</h2><p>Obecna wersja nie ma jeszcze systemu kont, hasła ani sesji użytkownika. Aplikacja otwiera się bez logowania i korzysta z jednego technicznego profilu „user-1”. Nie podajesz jej danych logowania do brokera, banku ani giełdy kryptowalut.</p></section>
+        <section><span className="support-icon"><Database size={21}/></span><h2>Dane bez konta</h2><p>Aktywa możesz dodać ręcznie albo zaimportować z obsługiwanego pliku. Po zapisaniu przetworzony portfel trafia do bazy aplikacji i wraca po odświeżeniu strony. Oryginalnego pliku nie przechowujemy.</p></section>
         <section><span className="support-icon"><UserCheck size={21}/></span><h2>Dane zespołu</h2><p>Obecne MVP nie ma zespołów ani rozdzielonych uprawnień. Wszystkie dane są zapisane pod profilem „user-1”, dlatego każda osoba z dostępem do tej instancji aplikacji może otworzyć ten sam portfel.</p></section>
         <section><span className="support-icon"><Trash2 size={21}/></span><h2>Usuwanie i eksport</h2><p>Nowy import nadpisuje poprzedni zapis profilu „user-1”. Aplikacja nie ma jeszcze osobnej funkcji trwałego usunięcia portfela z bazy ani eksportu wszystkich zapisanych danych.</p></section>
       </div>
@@ -315,7 +315,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
         <div className="security-section-head"><CheckCircle2 size={22}/><h2>Zabezpieczenia techniczne</h2></div>
         <div className="security-feature-grid">
           <div><ShieldCheck size={18}/><p>Połączenie z aplikacją jest szyfrowane przez HTTPS podczas korzystania z wersji hostowanej.</p></div>
-          <div><LockKeyhole size={18}/><p>Import nie wymaga loginu, hasła, kodu SMS ani połączenia z rachunkiem XTB.</p></div>
+          <div><LockKeyhole size={18}/><p>Dodawanie aktywów i import nie wymagają loginu, hasła, kodu SMS ani połączenia z zewnętrznym rachunkiem.</p></div>
           <div><Database size={18}/><p>Przetworzony portfel trafia do backendu aplikacji i jest zapisywany w jej bazie danych.</p></div>
           <div><ServerCog size={18}/><p>Dostawcy notowań otrzymują symbole i dane rynku, ale nie liczbę jednostek ani koszty zakupu.</p></div>
           <div><BellRing size={18}/><p>Moduł wyniku przetwarza na backendzie partie zakupu, transakcje i bieżące pozycje.</p></div>
@@ -326,7 +326,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
       <section className="security-wide-card">
         <div className="security-section-head"><ServerCog size={22}/><h2>Dostawcy usług technicznych</h2></div>
         <p className="security-provider-copy">Aplikacja korzysta z Yahoo Finance do notowań akcji i ETF-ów, CoinGecko do danych o kryptowalutach oraz NBP do kursów walut. Serwer wysyła do tych usług zapytania potrzebne do znalezienia instrumentu albo ceny.</p>
-        <p className="security-provider-copy">Zewnętrzni dostawcy nie otrzymują pełnego raportu XTB, liczby posiadanych jednostek, kosztów zakupu ani łącznej wartości portfela. Przetworzony portfel jest jednak zapisywany i analizowany przez backend tej aplikacji.</p>
+        <p className="security-provider-copy">Zewnętrzni dostawcy nie otrzymują pliku importu, liczby posiadanych jednostek, kosztów zakupu ani łącznej wartości portfela. Przetworzony portfel jest jednak zapisywany i analizowany przez backend tej aplikacji.</p>
         <div className="security-links"><button onClick={()=>selectView("faq")}>Jak działa import</button><button onClick={()=>selectView("pulpit")}>Wróć do portfela</button></div>
       </section>
 

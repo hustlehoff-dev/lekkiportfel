@@ -53,6 +53,9 @@ test("security page keeps ServiceBooker section names 1:1", async () => {
   for (const heading of headings) {
     assert.match(page, new RegExp(`<h2>${heading}</h2>`));
   }
+
+  assert.match(page, /Portfel może zawierać akcje, ETF-y, kryptowaluty, gotówkę/);
+  assert.doesNotMatch(page, /Raport XTB zawiera otwarte pozycje/);
 });
 
 test("performance API reconciles XTB sales and converts the benchmark to PLN", async () => {
