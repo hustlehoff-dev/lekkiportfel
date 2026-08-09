@@ -301,13 +301,13 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
         <div className="security-badge"><ShieldCheck size={14}/>Ochrona danych portfela</div>
         <h2>Co przechowujemy, w jakim celu i jak możesz to usunąć.</h2>
         <p>Raport XTB zawiera otwarte pozycje, historię transakcji, przepływy gotówki, dywidendy i informacje o rachunkach. Poniżej opisujemy, gdzie zapisujemy te dane i jakie informacje przekazujemy dostawcom notowań.</p>
-        <div className="security-pills" aria-label="Najważniejsze informacje"><span><LockKeyhole size={14}/>Import pliku w przeglądarce</span><span><Database size={14}/>Zapis w bazie aplikacji</span><span><ShieldCheck size={14}/>Bez dostępu do konta XTB</span><span><Upload size={14}/>Nadpisanie danych importem</span></div>
+        <div className="security-pills" aria-label="Najważniejsze zabezpieczenia"><span><LockKeyhole size={14}/>Import pliku w przeglądarce</span><span><Database size={14}/>Zapis w bazie aplikacji</span><span><ShieldCheck size={14}/>Bez dostępu do konta XTB</span><span><Upload size={14}/>Nadpisanie danych importem</span></div>
       </header>
 
       <div className="security-grid">
-        <section><span className="support-icon"><LockKeyhole size={21}/></span><h2>Import i zapis</h2><p>Plik ZIP, XLSX, XLS albo CSV odczytuje przeglądarka. Po imporcie do bazy aplikacji zapisujemy przetworzony portfel: pozycje, transakcje, przepływy, dywidendy i partie zakupu. Oryginalnego pliku nie przechowujemy.</p></section>
-        <section><span className="support-icon"><Database size={21}/></span><h2>Dane bez konta</h2><p>Obecna wersja nie ma logowania. Wszystkie dane zapisujemy pod jednym technicznym profilem „user-1”. Każda osoba, która ma dostęp do tej instancji aplikacji, może otworzyć ten sam portfel.</p></section>
-        <section><span className="support-icon"><UserCheck size={21}/></span><h2>Dane portfela</h2><p>Po imporcie przetworzony portfel jest zapisany w bazie aplikacji i wraca po odświeżeniu strony. Dane nie są jeszcze rozdzielone między osobne konta użytkowników.</p></section>
+        <section><span className="support-icon"><LockKeyhole size={21}/></span><h2>Logowanie i sesja</h2><p>Obecna wersja nie ma jeszcze systemu kont, hasła ani sesji użytkownika. Aplikacja otwiera się bez logowania i korzysta z jednego technicznego profilu „user-1”. Nie podajesz jej loginu ani hasła do XTB.</p></section>
+        <section><span className="support-icon"><Database size={21}/></span><h2>Dane bez konta</h2><p>Plik ZIP, XLSX, XLS albo CSV odczytuje przeglądarka. Po imporcie przetworzony portfel trafia do bazy aplikacji i wraca po odświeżeniu strony. Oryginalnego pliku nie przechowujemy.</p></section>
+        <section><span className="support-icon"><UserCheck size={21}/></span><h2>Dane zespołu</h2><p>Obecne MVP nie ma zespołów ani rozdzielonych uprawnień. Wszystkie dane są zapisane pod profilem „user-1”, dlatego każda osoba z dostępem do tej instancji aplikacji może otworzyć ten sam portfel.</p></section>
         <section><span className="support-icon"><Trash2 size={21}/></span><h2>Usuwanie i eksport</h2><p>Nowy import nadpisuje poprzedni zapis profilu „user-1”. Aplikacja nie ma jeszcze osobnej funkcji trwałego usunięcia portfela z bazy ani eksportu wszystkich zapisanych danych.</p></section>
       </div>
 
@@ -331,8 +331,8 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
       </section>
 
       <div className="security-grid security-bottom-grid">
-        <section><span className="support-icon"><ShieldCheck size={21}/></span><h2>Ochrona Twoich danych</h2><p>Obecne MVP działa na jednym profilu „user-1”, bez logowania i osobnych kont. Dostęp do portfela ma każda osoba, która może otworzyć tę instancję aplikacji.</p><div className="security-links"><button onClick={()=>selectView("faq")}>Najczęstsze pytania</button></div></section>
-        <section><span className="support-icon"><ShieldAlert size={21}/></span><h2>Usuwanie danych</h2><p>Nowy import zastępuje poprzedni portfel. Trwałe usuwanie rekordu z bazy nie jest jeszcze dostępne w interfejsie i trzeba je dodać przed publicznym wdrożeniem.</p></section>
+        <section><span className="support-icon"><ShieldCheck size={21}/></span><h2>Ochrona Twojego konta</h2><p>Obecne MVP nie ma jeszcze konta chronionego hasłem. Dostęp do portfela ma każda osoba, która może otworzyć tę instancję aplikacji, dlatego nie należy wystawiać jej publicznie bez dodania logowania.</p><div className="security-links"><button onClick={()=>selectView("faq")}>Najczęstsze pytania</button></div></section>
+        <section><span className="support-icon"><ShieldAlert size={21}/></span><h2>Zgłaszanie podatności</h2><p>Jeśli zauważysz błąd bezpieczeństwa, zgłoś go właścicielowi tej instancji. Opisz, jak odtworzyć problem, jakiego widoku dotyczy i czy mógł ujawnić albo zmienić dane portfela.</p></section>
       </div>
 
       <p className="security-note">Ten opis odzwierciedla sposób działania widoczny w aktualnym kodzie aplikacji. Po dodaniu logowania, osobnych kont użytkowników albo nowych integracji tę stronę trzeba zaktualizować.</p>

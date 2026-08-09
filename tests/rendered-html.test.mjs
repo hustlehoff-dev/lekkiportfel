@@ -37,6 +37,24 @@ test("metric cards stay dense at desktop and mobile widths", async () => {
   assert.match(css, /grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)/);
 });
 
+test("security page keeps ServiceBooker section names 1:1", async () => {
+  const page = await readFile(new URL("app/page.tsx", root), "utf8");
+  const headings = [
+    "Logowanie i sesja",
+    "Dane bez konta",
+    "Dane zespołu",
+    "Usuwanie i eksport",
+    "Zabezpieczenia techniczne",
+    "Dostawcy usług technicznych",
+    "Ochrona Twojego konta",
+    "Zgłaszanie podatności",
+  ];
+
+  for (const heading of headings) {
+    assert.match(page, new RegExp(`<h2>${heading}</h2>`));
+  }
+});
+
 test("performance API reconciles XTB sales and converts the benchmark to PLN", async () => {
   const route = await readFile(new URL("app/api/performance/route.ts", root), "utf8");
   assert.match(route, /reportedSale/);
