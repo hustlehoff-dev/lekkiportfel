@@ -980,3 +980,376 @@ html[data-portfolio-theme="lekka"] .history-panel { margin-top: 18px; }
   html[data-portfolio-theme="lekka"] .metric-card > h3 { margin-top: 7px; font-size: 17px; line-height: 21px; }
   html[data-portfolio-theme="lekka"] .metric-card > .micro { margin-top: 6px; }
 }
+
+/* BOOKER_FORK shell: the light view uses the same hierarchy and dimensions. */
+.main-shell,
+.main-content { display: contents; }
+
+html[data-portfolio-theme="lekka"],
+html[data-portfolio-theme="lekka"] body {
+  min-width: 320px;
+  background: #e8e8f1;
+  color: #0f1722;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", Inter, system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-portfolio-theme="lekka"] .app-shell {
+  position: relative;
+  isolation: isolate;
+  display: block;
+  min-height: 100vh;
+  background: #e8e8f1;
+}
+
+html[data-portfolio-theme="lekka"] .app-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 5%, rgba(196, 181, 253, .28), transparent 34%),
+    radial-gradient(circle at 92% 18%, rgba(216, 180, 254, .20), transparent 28%),
+    linear-gradient(135deg, #eeeef5 0%, #e8e8f1 48%, #e1e2ec 100%);
+}
+
+html[data-portfolio-theme="lekka"] .sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 100;
+  width: 256px;
+  max-width: 84vw;
+  height: 100vh;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+  background: #fff;
+  border-right: 1px solid #e2e8f0;
+  box-shadow: 8px 0 40px rgba(76, 29, 149, .05);
+}
+
+html[data-portfolio-theme="lekka"] .sidebar .brand {
+  min-height: 38px;
+  gap: 8px;
+  padding: 0 8px;
+  color: #475569;
+  font-size: 15.5px;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+html[data-portfolio-theme="lekka"] .sidebar .brand-mark {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  background: #f7c400;
+  color: #101820;
+  box-shadow: none;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+html[data-portfolio-theme="lekka"] .sidebar .brand small {
+  margin-top: 4px;
+  color: #a0a7b4;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .02em;
+}
+
+html[data-portfolio-theme="lekka"] .sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+html[data-portfolio-theme="lekka"] .sidebar nav button,
+html[data-portfolio-theme="lekka"] .sidebar nav button:not(.active) {
+  width: 100%;
+  min-height: 40px;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #475569;
+  box-shadow: none;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+}
+
+html[data-portfolio-theme="lekka"] .sidebar nav button:hover,
+html[data-portfolio-theme="lekka"] .sidebar nav button.active {
+  background: #f8fafc;
+  color: #0f172a;
+  box-shadow: none;
+  font-weight: 700;
+}
+
+html[data-portfolio-theme="lekka"] .sidebar nav button span,
+html[data-portfolio-theme="lekka"] .sidebar nav button.active span {
+  width: 22px;
+  justify-self: center;
+  color: #94a3b8;
+  font-size: 17px;
+}
+
+html[data-portfolio-theme="lekka"] .privacy {
+  margin-top: auto;
+  padding: 12px;
+  gap: 9px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .72);
+}
+
+html[data-portfolio-theme="lekka"] .privacy > span { color: #94a3b8; }
+html[data-portfolio-theme="lekka"] .privacy strong { color: #475569; font-size: 11px; }
+html[data-portfolio-theme="lekka"] .privacy p { color: #9aa3b2; font-size: 10px; }
+html[data-portfolio-theme="lekka"] .text-button {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 12px;
+  background: #7c3aed;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+html[data-portfolio-theme="lekka"] .content {
+  width: auto;
+  max-width: none;
+  min-width: 0;
+  min-height: 100vh;
+  margin: 0 0 0 256px;
+  padding: 0;
+  background: transparent;
+}
+
+html[data-portfolio-theme="lekka"] .topbar {
+  position: relative;
+  width: 100%;
+  height: 72px;
+  margin: 0;
+  padding: 0 36px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent;
+  border: 0;
+}
+
+html[data-portfolio-theme="lekka"] .topbar-search {
+  position: absolute;
+  left: calc(50vw - 16rem);
+  width: min(36rem, calc(100vw - 53rem));
+  max-width: 672px;
+  min-width: 330px;
+  height: 44px;
+  transform: translateX(-50%);
+}
+
+html[data-portfolio-theme="lekka"] .top-actions {
+  margin-left: auto;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+html[data-portfolio-theme="lekka"] .theme-select,
+html[data-portfolio-theme="lekka"] .currency-select,
+html[data-portfolio-theme="lekka"] .account-select {
+  height: 44px;
+  min-height: 44px;
+  padding-top: 0;
+  padding-bottom: 0;
+  border: 1px solid rgba(255, 255, 255, .8);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .85);
+  color: #475569;
+  box-shadow: none;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+html[data-portfolio-theme="lekka"] .theme-select { width: 82px; }
+html[data-portfolio-theme="lekka"] .currency-select { width: 88px; }
+html[data-portfolio-theme="lekka"] .account-select { max-width: 106px; }
+
+html[data-portfolio-theme="lekka"] .main-shell {
+  width: auto;
+  margin: 0;
+  padding: 32px 32px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+html[data-portfolio-theme="lekka"] .main-content {
+  display: block;
+  width: 100%;
+  max-width: none;
+}
+
+html[data-portfolio-theme="lekka"] .dashboard-intro { margin-top: 28px; }
+html[data-portfolio-theme="lekka"] .price-status { display: none; }
+html[data-portfolio-theme="lekka"] .hero-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+html[data-portfolio-theme="lekka"] .value-card,
+html[data-portfolio-theme="lekka"] .metric-card {
+  min-width: 0;
+  min-height: 96px;
+  grid-template-columns: 40px minmax(0, 1fr);
+  grid-template-rows: repeat(3, auto);
+  gap: 2px 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .92);
+  box-shadow: none;
+}
+
+html[data-portfolio-theme="lekka"] .value-card > p,
+html[data-portfolio-theme="lekka"] .metric-card > p { grid-row: 1; }
+html[data-portfolio-theme="lekka"] .value-card > h2,
+html[data-portfolio-theme="lekka"] .metric-card > h3 { grid-row: 2; }
+html[data-portfolio-theme="lekka"] .value-card > .profit-pill,
+html[data-portfolio-theme="lekka"] .metric-card > small { grid-row: 3; }
+html[data-portfolio-theme="lekka"] .value-card > small,
+html[data-portfolio-theme="lekka"] .metric-card > .micro { display: none; }
+
+html[data-portfolio-theme="lekka"] .panel,
+html[data-portfolio-theme="lekka"] .dividend-summary {
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .92);
+  box-shadow: none;
+}
+
+@media (max-width: 1279px) and (min-width: 961px) {
+  html[data-portfolio-theme="lekka"] .topbar { padding-inline: 28px; }
+  html[data-portfolio-theme="lekka"] .topbar-search {
+    position: relative;
+    left: auto;
+    width: auto;
+    min-width: 220px;
+    max-width: 520px;
+    flex: 1 1 280px;
+    transform: none;
+  }
+  html[data-portfolio-theme="lekka"] .add-asset-button { width: 44px; padding: 0; }
+  html[data-portfolio-theme="lekka"] .add-asset-button b { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+}
+
+@media (max-width: 960px) {
+  html[data-portfolio-theme="lekka"] .content { width: 100%; margin: 0; }
+  html[data-portfolio-theme="lekka"] .topbar { height: 58px; padding: 0 14px; }
+  html[data-portfolio-theme="lekka"] .main-shell {
+    width: min(1180px, calc(100% - 28px));
+    margin: 0 auto;
+    padding: 14px 0 calc(94px + env(safe-area-inset-bottom));
+  }
+  html[data-portfolio-theme="lekka"] .dashboard-intro { margin-top: 14px; }
+  html[data-portfolio-theme="lekka"] .sidebar:has(.mobile-nav-add) {
+    position: fixed;
+    inset: auto 8px calc(6px + env(safe-area-inset-bottom)) 8px;
+    z-index: 110;
+    width: auto;
+    max-width: none;
+    height: 58px;
+    min-height: 58px;
+    padding: 5px;
+    display: block;
+    overflow: visible;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 14px 45px rgba(76, 29, 149, .12);
+  }
+  html[data-portfolio-theme="lekka"] .sidebar .brand,
+  html[data-portfolio-theme="lekka"] .sidebar .privacy,
+  html[data-portfolio-theme="lekka"] .sidebar .text-button { display: none; }
+  html[data-portfolio-theme="lekka"] .sidebar nav {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+  }
+  html[data-portfolio-theme="lekka"] .sidebar nav button,
+  html[data-portfolio-theme="lekka"] .sidebar nav button:not(.active),
+  html[data-portfolio-theme="lekka"] .sidebar nav .mobile-nav-add {
+    min-width: 0;
+    min-height: 46px;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 20px 13px;
+    justify-items: center;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 3px 3px;
+    border: 0;
+    border-radius: 14px;
+    background: transparent;
+    color: #64748b;
+    box-shadow: none;
+    font-size: 10px;
+    line-height: 1.1;
+    font-weight: 800;
+  }
+  html[data-portfolio-theme="lekka"] .sidebar nav button.active { background: #f8fafc; color: #0f172a; }
+  html[data-portfolio-theme="lekka"] .sidebar nav button span,
+  html[data-portfolio-theme="lekka"] .sidebar nav button.active span {
+    width: auto;
+    color: #94a3b8;
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 860px) {
+  html[data-portfolio-theme="lekka"] .hero-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  html[data-portfolio-theme="lekka"] .hero-grid { gap: 10px; margin-top: 14px; }
+  html[data-portfolio-theme="lekka"] .value-card,
+  html[data-portfolio-theme="lekka"] .metric-card {
+    min-height: 88px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    padding: 12px;
+    border-radius: 10px;
+  }
+  html[data-portfolio-theme="lekka"] .metric-icon { display: none; }
+  html[data-portfolio-theme="lekka"] .value-card > p,
+  html[data-portfolio-theme="lekka"] .metric-card > p,
+  html[data-portfolio-theme="lekka"] .value-card > h2,
+  html[data-portfolio-theme="lekka"] .metric-card > h3,
+  html[data-portfolio-theme="lekka"] .value-card > .profit-pill,
+  html[data-portfolio-theme="lekka"] .metric-card > small {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  html[data-portfolio-theme="lekka"] .value-card > h2,
+  html[data-portfolio-theme="lekka"] .metric-card > h3 {
+    margin-top: 6px;
+    font-size: 18px;
+    line-height: 22px;
+    white-space: nowrap;
+  }
+}
