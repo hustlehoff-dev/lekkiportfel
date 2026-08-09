@@ -298,44 +298,44 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
     {view==="bezpieczenstwo"&&<article className="support-page security-page" aria-label="Bezpieczeństwo">
       <header className="security-hero">
         <h1 className="security-eyebrow">Bezpieczeństwo</h1>
-        <div className="security-badge"><ShieldCheck size={14}/>Przepływ danych bez niedomówień</div>
-        <h2>Gdzie trafiają dane z raportu XTB.</h2>
-        <p>Plik jest odczytywany w przeglądarce. Po imporcie aplikacja zapisuje przetworzony portfel w swojej bazie, żeby dane wróciły po ponownym otwarciu. Oryginalnego ZIP-a, XLSX-a ani CSV nie wysyłamy do dostawców notowań.</p>
-        <div className="security-pills" aria-label="Najważniejsze informacje"><span><LockKeyhole size={14}/>Plik odczytywany lokalnie</span><span><Database size={14}/>Portfel zapisany w bazie</span><span><ShieldCheck size={14}/>Ceny: symbol i waluta</span><span><Upload size={14}/>Bez loginu do XTB</span></div>
+        <div className="security-badge"><ShieldCheck size={14}/>Ochrona danych portfela</div>
+        <h2>Co przechowujemy, w jakim celu i jak możesz to usunąć.</h2>
+        <p>Raport XTB zawiera otwarte pozycje, historię transakcji, przepływy gotówki, dywidendy i informacje o rachunkach. Poniżej opisujemy, gdzie zapisujemy te dane i jakie informacje przekazujemy dostawcom notowań.</p>
+        <div className="security-pills" aria-label="Najważniejsze informacje"><span><LockKeyhole size={14}/>Import pliku w przeglądarce</span><span><Database size={14}/>Zapis w bazie aplikacji</span><span><ShieldCheck size={14}/>Bez dostępu do konta XTB</span><span><Upload size={14}/>Nadpisanie danych importem</span></div>
       </header>
 
       <div className="security-grid">
-        <section><span className="support-icon"><LockKeyhole size={21}/></span><h2>Import pliku</h2><p>ZIP, XLSX, XLS i CSV są rozpakowywane i odczytywane w przeglądarce. Do bazy trafia wynik importu: pozycje, transakcje, przepływy, dywidendy i partie zakupu. Oryginalnego pliku nie przechowujemy.</p></section>
-        <section><span className="support-icon"><Database size={21}/></span><h2>Zapis portfela</h2><p>Przetworzone dane zapisujemy w bazie pod technicznym profilem „user-1”. Obecna wersja nie ma logowania ani oddzielnych kont. Każda osoba z dostępem do tej instancji aplikacji widzi ten sam portfel.</p></section>
-        <section><span className="support-icon"><UserCheck size={21}/></span><h2>Bieżące ceny</h2><p>Moduł cen dostaje symbol, klasę aktywa, walutę i techniczny identyfikator pozycji. Nie dostaje liczby jednostek, kosztu zakupu, wartości całego portfela ani historii transakcji.</p></section>
-        <section><span className="support-icon"><Trash2 size={21}/></span><h2>Usuwanie danych</h2><p>Nowy import nadpisuje poprzedni zapis profilu „user-1”. Aplikacja nie ma jeszcze osobnej funkcji trwałego usunięcia portfela z bazy. Trzeba ją dodać przed publicznym wdrożeniem.</p></section>
+        <section><span className="support-icon"><LockKeyhole size={21}/></span><h2>Import i zapis</h2><p>Plik ZIP, XLSX, XLS albo CSV odczytuje przeglądarka. Po imporcie do bazy aplikacji zapisujemy przetworzony portfel: pozycje, transakcje, przepływy, dywidendy i partie zakupu. Oryginalnego pliku nie przechowujemy.</p></section>
+        <section><span className="support-icon"><Database size={21}/></span><h2>Dane bez konta</h2><p>Obecna wersja nie ma logowania. Wszystkie dane zapisujemy pod jednym technicznym profilem „user-1”. Każda osoba, która ma dostęp do tej instancji aplikacji, może otworzyć ten sam portfel.</p></section>
+        <section><span className="support-icon"><UserCheck size={21}/></span><h2>Dane portfela</h2><p>Po imporcie przetworzony portfel jest zapisany w bazie aplikacji i wraca po odświeżeniu strony. Dane nie są jeszcze rozdzielone między osobne konta użytkowników.</p></section>
+        <section><span className="support-icon"><Trash2 size={21}/></span><h2>Usuwanie i eksport</h2><p>Nowy import nadpisuje poprzedni zapis profilu „user-1”. Aplikacja nie ma jeszcze osobnej funkcji trwałego usunięcia portfela z bazy ani eksportu wszystkich zapisanych danych.</p></section>
       </div>
 
       <section className="security-wide-card">
-        <div className="security-section-head"><CheckCircle2 size={22}/><h2>Co dokładnie wysyła aplikacja</h2></div>
+        <div className="security-section-head"><CheckCircle2 size={22}/><h2>Zabezpieczenia techniczne</h2></div>
         <div className="security-feature-grid">
-          <div><ShieldCheck size={18}/><p><b>Import:</b> przetworzony portfel trafia do <code>/api/portfolio</code> i jest zapisywany w bazie aplikacji.</p></div>
-          <div><LockKeyhole size={18}/><p><b>Dostęp do XTB:</b> aplikacja nie prosi o login, hasło, kod SMS ani token API brokera.</p></div>
-          <div><Database size={18}/><p><b>Notowania:</b> <code>/api/prices</code> dostaje symbole i dane potrzebne do dobrania właściwego rynku oraz waluty.</p></div>
-          <div><ServerCog size={18}/><p><b>Historia wyniku:</b> <code>/api/performance</code> dostaje partie zakupu, transakcje i bieżące pozycje.</p></div>
-          <div><BellRing size={18}/><p><b>Wyszukiwanie:</b> wpisana nazwa lub symbol trafia do serwera aplikacji, a następnie do Yahoo Finance albo CoinGecko.</p></div>
-          <div><CheckCircle2 size={18}/><p><b>Kursy walut:</b> aplikacja pobiera publiczne kursy z NBP; nie przekazuje tam danych portfela.</p></div>
+          <div><ShieldCheck size={18}/><p>Połączenie z aplikacją jest szyfrowane przez HTTPS podczas korzystania z wersji hostowanej.</p></div>
+          <div><LockKeyhole size={18}/><p>Import nie wymaga loginu, hasła, kodu SMS ani połączenia z rachunkiem XTB.</p></div>
+          <div><Database size={18}/><p>Przetworzony portfel trafia do backendu aplikacji i jest zapisywany w jej bazie danych.</p></div>
+          <div><ServerCog size={18}/><p>Dostawcy notowań otrzymują symbole i dane rynku, ale nie liczbę jednostek ani koszty zakupu.</p></div>
+          <div><BellRing size={18}/><p>Moduł wyniku przetwarza na backendzie partie zakupu, transakcje i bieżące pozycje.</p></div>
+          <div><CheckCircle2 size={18}/><p>Kursy walut pobieramy z NBP bez przekazywania danych portfela.</p></div>
         </div>
       </section>
 
       <section className="security-wide-card">
-        <div className="security-section-head"><ServerCog size={22}/><h2>Usługi zewnętrzne</h2></div>
-        <p className="security-provider-copy"><b>Yahoo Finance i CoinGecko</b> dostają zapytania o instrumenty i notowania. <b>NBP</b> obsługuje kursy walut. Nie wysyłamy do tych usług eksportu XTB, liczby jednostek, kosztów zakupu ani salda portfela.</p>
-        <p className="security-provider-copy">Serwer tej aplikacji otrzymuje jednak przetworzony portfel, bo zapisuje go w bazie i liczy historię wyniku. To ważne rozróżnienie: zewnętrzny dostawca notowań nie widzi portfela, ale backend aplikacji go przetwarza.</p>
+        <div className="security-section-head"><ServerCog size={22}/><h2>Dostawcy usług technicznych</h2></div>
+        <p className="security-provider-copy">Aplikacja korzysta z Yahoo Finance do notowań akcji i ETF-ów, CoinGecko do danych o kryptowalutach oraz NBP do kursów walut. Serwer wysyła do tych usług zapytania potrzebne do znalezienia instrumentu albo ceny.</p>
+        <p className="security-provider-copy">Zewnętrzni dostawcy nie otrzymują pełnego raportu XTB, liczby posiadanych jednostek, kosztów zakupu ani łącznej wartości portfela. Przetworzony portfel jest jednak zapisywany i analizowany przez backend tej aplikacji.</p>
         <div className="security-links"><button onClick={()=>selectView("faq")}>Jak działa import</button><button onClick={()=>selectView("pulpit")}>Wróć do portfela</button></div>
       </section>
 
       <div className="security-grid security-bottom-grid">
-        <section><span className="support-icon"><ShieldCheck size={21}/></span><h2>Brak logowania</h2><p>To MVP korzysta z jednego profilu „user-1”. Ochrona danych zależy teraz od tego, kto ma dostęp do tej instancji aplikacji i sieci, w której działa.</p><div className="security-links"><button onClick={()=>selectView("faq")}>Najczęstsze pytania</button></div></section>
-        <section><span className="support-icon"><ShieldAlert size={21}/></span><h2>Przed publikacją</h2><p>Publiczne wdrożenie z prawdziwymi danymi wymaga logowania, rozdzielenia danych użytkowników, kontroli dostępu oraz trwałego usuwania portfela. Obecna wersja tego jeszcze nie zapewnia.</p></section>
+        <section><span className="support-icon"><ShieldCheck size={21}/></span><h2>Ochrona Twoich danych</h2><p>Obecne MVP działa na jednym profilu „user-1”, bez logowania i osobnych kont. Dostęp do portfela ma każda osoba, która może otworzyć tę instancję aplikacji.</p><div className="security-links"><button onClick={()=>selectView("faq")}>Najczęstsze pytania</button></div></section>
+        <section><span className="support-icon"><ShieldAlert size={21}/></span><h2>Usuwanie danych</h2><p>Nowy import zastępuje poprzedni portfel. Trwałe usuwanie rekordu z bazy nie jest jeszcze dostępne w interfejsie i trzeba je dodać przed publicznym wdrożeniem.</p></section>
       </div>
 
-      <p className="security-note"><b>W skrócie:</b> nie wysyłamy pliku XTB do Yahoo Finance, CoinGecko ani NBP. Przetworzony portfel zapisujemy jednak w bazie aplikacji. To lokalne MVP dla jednego użytkownika, a nie gotowy system wielokontowy.</p>
+      <p className="security-note">Ten opis odzwierciedla sposób działania widoczny w aktualnym kodzie aplikacji. Po dodaniu logowania, osobnych kont użytkowników albo nowych integracji tę stronę trzeba zaktualizować.</p>
     </article>}
     {addingAsset&&<div className="modal-backdrop" role="presentation" tabIndex={-1} onKeyDown={e=>{if(e.key==="Escape")setAddingAsset(false)}} onMouseDown={e=>{if(e.currentTarget===e.target)setAddingAsset(false)}}>
       <section className="asset-modal" role="dialog" aria-modal="true" aria-labelledby="asset-modal-title">
