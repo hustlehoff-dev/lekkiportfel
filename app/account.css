@@ -50,6 +50,7 @@
 .price-status strong { color: #315943; font-size: 10px; }
 .price-status small { color: #7c8780; font-size: 9px; margin-top: 2px; }
 .price-status button { margin-left: auto; border: 1px solid #d3ddd6; background: #fff; color: #35654b; border-radius: 7px; padding: 6px 9px; font-size: 9px; font-weight: 700; }
+.price-status button { display: inline-flex; align-items: center; gap: 5px; }
 .price-status button:disabled { opacity: .55; cursor: wait; }
 @keyframes price-pulse { to { opacity: .45; transform: scale(.8); } }
 
@@ -103,7 +104,8 @@
 .primary-action:disabled { opacity: .45; cursor: not-allowed; }
 .instrument-search { position: relative; }
 .search-input { position: relative; }
-.search-input > b { position: absolute; z-index: 1; left: 12px; top: 50%; transform: translateY(-50%); color: #738078; font-size: 17px; font-weight: 500; }
+.search-input > b,
+.search-input > svg { position: absolute; z-index: 1; left: 12px; top: 50%; transform: translateY(-50%); color: #738078; }
 .search-input input { padding-left: 37px; padding-right: 36px; }
 .search-input > i { position: absolute; right: 13px; top: 50%; width: 14px; height: 14px; margin-top: -7px; }
 .search-spinner { border: 2px solid #d8dfda; border-top-color: #2e6b4f; border-radius: 50%; animation: search-spin .7s linear infinite; }
@@ -258,7 +260,8 @@ footer, .content footer > span { color: #9faf9f; }
 .secondary-action { background: #172119; border-color: #43594a; color: #fff; }
 .primary-action { background: #55f59a; border-color: #8affb8; color: #041009; }
 .primary-action:hover { background: #82ffb7; }
-.search-input > b { color: #aebdb4; }
+.search-input > b,
+.search-input > svg { color: #aebdb4; }
 .search-results { background: #0c130f; border-color: #45604e; box-shadow: 0 20px 46px rgba(0, 0, 0, .65); }
 .search-results button { background: #0c130f; color: #fff; }
 .search-results button:hover, .search-results button.active { background: #193023; box-shadow: inset 3px 0 #55f59a; }
@@ -1700,11 +1703,12 @@ html[data-portfolio-theme="lekka"] .security-note {
 @media (min-width: 961px) {
   .mobile-more-backdrop,
   .mobile-more-panel { display: none; }
+  .sidebar nav button.mobile-more { display: none !important; }
 }
 
 @media (max-width: 960px) {
   html[data-portfolio-theme="lekka"] .sidebar .help-nav { display: none; }
-  html[data-portfolio-theme="lekka"] .sidebar nav .mobile-more { display: grid; }
+  html[data-portfolio-theme="lekka"] .sidebar nav button.mobile-more { display: grid !important; }
 }
 
 @media (max-width: 760px) {
@@ -1715,4 +1719,63 @@ html[data-portfolio-theme="lekka"] .security-note {
   .security-grid { grid-template-columns: 1fr; }
   .faq-list summary { padding: 14px; }
   .faq-list details p { padding: 0 14px 15px; }
+}
+
+/* Lucide icon system copied from BOOKER_FORK. */
+.brand-mark svg,
+.sidebar nav button svg,
+.topbar-search svg,
+.add-asset-button svg,
+.import-button svg,
+.metric-icon svg,
+.upload-icon svg,
+.empty-positions > div > svg,
+.mobile-more-panel svg,
+.security-page svg,
+.faq-list svg {
+  display: block;
+  flex: 0 0 auto;
+}
+
+.sidebar nav button > span,
+.mobile-more-panel > button > span,
+.topbar-search > span,
+.add-asset-button > span,
+.import-button > span {
+  line-height: 0;
+}
+
+.add-asset-button > span,
+.import-button > span {
+  display: grid;
+  place-items: center;
+}
+
+.security-pills span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.faq-list summary > span {
+  display: grid;
+  place-items: center;
+}
+
+.security-note > span svg { display: block; }
+
+.modal-close,
+.notice > span {
+  display: grid;
+  place-items: center;
+}
+
+.modal-close { padding: 0; }
+.modal-close svg,
+.notice svg { display: block; }
+
+.arrow-button {
+  display: grid;
+  place-items: center;
+  padding: 0;
 }
