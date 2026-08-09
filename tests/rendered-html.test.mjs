@@ -67,3 +67,26 @@ test("performance API reconciles XTB sales and converts the benchmark to PLN", a
   assert.match(route, /capitalGain/);
   assert.match(route, /benchmarkPct/);
 });
+
+test("XTB import preserves source fields required for a tax audit trail", async () => {
+  const page = await readFile(new URL("app/page.tsx", root), "utf8");
+
+  for (const field of [
+    "sourceId",
+    "positionId",
+    "product",
+    "grossProfit",
+    "commission",
+    "swap",
+    "rollover",
+    "openConversionRate",
+    "closeConversionRate",
+    "closeOrigin",
+  ]) {
+    assert.match(page, new RegExp(`${field}:optionalReport`));
+  }
+
+  assert.match(page, /sourceId:pick\(headers,\["id"\]\)/);
+  assert.match(page, /positionId:pick\(headers,\["position id","id pozycji"\]\)/);
+  assert.match(page, /category:pick\(headers,\["category","kategoria"\]\),product:pick\(headers,\["product"\]\)/);
+});
