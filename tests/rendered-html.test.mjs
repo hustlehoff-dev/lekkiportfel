@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { calculateTaxSummary } from "../lib/tax-calculator.ts";
 
 const root = new URL("../", import.meta.url);
 
@@ -89,4 +90,45 @@ test("XTB import preserves source fields required for a tax audit trail", async 
   assert.match(page, /sourceId:pick\(headers,\["id"\]\)/);
   assert.match(page, /positionId:pick\(headers,\["position id","id pozycji"\]\)/);
   assert.match(page, /category:pick\(headers,\["category","kategoria"\]\),product:pick\(headers,\["product"\]\)/);
+});
+
+test("tax calculator separates ordinary accounts from IKE and IKZE", () => {
+  const result = calculateTaxSummary({
+    year: 2025,
+    eligiblePriorLoss: 100,
+    extraCosts: 10,
+    trades: [
+      { date: "2025-04-10", account: "PLN", saleValue: 1200, purchaseValue: 1000, result: 200 },
+      { date: "2025-05-10", account: "IKE", saleValue: 900, purchaseValue: 500, result: 400 },
+    ],
+    cash: [
+      { date: "2025-06-10", account: "PLN", type: "DIVIDENT", symbol: "MSFT.US", amount: 100 },
+      { date: "2025-06-10", account: "PLN", type: "Withholding Tax", symbol: "MSFT.US", amount: -15 },
+      { date: "2025-07-10", account: "PLN", type: "DIVIDENT", symbol: "PKO.PL", amount: 80 },
+      { date: "2025-08-10", account: "IKZE", type: "DIVIDENT", symbol: "MSFT.US", amount: 50 },
+    ],
+  });
+
+  assert.equal(result.trades.revenue, 1200);
+  assert.equal(result.trades.costs, 1010);
+  assert.equal(result.trades.taxableBase, 90);
+  assert.equal(result.trades.tax, 17);
+  assert.equal(result.foreignDividends.taxDue, 4);
+  assert.equal(result.domesticDividends.gross, 80);
+  assert.equal(result.retirementAccounts.trades, 1);
+  assert.equal(result.retirementAccounts.dividends, 1);
+  assert.equal(result.totalTaxDue, 21);
+});
+
+test("tax view has a local PIT-38 route and data-quality warnings", async () => {
+  const [page, route] = await Promise.all([
+    readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/podatki/page.tsx", root), "utf8"),
+  ]);
+
+  assert.match(page, /podatki:"\/podatki"/);
+  assert.match(page, /Szacowany podatek do zapłaty/);
+  assert.match(page, /Wiarygodność wyliczenia/);
+  assert.match(page, /Ręcznie dodane krypto nie ma historii transakcji/);
+  assert.match(route, /initialView="podatki"/);
 });
