@@ -718,7 +718,12 @@ html[data-portfolio-theme="lekka"] .manual-assets { border-color: #e2e8f0; }
 html[data-portfolio-theme="lekka"] .manual-assets > div { border-color: #eaecf0; }
 html[data-portfolio-theme="lekka"] .manual-assets small { color: #667085; }
 html[data-portfolio-theme="lekka"] .manual-assets button { background: #fff1f0; color: #b23d38; border-color: #f0d1ce; }
-html[data-portfolio-theme="lekka"] * { scrollbar-color: #cbd5e1 transparent; }
+html[data-portfolio-theme="lekka"] * { scrollbar-color: auto; }
+html[data-portfolio-theme="lekka"],
+html[data-portfolio-theme="lekka"] body {
+  scrollbar-color: auto;
+  scrollbar-width: auto;
+}
 
 @media (max-width: 1100px) {
   html[data-portfolio-theme="lekka"] .app-shell { grid-template-columns: 76px minmax(0, 1fr); }
@@ -993,9 +998,26 @@ html[data-portfolio-theme="lekka"] body {
   min-width: 320px;
   background: #e8e8f1;
   color: #0f1722;
-  font-family: var(--font-jakarta), "Plus Jakarta Sans", Inter, system-ui, sans-serif;
+  font-family: "Plus Jakarta Sans", Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   font-variant-numeric: tabular-nums;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 99px;
+  background: rgba(15, 23, 34, .18);
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background-color: #f7c400; }
 
 html[data-portfolio-theme="lekka"] .app-shell {
   position: relative;
@@ -1554,7 +1576,7 @@ html[data-portfolio-theme="lekka"] .dividend-summary {
   padding: 6px 0 48px;
   text-align: center;
 }
-.security-eyebrow {
+.security-page .security-eyebrow {
   margin: 0;
   color: #8e9aa5;
   font-size: 14px;
@@ -1715,6 +1737,7 @@ html[data-portfolio-theme="lekka"] .dividend-summary {
   color: #efe7ff;
   font-size: 13px;
   font-weight: 800;
+  text-align: start;
 }
 .security-links button:hover { background: rgba(124,58,237,.28); }
 .security-bottom-grid .security-links { margin-top: 16px; }
@@ -1764,7 +1787,14 @@ html[data-portfolio-theme="lekka"] .support-search input::placeholder,
 html[data-portfolio-theme="lekka"] .faq-list summary span { color: #94a3b8; }
 html[data-portfolio-theme="lekka"] .faq-list details p { color: #667085; }
 html[data-portfolio-theme="lekka"] .security-page { color: #171717; }
-html[data-portfolio-theme="lekka"] .security-eyebrow { color: #737373; }
+html[data-portfolio-theme="lekka"] .security-page .security-eyebrow {
+  margin: 0;
+  color: oklch(.556 0 0);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: 0;
+}
 html[data-portfolio-theme="lekka"] .security-badge {
   border-color: rgba(255,255,255,.72);
   background: rgba(255,255,255,.54);
@@ -1864,7 +1894,7 @@ html[data-portfolio-theme="lekka"] .security-links button:hover { background: #f
 .security-pills span {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
 }
 
 .faq-list summary > span {
