@@ -1,13 +1,11 @@
-/* eslint-disable @next/next/no-page-custom-font */
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import "./globals.css";
 import "./account.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
-const jakarta = Plus_Jakarta_Sans({ variable: "--font-jakarta", subsets: ["latin"] });
 
 export const viewport: Viewport = { themeColor: "#f3f6fb", colorScheme: "light dark" };
 
@@ -25,5 +23,5 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="pl" data-portfolio-theme="lekka"><head><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/></head><body className={`${geistSans.variable} ${geistMono.variable} ${jakarta.variable}`}>{children}</body></html>;
+  return <html lang="pl" data-portfolio-theme="lekka"><body className={`${geistSans.variable} ${geistMono.variable}`}>{children}</body></html>;
 }
