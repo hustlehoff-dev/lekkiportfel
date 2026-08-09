@@ -18,6 +18,9 @@ test("dashboard exposes real monthly performance and benchmark controls", async 
   assert.match(page, /aria-label="Waluta prezentacji"/);
   assert.match(page, /kapital-theme/);
   assert.match(page, /aria-label="Wygląd aplikacji"/);
+  assert.match(page, /className="topbar-search"/);
+  assert.match(page, /className="dashboard-intro"/);
+  assert.match(page, /Ctrl K/);
 });
 
 test("metric cards stay dense at desktop and mobile widths", async () => {
@@ -28,6 +31,10 @@ test("metric cards stay dense at desktop and mobile widths", async () => {
   assert.match(css, /\.performance-chart\.market/);
   assert.match(css, /data-portfolio-theme="lekka"/);
   assert.match(css, /#f7c400/);
+  assert.match(css, /width:\s*256px/);
+  assert.match(css, /height:\s*72px/);
+  assert.match(css, /max-width:\s*1180px/);
+  assert.match(css, /grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)/);
 });
 
 test("performance API reconciles XTB sales and converts the benchmark to PLN", async () => {
