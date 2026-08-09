@@ -1718,6 +1718,13 @@ html[data-portfolio-theme="lekka"] .dividend-summary {
   font-weight: 500;
   line-height: 26px;
 }
+.security-feature-grid code {
+  padding: 1px 5px;
+  border-radius: 6px;
+  background: rgba(255,255,255,.08);
+  color: #f8fafc;
+  font-size: 13px;
+}
 .security-provider-copy { margin-bottom: 16px; line-height: 28px; }
 .security-provider-copy:last-of-type { margin-bottom: 0; }
 .security-links {
@@ -1813,6 +1820,10 @@ html[data-portfolio-theme="lekka"] .security-hero > p,
 html[data-portfolio-theme="lekka"] .security-grid p,
 html[data-portfolio-theme="lekka"] .security-feature-grid p,
 html[data-portfolio-theme="lekka"] .security-provider-copy { color: #525252; }
+html[data-portfolio-theme="lekka"] .security-feature-grid code {
+  background: rgba(15,23,42,.05);
+  color: #171717;
+}
 html[data-portfolio-theme="lekka"] .security-pills span {
   border-color: rgba(15,23,42,.1);
   background: rgba(255,255,255,.7);
