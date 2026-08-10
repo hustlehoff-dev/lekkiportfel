@@ -71,7 +71,7 @@ export function buildPortfolioCopy(input:PortfolioCopyInput,settings:PortfolioCo
     "# LekkiPortfel — dane portfela",
     `Wygenerowano: ${new Intl.DateTimeFormat("pl-PL",{dateStyle:"long",timeStyle:"short"}).format(input.generatedAt)}`,
     `Źródło danych: ${input.source}`,
-    `Zakres rachunków: ${input.account}`,
+    `Dostawca: ${input.account}`,
     `Waluta prezentacji: ${input.displayCurrency}`,
     `Ostatnia aktualizacja cen: ${input.priceUpdatedAt?new Intl.DateTimeFormat("pl-PL",{dateStyle:"short",timeStyle:"short"}).format(new Date(input.priceUpdatedAt)):"brak"}`,
   ];
