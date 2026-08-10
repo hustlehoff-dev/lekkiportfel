@@ -5,6 +5,7 @@ import { strFromU8, unzipSync } from "fflate";
 import { auditTradesWithNbp, calculateCryptoTax, calculateLossCarryforward, calculateTaxSummary } from "../lib/tax-calculator.ts";
 import { calculateLiquidationTax, calculateRetirementExitTax } from "../lib/liquidation-tax.ts";
 import { buildDividendForecast, inferMonthlyContribution } from "../lib/dividend-forecast.ts";
+import { groupDividendForecast, groupDividendHistory } from "../lib/dividend-groups.ts";
 import { buildCsvZipBytes, buildXlsxBytes } from "../lib/spreadsheet-export.ts";
 
 const root = new URL("../", import.meta.url);
@@ -286,6 +287,38 @@ test("monthly contribution uses external deposits without double-counting IKE tr
   ], today);
 
   assert.equal(monthly, 1000);
+});
+
+test("dividend forecast groups future dates by company", () => {
+  const groups = groupDividendForecast([
+    { date: "2026-09-01", symbol: "ADC.US", gross: 10, net: 8.5, confidence: "miesięczny", accounts: ["IKE"] },
+    { date: "2026-10-01", symbol: "ADC.US", gross: 11, net: 9.35, confidence: "miesięczny", accounts: ["IKE"] },
+    { date: "2027-06-20", symbol: "XTB.PL", gross: 40, net: 40, confidence: "roczny", accounts: ["PLN"] },
+  ]);
+
+  assert.equal(groups.length, 2);
+  assert.equal(groups[0].symbol, "ADC.US");
+  assert.equal(groups[0].eventCount, 2);
+  assert.equal(groups[0].net, 17.85);
+  assert.equal(groups[0].nextDate, "2026-09-01");
+});
+
+test("dividend history merges XTB lot rows from the same company and date", () => {
+  const groups = groupDividendHistory([
+    { date: "2026-06-24", symbol: "XTB.PL", amount: 40.7, account: "IKE" },
+    { date: "2026-06-24", symbol: "XTB.PL", amount: 20.35, account: "IKE" },
+    { date: "2025-06-25", symbol: "XTB.PL", amount: 54.5, account: "PLN" },
+  ],[
+    { date: "2026-06-24", symbol: "XTB.PL", amount: -5, account: "IKE" },
+  ]);
+
+  assert.equal(groups.length, 1);
+  assert.equal(groups[0].paymentCount, 2);
+  assert.equal(groups[0].entryCount, 3);
+  assert.equal(groups[0].payments[0].entryCount, 2);
+  assert.ok(Math.abs(groups[0].payments[0].gross - 61.05) < 1e-9);
+  assert.ok(Math.abs(groups[0].payments[0].net - 56.05) < 1e-9);
+  assert.ok(Math.abs(groups[0].net - 110.55) < 1e-9);
 });
 
 test("crypto tax carries unused costs forward and ignores crypto-to-crypto swaps", () => {
