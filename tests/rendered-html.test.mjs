@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { strFromU8, unzipSync } from "fflate";
 import { auditTradesWithNbp, calculateCryptoTax, calculateLossCarryforward, calculateTaxSummary } from "../lib/tax-calculator.ts";
-import { calculateLiquidationTax } from "../lib/liquidation-tax.ts";
+import { calculateLiquidationTax, calculateRetirementExitTax } from "../lib/liquidation-tax.ts";
 import { buildCsvZipBytes, buildXlsxBytes } from "../lib/spreadsheet-export.ts";
 
 const root = new URL("../", import.meta.url);
@@ -214,6 +214,22 @@ test("liquidation tax separates ordinary profit from IKE and IKZE profit", () =>
   assert.equal(result.excluded.retirementValue, 58900);
   assert.equal(result.securities.tax, 303);
   assert.equal(result.taxChange, 303);
+});
+
+test("retirement exit distinguishes asset sales, early return and qualified payout", () => {
+  const values = { ikeValue: 52000, ikeBasis: 36500, ikzeValue: 3200 };
+  const assets = calculateRetirementExitTax({ ...values, mode: "assets" });
+  const early12 = calculateRetirementExitTax({ ...values, mode: "early", ikzeRate: 12 });
+  const early32 = calculateRetirementExitTax({ ...values, mode: "early", ikzeRate: 32 });
+  const qualified = calculateRetirementExitTax({ ...values, mode: "qualified" });
+
+  assert.equal(assets.total, 0);
+  assert.equal(early12.ikeTax, 2945);
+  assert.equal(early12.ikzeTax, 384);
+  assert.equal(early12.total, 3329);
+  assert.equal(early32.ikzeTax, 1024);
+  assert.equal(qualified.ikeTax, 0);
+  assert.equal(qualified.ikzeTax, 320);
 });
 
 test("crypto tax carries unused costs forward and ignores crypto-to-crypto swaps", () => {

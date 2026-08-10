@@ -4,6 +4,15 @@ import { hasKnownCost } from "./portfolio-metrics.ts";
 export type LiquidationPosition={symbol:string;name:string;assetClass:string;account?:string;cost:number;costKnown?:boolean;value:number};
 export type LiquidationCryptoTransaction=CryptoTaxTransaction&{symbol?:string;toSymbol?:string};
 
+export function calculateRetirementExitTax({ikeValue,ikeBasis,ikzeValue,mode,ikzeRate=12}:{
+  ikeValue:number;ikeBasis:number;ikzeValue:number;mode:"assets"|"early"|"qualified";ikzeRate?:12|32;
+}){
+  const ikeIncome=Math.max(0,ikeValue-ikeBasis);
+  const ikeTax=mode==="early"?Math.round(ikeIncome*.19):0;
+  const ikzeTax=mode==="early"?Math.round(ikzeValue*ikzeRate/100):mode==="qualified"?Math.round(ikzeValue*.1):0;
+  return{ikeIncome,ikeTax,ikzeTax,total:ikeTax+ikzeTax,ikzeRate};
+}
+
 export function calculateLiquidationTax({
   asOf,positions,trades,cash,cryptoTransactions,lossSettings={},cryptoCostOverrides={},
 }:{
@@ -18,6 +27,8 @@ export function calculateLiquidationTax({
   const year=asOf.getFullYear(),date=asOf.toISOString().slice(0,10);
   const ordinary=positions.filter(position=>!isRetirementAccount(position.account));
   const retirement=positions.filter(position=>isRetirementAccount(position.account));
+  const ike=retirement.filter(position=>/^IKE$/i.test(position.account?.trim()||""));
+  const ikze=retirement.filter(position=>/^IKZE$/i.test(position.account?.trim()||""));
   const securities=ordinary.filter(position=>/^(Akcje|ETF|REIT)$/i.test(position.assetClass));
   const retirementSecurities=retirement.filter(position=>/^(Akcje|ETF|REIT)$/i.test(position.assetClass));
   const crypto=ordinary.filter(position=>/^Krypto$/i.test(position.assetClass));
@@ -25,6 +36,7 @@ export function calculateLiquidationTax({
   const cashPositions=ordinary.filter(position=>position.assetClass==="Gotówka");
   const knownSecurities=securities.filter(hasKnownCost),unknownSecurities=securities.filter(position=>!hasKnownCost(position));
   const knownRetirementSecurities=retirementSecurities.filter(hasKnownCost);
+  const knownIke=ike.filter(hasKnownCost);
   const hypotheticalTrades:TaxTrade[]=knownSecurities.map((position,index)=>({
     id:`liquidation-${index}`,date,symbol:position.symbol,result:position.value-position.cost,
     saleValue:position.value,purchaseValue:position.cost,account:position.account,
@@ -82,6 +94,10 @@ export function calculateLiquidationTax({
       retirementValue:retirement.reduce((sum,position)=>sum+position.value,0),
       retirementResult:knownRetirementSecurities.reduce((sum,position)=>sum+position.value-position.cost,0),
       retirementResultPositions:knownRetirementSecurities.length,
+      ikeValue:ike.reduce((sum,position)=>sum+position.value,0),
+      ikeBasis:knownIke.reduce((sum,position)=>sum+position.cost,0),
+      ikeBasisComplete:knownIke.length===ike.length,
+      ikzeValue:ikze.reduce((sum,position)=>sum+position.value,0),
       cashValue:cashPositions.reduce((sum,position)=>sum+position.value,0),
       otherValue:other.reduce((sum,position)=>sum+position.value,0),
     },

@@ -1949,6 +1949,9 @@ html[data-portfolio-theme="lekka"] .security-links button:hover { background: #f
 .tax-toolbar p { max-width: 430px; margin: 0; color: #aebdb4; font-size: 10px; line-height: 1.55; text-align: right; }
 .liquidation-card { overflow: hidden; border: 1px solid #41624e; border-radius: 14px; background: linear-gradient(145deg,#12291b,#0e1712 60%); box-shadow: 0 18px 55px rgba(0,0,0,.12); }
 .liquidation-card.incomplete { border-color: #6f5a17; }
+.liquidation-scenarios { display: flex; gap: 5px; padding: 9px 22px 0; }
+.liquidation-scenarios button { min-height: 32px; padding: 0 13px; border: 1px solid #345342; border-radius: 8px; background: transparent; color: #aebdb4; font-size: 8.5px; font-weight: 800; }
+.liquidation-scenarios button.active { border-color: #72ffac; background: #1c462c; color: #e8fff0; }
 .liquidation-main { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 28px; padding: 22px; }
 .liquidation-title { display: flex; align-items: flex-start; gap: 13px; }
 .liquidation-title > span { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border-radius: 10px; background: #1c462c; color: #72ffac; }
@@ -1963,6 +1966,12 @@ html[data-portfolio-theme="lekka"] .security-links button:hover { background: #f
 .liquidation-total small { margin-top: 7px; color: #ffd84d; font-size: 8.5px; }
 .liquidation-total small.before-loss-tax { color: #b7c8bd; }
 .liquidation-total small.positive { color: #72ffac; }
+.retirement-exit-note { display: flex; align-items: flex-start; gap: 10px; margin: 0 22px 15px; padding: 12px 13px; border: 1px solid #3c5948; border-radius: 10px; background: rgba(61,115,78,.13); color: #b8c8be; }
+.retirement-exit-note > svg { flex: none; margin-top: 1px; color: #72ffac; }
+.retirement-exit-note p { margin: 0; font-size: 9px; line-height: 1.55; }
+.retirement-exit-note strong { color: #e7f5eb; }
+.retirement-exit-note label { display: flex; align-items: center; gap: 8px; margin-top: 8px; color: #d7e5db; font-size: 8.5px; font-weight: 750; }
+.retirement-exit-note select { min-height: 30px; padding: 0 26px 0 9px; border: 1px solid #4d6c59; border-radius: 7px; background: #14261a; color: #effbf2; font: inherit; }
 .liquidation-warning { display: grid; grid-template-columns: 20px minmax(0,1fr) auto; align-items: center; gap: 10px; margin: 0 22px 16px; padding: 11px 12px; border: 1px solid #6f5a17; border-radius: 9px; background: #2b240f; color: #ddc66f; }
 .liquidation-warning svg { color: #ffd84d; }
 .liquidation-warning p { margin: 0; font-size: 9px; line-height: 1.5; }
@@ -2126,6 +2135,8 @@ html[data-portfolio-theme="lekka"] .tax-toolbar,
 html[data-portfolio-theme="lekka"] .tax-hero-grid article { border-color: #e5e7eb; background: rgba(255,255,255,.94); }
 html[data-portfolio-theme="lekka"] .liquidation-card { border-color: #d8e7dd; background: linear-gradient(145deg,#f3fbf6,#fff 62%); box-shadow: 0 18px 45px rgba(15,23,42,.06); }
 html[data-portfolio-theme="lekka"] .liquidation-card.incomplete { border-color: #ead98a; }
+html[data-portfolio-theme="lekka"] .liquidation-scenarios button { border-color: #d8e4dc; color: #526257; }
+html[data-portfolio-theme="lekka"] .liquidation-scenarios button.active { border-color: #18753c; background: #e6f7ec; color: #145f32; }
 html[data-portfolio-theme="lekka"] .liquidation-title > span { background: #e6f7ec; color: #18753c; }
 html[data-portfolio-theme="lekka"] .liquidation-title h2 { color: #0f172a; }
 html[data-portfolio-theme="lekka"] .liquidation-title h2 + p,
@@ -2142,6 +2153,11 @@ html[data-portfolio-theme="lekka"] .liquidation-loss-note { border-color: #cfe5d
 html[data-portfolio-theme="lekka"] .liquidation-loss-note svg,
 html[data-portfolio-theme="lekka"] .liquidation-loss-note strong { color: #18753c; }
 html[data-portfolio-theme="lekka"] .liquidation-toggle { border-top-color: #e5e7eb; background: #f8fafc; color: #475569; }
+html[data-portfolio-theme="lekka"] .retirement-exit-note { border-color: #d8e7dd; background: #f3faf5; color: #526257; }
+html[data-portfolio-theme="lekka"] .retirement-exit-note > svg { color: #18753c; }
+html[data-portfolio-theme="lekka"] .retirement-exit-note strong,
+html[data-portfolio-theme="lekka"] .retirement-exit-note label { color: #1e3a29; }
+html[data-portfolio-theme="lekka"] .retirement-exit-note select { border-color: #cbd9cf; background: #fff; color: #1e293b; }
 html[data-portfolio-theme="lekka"] .liquidation-details { border-top-color: #e5e7eb; }
 html[data-portfolio-theme="lekka"] .liquidation-details > article { border-color: #e5e7eb; background: #fff; }
 html[data-portfolio-theme="lekka"] .liquidation-detail-head,
@@ -2317,6 +2333,9 @@ html[data-portfolio-theme="lekka"] .tax-disclaimer { border-color: #ead98a; back
   .tax-toolbar > div { grid-template-columns: 1fr 150px; }
   .tax-toolbar p { text-align: left; }
   .liquidation-main { grid-template-columns: 1fr; gap: 18px; padding: 17px 14px; }
+  .liquidation-scenarios { overflow-x: auto; padding: 9px 14px 0; }
+  .liquidation-scenarios button { flex: none; }
+  .retirement-exit-note { margin: 0 14px 14px; }
   .liquidation-total { min-width: 0; justify-items: start; padding-left: 51px; }
   .liquidation-total strong { font-size: 27px; }
   .liquidation-warning { grid-template-columns: 18px minmax(0,1fr); margin: 0 14px 13px; }
