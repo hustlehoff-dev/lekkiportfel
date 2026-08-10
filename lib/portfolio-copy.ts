@@ -87,7 +87,7 @@ export function buildPortfolioCopy(input:PortfolioCopyInput,settings:PortfolioCo
       `- Dywidendy brutto: ${money(divGross)}`,
       `- Dywidendy netto: ${money(divNet)}`,
       `- Podatek u źródła: ${money(Math.abs(divGross-divNet))}`,
-      `- Prognoza dywidend na 12 miesięcy: ${money(forecastTotal)} (${input.forecast.length} wypłat)`,
+      `- Estymacja dywidend na 12 miesięcy: ${money(forecastTotal)} (${input.forecast.length} orientacyjnych terminów)`,
       `- Liczba aktywnych pozycji: ${positions.length}`,
     );
   }

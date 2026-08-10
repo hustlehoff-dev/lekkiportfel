@@ -4,6 +4,7 @@ import test from "node:test";
 import { strFromU8, unzipSync } from "fflate";
 import { auditTradesWithNbp, calculateCryptoTax, calculateLossCarryforward, calculateTaxSummary } from "../lib/tax-calculator.ts";
 import { calculateLiquidationTax, calculateRetirementExitTax } from "../lib/liquidation-tax.ts";
+import { buildDividendForecast } from "../lib/dividend-forecast.ts";
 import { buildCsvZipBytes, buildXlsxBytes } from "../lib/spreadsheet-export.ts";
 
 const root = new URL("../", import.meta.url);
@@ -230,6 +231,34 @@ test("retirement exit distinguishes asset sales, early return and qualified payo
   assert.equal(early32.ikzeTax, 1024);
   assert.equal(qualified.ikeTax, 0);
   assert.equal(qualified.ikzeTax, 320);
+});
+
+test("dividend forecast excludes sold positions and stale payment histories", () => {
+  const today = new Date("2026-08-10T12:00:00Z");
+  const dividends = [
+    { date: "2025-06-25", symbol: "XTB.PL", amount: 54.5, comment: "XTB.PL PLN 5.4500/ SHR", account: "PLN" },
+    { date: "2026-06-24", symbol: "XTB.PL", amount: 40.7, comment: "XTB.PL PLN 4.0700/ SHR", account: "PLN" },
+    { date: "2022-12-15", symbol: "KO.US", amount: 10, account: "PLN" },
+    { date: "2023-04-03", symbol: "KO.US", amount: 10, account: "PLN" },
+    { date: "2023-07-03", symbol: "KO.US", amount: 10, account: "PLN" },
+    { date: "2025-09-01", symbol: "INTC.US", amount: 2, account: "PLN" },
+    { date: "2025-12-01", symbol: "INTC.US", amount: 2, account: "PLN" },
+    { date: "2026-03-02", symbol: "INTC.US", amount: 2, account: "PLN" },
+    { date: "2026-06-01", symbol: "INTC.US", amount: 2, account: "PLN" },
+  ];
+  const result = buildDividendForecast(dividends, [], today, { positions: [{ symbol: "XTB.PL", quantity: 14, account: "PLN" }, { symbol: "KO.US", quantity: 5, account: "PLN" }], fxRates: { PLN: 1 } });
+
+  assert.ok(result.length > 0);
+  assert.ok(result.every(item => item.symbol === "XTB.PL"));
+  assert.ok(result.every(item => Math.abs(item.gross - 56.98) < 0.001));
+});
+
+test("dividend forecast requires six dates before treating a payer as monthly", () => {
+  const today = new Date("2026-08-10T12:00:00Z");
+  const rows = ["2026-04-15", "2026-05-14", "2026-06-12", "2026-07-15"].map(date => ({ date, symbol: "ADC.US", amount: 1, account: "IKE" }));
+  const result = buildDividendForecast(rows, [], today, { positions: [{ symbol: "ADC.US", quantity: 1, account: "IKE" }] });
+
+  assert.equal(result.length, 0);
 });
 
 test("crypto tax carries unused costs forward and ignores crypto-to-crypto swaps", () => {
