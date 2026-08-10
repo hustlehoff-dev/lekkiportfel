@@ -8,6 +8,23 @@ Drizzle support.
 
 - Node.js `>=22.13.0`
 
+## Firebase: konta i portfele
+
+1. W Firebase Console włącz **Authentication → Sign-in method → Email/Password**.
+2. Utwórz bazę **Cloud Firestore**.
+3. Dodaj aplikację typu **Web** i przepisz jej konfigurację do `.env.local` według `.env.example`.
+4. Opublikuj zawartość `firestore.rules` w zakładce **Firestore Database → Rules**.
+5. Uruchom aplikację w sieci lokalnej:
+
+```bash
+npm run dev -- --hostname 0.0.0.0 --port 4173
+```
+
+Logowanie działa przez Firebase Authentication, a portfel jest zapisywany w
+`users/{uid}/portfolio/main`. Projekt nie korzysta z Cloud Functions. Kod
+`LEGACY_MIGRATION_KEY` służy tylko do jednorazowego przeniesienia starego,
+lokalnego portfela do pierwszego konta.
+
 ## Quick Start
 
 ```bash

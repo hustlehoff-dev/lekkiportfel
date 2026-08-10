@@ -61,6 +61,30 @@ test("security page keeps ServiceBooker section names 1:1", async () => {
   assert.doesNotMatch(page, /Raport XTB zawiera otwarte pozycje/);
 });
 
+test("Firebase accounts isolate portfolios and protect the legacy migration", async () => {
+  const client = await readFile(new URL("lib/firebase-client.ts", root), "utf8");
+  const page = await readFile(new URL("app/page.tsx", root), "utf8");
+  const rules = await readFile(new URL("firestore.rules", root), "utf8");
+  const legacyRoute = await readFile(new URL("app/api/portfolio/route.ts", root), "utf8");
+  const env = await readFile(new URL(".env.example", root), "utf8");
+
+  assert.match(client, /createUserWithEmailAndPassword/);
+  assert.match(client, /sendEmailVerification/);
+  assert.match(client, /sendPasswordResetEmail/);
+  assert.match(client, /browserLocalPersistence/);
+  assert.match(client, /browserSessionPersistence/);
+  assert.match(client, /"users",uid,"portfolio","main"/);
+  assert.doesNotMatch(client, /firebase\/functions/);
+  assert.match(page, /loginWithPassword/);
+  assert.match(page, /loadUserPortfolio<PortfolioData>/);
+  assert.match(page, /saveUserPortfolio\(firebaseUser\.uid/);
+  assert.match(rules, /request\.auth\.uid == userId/);
+  assert.match(rules, /request\.auth\.token\.email_verified == true/);
+  assert.match(legacyRoute, /LEGACY_MIGRATION_KEY/);
+  assert.match(legacyRoute, /x-migration-key/);
+  assert.match(env, /NEXT_PUBLIC_FIREBASE_PROJECT_ID=/);
+});
+
 test("performance API reconciles XTB sales and converts the benchmark to PLN", async () => {
   const route = await readFile(new URL("app/api/performance/route.ts", root), "utf8");
   assert.match(route, /reportedSale/);

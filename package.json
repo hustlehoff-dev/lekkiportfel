@@ -16,8 +16,9 @@
   "dependencies": {
     "drizzle-orm": "0.45.2",
     "fflate": "^0.8.3",
+    "firebase": "^12.17.1",
     "lucide-react": "^1.14.0",
-    "next": "16.2.6",
+    "next": "16.3.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "read-excel-file": "^9.3.5"

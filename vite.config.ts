@@ -1,5 +1,5 @@
 import vinext from "vinext";
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import hostingConfig from "./.openai/hosting.json";
 import { sites } from "./build/sites-vite-plugin";
 
@@ -33,7 +33,10 @@ const localBindingConfig = {
     : [],
 };
 
-export default defineConfig(async () => {
+export default defineConfig(async ({ mode }) => {
+  const fileEnv = loadEnv(mode, process.cwd(), "");
+  const publicEnv = (name: string) => JSON.stringify(process.env[name] ?? fileEnv[name] ?? "");
+  process.env.LEGACY_MIGRATION_KEY ??= fileEnv.LEGACY_MIGRATION_KEY;
   // Keep Wrangler and Miniflare state project-local. These are non-secret tool
   // settings; application environment belongs in ignored `.env*` files.
   process.env.WRANGLER_WRITE_LOGS ??= "false";
@@ -44,9 +47,18 @@ export default defineConfig(async () => {
   const { cloudflare } = await import("@cloudflare/vite-plugin");
 
   return {
-    server: isCodexSeatbeltSandbox
-      ? { watch: { useFsEvents: false, usePolling: true } }
-      : undefined,
+    define: {
+      "process.env.NEXT_PUBLIC_FIREBASE_API_KEY": publicEnv("NEXT_PUBLIC_FIREBASE_API_KEY"),
+      "process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN": publicEnv("NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"),
+      "process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID": publicEnv("NEXT_PUBLIC_FIREBASE_PROJECT_ID"),
+      "process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET": publicEnv("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET"),
+      "process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": publicEnv("NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"),
+      "process.env.NEXT_PUBLIC_FIREBASE_APP_ID": publicEnv("NEXT_PUBLIC_FIREBASE_APP_ID"),
+    },
+    server: {
+      host: "0.0.0.0",
+      ...(isCodexSeatbeltSandbox ? { watch: { useFsEvents: false, usePolling: true } } : {}),
+    },
     plugins: [
       vinext(),
       sites(),

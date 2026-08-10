@@ -17,6 +17,8 @@ import {
   History,
   Info,
   LockKeyhole,
+  LogOut,
+  Mail,
   Plus,
   RefreshCw,
   ReceiptText,
@@ -33,6 +35,7 @@ import {
 } from "lucide-react";
 import { auditTradesWithNbp, calculateCryptoTax, calculateLossCarryforward, calculateTaxSummary, inferInstrumentCurrency, isRetirementAccount, rateKey, taxYears, type CryptoTaxTransaction, type LossSetting, type NbpRate } from "../lib/tax-calculator";
 import { buildCsvZipBytes, buildXlsxBytes, downloadBytes, type SpreadsheetSheet } from "../lib/spreadsheet-export";
+import { firebaseConfigured, loadUserPortfolio, loginWithPassword, logout, observeUser, registerWithPassword, resetPassword, saveUserPortfolio, type FirebaseUser } from "../lib/firebase-client";
 
 type Sector = "Technologia" | "Finanse" | "Zdrowie" | "Konsumpcja" | "Przemysł" | "Energia" | "Nieruchomości" | "ETF" | "Inne";
 type Position = { id:string; symbol:string; name:string; sector:Sector; assetClass:string; quantity:number; cost:number; value:number; currency:string; account?:string; manual?:boolean; priceId?:string; marketPrice?:number; priceUpdatedAt?:string; priceProvider?:string; priceChangePct?:number|null };
@@ -89,6 +92,8 @@ const demoData: PortfolioData = {
   ],
 };
 
+const emptyData: PortfolioData = { positions:[], cash:[], trades:[], lots:[], source:"Nowy portfel" };
+
 const number = (value:number,digits=2) => new Intl.NumberFormat("pl-PL",{maximumFractionDigits:digits,minimumFractionDigits:digits}).format(value);
 const dateLabel = (value:string) => new Intl.DateTimeFormat("pl-PL",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(value));
 const norm = (value:unknown) => String(value??"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
@@ -140,8 +145,74 @@ function CryptoPicker({label,selected,onSelect,autoFocus=false}:{label:string;se
   return <label className="field full-field instrument-search"><span>{label}</span><div className="search-input"><Search size={17} strokeWidth={1.9} aria-hidden="true"/><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="np. Bitcoin, USDT albo USDC…" autoFocus={autoFocus} role="combobox" aria-expanded={results.length>0} aria-controls={listId} aria-autocomplete="list"/><i className={loading?"search-spinner":""}/></div>{results.length>0&&<div className="search-results" id={listId} role="listbox">{results.map(item=><button type="button" role="option" aria-selected="false" key={item.key} onMouseDown={event=>event.preventDefault()} onClick={()=>onSelect(item)}><span className="result-mark">{item.symbol.slice(0,2)}</span><span><strong>{item.name}</strong><small>{item.symbol} · Krypto{item.rank?` · #${item.rank}`:""}</small></span>{item.pricePln!=null&&<b>{number(item.pricePln,item.pricePln<10?3:2)} zł</b>}</button>)}</div>}{!loading&&query.trim().length>=2&&!results.length&&<small className="search-empty">Brak wyników — spróbuj pełnej nazwy albo symbolu.</small>}</label>
 }
 
+type AuthMode = "login" | "register" | "reset";
+
+function authMessage(error:unknown) {
+  const code=typeof error==="object"&&error&&"code" in error?String((error as {code?:unknown}).code):"";
+  const message=error instanceof Error?error.message:"";
+  if(message.startsWith("Najpierw potwierdź"))return message;
+  if(code.includes("invalid-credential")||code.includes("wrong-password")||code.includes("user-not-found"))return "Nieprawidłowy e-mail lub hasło.";
+  if(code.includes("email-already-in-use"))return "Konto z tym adresem już istnieje. Zaloguj się albo zresetuj hasło.";
+  if(code.includes("weak-password"))return "Hasło nie spełnia wymagań bezpieczeństwa.";
+  if(code.includes("too-many-requests"))return "Zbyt wiele prób. Odczekaj chwilę i spróbuj ponownie.";
+  if(code.includes("network-request-failed"))return "Brak połączenia z usługą logowania.";
+  return "Nie udało się wykonać operacji. Sprawdź dane i spróbuj ponownie.";
+}
+
+function AuthScreen({configured}:{configured:boolean}) {
+  const [mode,setMode]=useState<AuthMode>("login");
+  const [email,setEmail]=useState("");
+  const [password,setPassword]=useState("");
+  const [confirm,setConfirm]=useState("");
+  const [remember,setRemember]=useState(true);
+  const [busy,setBusy]=useState(false);
+  const [error,setError]=useState("");
+  const [message,setMessage]=useState("");
+  const switchMode=(next:AuthMode)=>{setMode(next);setError("");setMessage("");setPassword("");setConfirm("")};
+  const submit=async(event:React.FormEvent<HTMLFormElement>)=>{
+    event.preventDefault();setError("");setMessage("");setBusy(true);
+    const normalizedEmail=email.trim().toLowerCase();
+    try{
+      if(mode==="register"){
+        if(password.length<10||!/[a-z]/.test(password)||!/[A-Z]/.test(password)||!/[0-9]/.test(password))throw new Error("password-policy");
+        if(password!==confirm)throw new Error("password-mismatch");
+        await registerWithPassword(normalizedEmail,password);
+        setMessage("Konto utworzone. Otwórz wiadomość i potwierdź adres e-mail, a potem się zaloguj.");
+      }else if(mode==="reset"){
+        await resetPassword(normalizedEmail);
+        setMessage("Jeśli konto istnieje, na ten adres wysłaliśmy link do ustawienia nowego hasła.");
+      }else await loginWithPassword(normalizedEmail,password,remember);
+    }catch(caught){
+      const own=caught instanceof Error?caught.message:"";
+      setError(own==="password-policy"?"Hasło musi mieć co najmniej 10 znaków, małą i wielką literę oraz cyfrę.":own==="password-mismatch"?"Wpisane hasła nie są takie same.":authMessage(caught));
+    }finally{setBusy(false)}
+  };
+  return <main className="auth-shell"><section className="auth-card">
+    <div className="auth-brand"><span className="brand-mark"><WalletCards size={20}/></span><div><strong>KAPITAŁ</strong><small>prywatny portfel</small></div></div>
+    {!configured?<div className="auth-setup"><span className="auth-icon"><ServerCog size={24}/></span><p className="eyebrow">Konfiguracja lokalna</p><h1>Połącz aplikację z Firebase</h1><p>System kont jest gotowy. Aby go uruchomić, dodaj konfigurację aplikacji internetowej Firebase do pliku <code>.env.local</code> i zrestartuj serwer.</p><ul><li>NEXT_PUBLIC_FIREBASE_API_KEY</li><li>NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN</li><li>NEXT_PUBLIC_FIREBASE_PROJECT_ID</li><li>NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET</li><li>NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID</li><li>NEXT_PUBLIC_FIREBASE_APP_ID</li></ul><div className="auth-security"><ShieldCheck size={17}/><span>Bez Cloud Functions. Logowanie obsługuje Firebase Auth, a każdy portfel ma osobny dokument Firestore.</span></div></div>:<>
+      <div className="auth-heading"><p className="eyebrow">{mode==="login"?"Bezpieczny dostęp":mode==="register"?"Nowe konto":"Odzyskiwanie dostępu"}</p><h1>{mode==="login"?"Zaloguj się":mode==="register"?"Utwórz konto":"Ustaw nowe hasło"}</h1><p>{mode==="login"?"Twoje aktywa i historia są przypisane wyłącznie do Twojego konta.":mode==="register"?"Po rejestracji potwierdzisz adres e-mail przed pierwszym logowaniem.":"Podaj adres konta. Wyślemy instrukcję zmiany hasła."}</p></div>
+      {mode!=="reset"&&<div className="auth-tabs"><button className={mode==="login"?"active":""} type="button" onClick={()=>switchMode("login")}>Logowanie</button><button className={mode==="register"?"active":""} type="button" onClick={()=>switchMode("register")}>Rejestracja</button></div>}
+      <form className="auth-form" onSubmit={submit}><label><span>Adres e-mail</span><div><Mail size={17}/><input type="email" value={email} onChange={event=>setEmail(event.target.value)} autoComplete="email" required autoFocus placeholder="ty@example.com"/></div></label>{mode!=="reset"&&<label><span>Hasło</span><div><LockKeyhole size={17}/><input type="password" value={password} onChange={event=>setPassword(event.target.value)} autoComplete={mode==="login"?"current-password":"new-password"} minLength={mode==="register"?10:6} required/></div></label>}{mode==="register"&&<label><span>Powtórz hasło</span><div><LockKeyhole size={17}/><input type="password" value={confirm} onChange={event=>setConfirm(event.target.value)} autoComplete="new-password" minLength={10} required/></div></label>}{mode==="login"&&<div className="auth-options"><label><input type="checkbox" checked={remember} onChange={event=>setRemember(event.target.checked)}/>Zapamiętaj mnie na tym urządzeniu</label><button type="button" onClick={()=>switchMode("reset")}>Nie pamiętam hasła</button></div>}{error&&<p className="auth-error" role="alert">{error}</p>}{message&&<p className="auth-success" role="status">{message}</p>}<button className="auth-submit" type="submit" disabled={busy}>{busy?"Chwila…":mode==="login"?"Zaloguj się":mode==="register"?"Utwórz konto":"Wyślij link"}</button>{mode==="reset"&&<button className="auth-back" type="button" onClick={()=>switchMode("login")}>Wróć do logowania</button>}</form>
+      <div className="auth-security"><ShieldCheck size={17}/><span>Hasło obsługuje Firebase Authentication. Aplikacja nie zapisuje go w portfelu ani we własnej bazie.</span></div>
+    </>}
+  </section></main>
+}
+
+function AuthLoading(){return <main className="auth-shell"><div className="auth-loading"><span className="loading-ring"/><p>Sprawdzamy sesję…</p></div></main>}
+
+function MigrationScreen({email,code,setCode,onMigrate,onEmpty,busy,error}:{email:string;code:string;setCode:(value:string)=>void;onMigrate:()=>void;onEmpty:()=>void;busy:boolean;error:string}){
+  return <main className="auth-shell"><section className="auth-card migration-card"><div className="auth-brand"><span className="brand-mark"><WalletCards size={20}/></span><div><strong>KAPITAŁ</strong><small>{email}</small></div></div><div className="auth-heading"><p className="eyebrow">Pierwsze uruchomienie</p><h1>Co zrobić z portfelem?</h1><p>To konto nie ma jeszcze danych. Możesz jednorazowo przenieść dotychczasowy lokalny portfel albo zacząć od pustego konta.</p></div><label className="migration-code"><span>Kod migracji lokalnego portfela</span><input type="password" value={code} onChange={event=>setCode(event.target.value)} placeholder="Kod z .env.local"/></label>{error&&<p className="auth-error" role="alert">{error}</p>}<button className="auth-submit" type="button" disabled={busy||!code} onClick={onMigrate}>{busy?"Przenoszę…":"Przenieś dotychczasowy portfel"}</button><button className="auth-back" type="button" disabled={busy} onClick={onEmpty}>Zacznij od pustego portfela</button><p className="migration-note">Migracja kopiuje dane do prywatnego dokumentu tego konta. Stary zapis pozostaje wyłącznie jako lokalna kopia awaryjna.</p></section></main>
+}
+
 export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
   const [data,setData]=useState<PortfolioData>(demoData);
+  const [firebaseUser,setFirebaseUser]=useState<FirebaseUser|null>(null);
+  const [authReady,setAuthReady]=useState(!firebaseConfigured);
+  const [portfolioLoaded,setPortfolioLoaded]=useState(false);
+  const [needsMigration,setNeedsMigration]=useState(false);
+  const [migrationCode,setMigrationCode]=useState("");
+  const [migrationBusy,setMigrationBusy]=useState(false);
+  const [migrationError,setMigrationError]=useState("");
   const [view,setView]=useState<AppView>(initialView);
   const [mobileMoreOpen,setMobileMoreOpen]=useState(false);
   const [allocation,setAllocation]=useState<"firma"|"sektor"|"klasa">("firma");
@@ -179,6 +250,10 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
   const pln=useCallback((value:number,digits=2)=>new Intl.NumberFormat("pl-PL",{style:"currency",currency:"PLN",maximumFractionDigits:digits,minimumFractionDigits:digits}).format(value),[]);
   const changeCurrency=(currency:CurrencyCode)=>{setDisplayCurrency(currency);try{window.localStorage.setItem("kapital-currency",currency)}catch{}};
   const changeDesignTheme=(theme:DesignTheme)=>{setDesignTheme(theme);try{window.localStorage.setItem("kapital-theme",theme)}catch{}};
+  useEffect(()=>{
+    if(!firebaseConfigured)return;
+    return observeUser(user=>{setFirebaseUser(user);setAuthReady(true);setPortfolioLoaded(false);setNeedsMigration(false);setMigrationCode("");setMigrationError("")});
+  },[]);
   useEffect(()=>{portfolioRef.current=data},[data]);
   useEffect(()=>{document.documentElement.dataset.portfolioTheme=designTheme},[designTheme]);
   useEffect(()=>{const timer=window.setTimeout(()=>{try{const saved=window.localStorage.getItem("kapital-theme");if(saved==="lekka"||saved==="dark")setDesignTheme(saved)}catch{}},0);return()=>window.clearTimeout(timer)},[]);
@@ -195,7 +270,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
       if(announce)setNotice(missing.length?`Odświeżono ${quotes.size} notowań. Brak ceny dla: ${[...new Set(missing)].join(", ")}.`:`Odświeżono wszystkie ${quotes.size} notowania.`);
     }catch(error){setPriceStatus(current=>({...current,loading:false}));if(announce)setNotice(error instanceof Error?error.message:"Nie udało się pobrać cen.")}
   },[]);
-  useEffect(()=>{let active=true;fetch("/api/portfolio").then(response=>response.ok?response.json():null).then(result=>{if(active&&result?.portfolio){portfolioRef.current=result.portfolio;setData(result.portfolio);void refreshPrices(result.portfolio)}}).catch(()=>undefined);const timer=window.setInterval(()=>void refreshPrices(),60000);return()=>{active=false;window.clearInterval(timer)}},[refreshPrices]);
+  useEffect(()=>{if(!firebaseUser)return;let active=true;loadUserPortfolio<PortfolioData>(firebaseUser.uid).then(portfolio=>{if(!active)return;if(portfolio){portfolioRef.current=portfolio;setData(portfolio);void refreshPrices(portfolio)}else setNeedsMigration(true);setPortfolioLoaded(true)}).catch(()=>{if(active){setPortfolioLoaded(true);setNotice("Nie udało się odczytać portfela z Firestore. Sprawdź reguły dostępu i połączenie.")}});const timer=window.setInterval(()=>void refreshPrices(),60000);return()=>{active=false;window.clearInterval(timer)}},[firebaseUser,refreshPrices]);
   useEffect(()=>{if(!addingAsset||manualKind!=="Aktywa"||assetQuery.trim().length<2||(selectedInstrument&&assetQuery===`${selectedInstrument.name} (${selectedInstrument.symbol})`)){const reset=window.setTimeout(()=>{setSearchResults([]);setSearching(false)},0);return()=>window.clearTimeout(reset)}const controller=new AbortController();const timer=window.setTimeout(()=>{setSearching(true);const query=assetQuery.trim();Promise.all(["market","crypto"].map(kind=>fetch(`/api/instruments?q=${encodeURIComponent(query)}&kind=${kind}`,{signal:controller.signal}).then(async response=>{if(!response.ok)throw new Error();return response.json()}))).then(([market,crypto])=>{const needle=query.toUpperCase();const merged=[...(market.results||[]),...(crypto.results||[])].sort((a:InstrumentResult,b:InstrumentResult)=>Number(b.symbol.toUpperCase()===needle)-Number(a.symbol.toUpperCase()===needle)||Number(b.name.toUpperCase()===needle)-Number(a.name.toUpperCase()===needle)||(a.rank??999999)-(b.rank??999999)).slice(0,10);setSearchResults(merged);setActiveResult(0)}).catch(()=>{if(!controller.signal.aborted)setSearchResults([])}).finally(()=>{if(!controller.signal.aborted)setSearching(false)})},280);return()=>{window.clearTimeout(timer);controller.abort()}},[addingAsset,assetQuery,manualKind,selectedInstrument]);
   const accounts=useMemo(()=>["Wszystkie",...Array.from(new Set([...data.positions,...data.cash,...data.trades].map(item=>item.account).filter(Boolean) as string[]))],[data]);
   const positions=useMemo(()=>account==="Wszystkie"?data.positions:data.positions.filter(item=>item.account===account),[account,data.positions]);
@@ -248,12 +323,12 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
       const manualPositions=data.positions.filter(item=>item.manual);
       if(manualPositions.length){next.positions.push(...manualPositions);next.source=`${next.source} · własne aktywa`}
       setData(next);setAccount("Wszystkie");
-      const saved=await fetch("/api/portfolio",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(next)}).then(response=>response.ok).catch(()=>false);
-      setNotice(`${saved?"Zapisano Użytkownika 1.":"Wczytano lokalnie."} ${next.positions.length} pozycji otwartych i ${next.cash.length+next.trades.length} operacji.`);
+      const saved=await storePortfolio(next);
+      setNotice(`${saved?"Zapisano portfel na Twoim koncie.":"Wczytano tylko w tej sesji."} ${next.positions.length} pozycji otwartych i ${next.cash.length+next.trades.length} operacji.`);
       void refreshPrices(next);
     }catch(error){setNotice(`Nie udało się odczytać pliku: ${error instanceof Error?error.message:"nieznany format"}. Spróbuj pełnego eksportu ZIP/XLSX z xStation.`)}finally{setImporting(false)}
   }
-  async function storePortfolio(next:PortfolioData){return fetch("/api/portfolio",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(next)}).then(response=>response.ok).catch(()=>false)}
+  async function storePortfolio(next:PortfolioData){if(!firebaseUser)return false;return saveUserPortfolio(firebaseUser.uid,next).catch(()=>false)}
   function commitPortfolio(next:PortfolioData,message?:string){setData(next);void storePortfolio(next).then(saved=>{if(message)setNotice(saved?message:"Zmiana jest widoczna, ale nie udało się jej zapisać.")})}
   function updateSector(id:string,sector:Sector){const next={...data,positions:data.positions.map(p=>p.id===id?{...p,sector}:p)};commitPortfolio(next)}
   function updateTaxLoss(year:number,patch:Partial<LossSetting>){const key=String(year);const next={...data,taxLosses:{...(data.taxLosses||{}),[key]:{...(data.taxLosses?.[key]||{}),...patch}}};commitPortfolio(next)}
@@ -271,7 +346,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
         if(!response.ok)throw new Error("Nie udało się pobrać kursu NBP dla tej daty.");
         const result=await response.json();const rate=result.rates?.[0] as NbpRate|undefined;if(!rate)throw new Error("Brak tabeli NBP dla tej daty.");nbpRate=rate.rate;nbpDate=rate.effectiveDate;
       }
-      const transaction:CryptoTransaction={id:`crypto-${Date.now()}`,date,type:cryptoTransactionType,symbol:cryptoInstrument.symbol,name:cryptoInstrument.name,quantity,toSymbol:cryptoTargetInstrument?.symbol,toName:cryptoTargetInstrument?.name,toQuantity:cryptoTransactionType==="swap"?toQuantity:undefined,amount:cryptoTransactionType==="swap"?0:transactionAmount,currency,amountPln:cryptoTransactionType==="swap"?0:Math.round(transactionAmount*nbpRate*100)/100,nbpRate,nbpDate,fee:cryptoTransactionType==="swap"?0:fee,feePln:cryptoTransactionType==="swap"?0:Math.round(fee*nbpRate*100)/100,account:accountName,note:text("note")||undefined};
+      const transaction:CryptoTransaction={id:`crypto-${crypto.randomUUID()}`,date,type:cryptoTransactionType,symbol:cryptoInstrument.symbol,name:cryptoInstrument.name,quantity,toSymbol:cryptoTargetInstrument?.symbol,toName:cryptoTargetInstrument?.name,toQuantity:cryptoTransactionType==="swap"?toQuantity:undefined,amount:cryptoTransactionType==="swap"?0:transactionAmount,currency,amountPln:cryptoTransactionType==="swap"?0:Math.round(transactionAmount*nbpRate*100)/100,nbpRate,nbpDate,fee:cryptoTransactionType==="swap"?0:fee,feePln:cryptoTransactionType==="swap"?0:Math.round(fee*nbpRate*100)/100,account:accountName,note:text("note")||undefined};
       const next={...data,cryptoTransactions:[...(data.cryptoTransactions||[]),transaction]};commitPortfolio(next,`Zapisano transakcję ${cryptoInstrument.symbol}.`);setAddingCryptoTransaction(false);setCryptoInstrument(null);setCryptoTargetInstrument(null);
     }catch(error){setNotice(error instanceof Error?error.message:"Nie udało się zapisać transakcji.")}finally{setSavingCryptoTransaction(false)}
   }
@@ -289,15 +364,15 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
       if(!selectedInstrument){setNotice("Najpierw wyszukaj i wybierz instrument z listy.");return}
       if(quantity<=0){setNotice("Podaj, ile sztuk posiadasz.");return}
       const price=selectedInstrument.pricePln||cost/quantity;
-      position={id:`manual-${Date.now()}`,symbol:selectedInstrument.symbol,name:selectedInstrument.name,sector:selectedInstrument.assetClass==="ETF"?"ETF":selectedInstrument.assetClass==="Krypto"?"Inne":sectorFromSearch(selectedInstrument.sector),assetClass:selectedInstrument.assetClass,quantity,cost,value:quantity*price,currency:"PLN",account:accountName,manual:true,priceId:selectedInstrument.priceId,marketPrice:price||undefined,priceUpdatedAt:price?new Date().toISOString():undefined,priceProvider:selectedInstrument.assetClass==="Krypto"?"CoinGecko":"Yahoo Finance"};
+      position={id:`manual-${crypto.randomUUID()}`,symbol:selectedInstrument.symbol,name:selectedInstrument.name,sector:selectedInstrument.assetClass==="ETF"?"ETF":selectedInstrument.assetClass==="Krypto"?"Inne":sectorFromSearch(selectedInstrument.sector),assetClass:selectedInstrument.assetClass,quantity,cost,value:quantity*price,currency:"PLN",account:accountName,manual:true,priceId:selectedInstrument.priceId,marketPrice:price||undefined,priceUpdatedAt:price?new Date().toISOString():undefined,priceProvider:selectedInstrument.assetClass==="Krypto"?"CoinGecko":"Yahoo Finance"};
     }else if(manualKind==="Gotówka"){
       const currency=text("currency").toUpperCase()||"PLN",quantity=amount("quantity");
       if(quantity<=0){setNotice("Kwota gotówki musi być większa od zera.");return}
-      position={id:`manual-${Date.now()}`,symbol:currency,name:`Gotówka ${currency}`,sector:"Inne",assetClass:"Gotówka",quantity,cost:quantity,value:quantity,currency,account:accountName,manual:true};
+      position={id:`manual-${crypto.randomUUID()}`,symbol:currency,name:`Gotówka ${currency}`,sector:"Inne",assetClass:"Gotówka",quantity,cost:quantity,value:quantity,currency,account:accountName,manual:true};
     }else{
       const symbol=(text("symbol")||text("name")||"INNE").toUpperCase(),cost=amount("totalCost"),value=amount("currentValue");
       if(!text("name")||value<0){setNotice("Podaj nazwę i obecną wartość aktywa.");return}
-      position={id:`manual-${Date.now()}`,symbol,name:text("name"),sector:"Inne",assetClass:"Inne",quantity:1,cost,value,currency:"PLN",account:accountName,manual:true};
+      position={id:`manual-${crypto.randomUUID()}`,symbol,name:text("name"),sector:"Inne",assetClass:"Inne",quantity:1,cost,value,currency:"PLN",account:accountName,manual:true};
     }
     const next={...data,positions:[...data.positions,position],source:data.source.includes("własne aktywa")?data.source:`${data.source} · własne aktywa`};
     commitPortfolio(next,`Dodano ${position.name} do portfela.`);setAccount("Wszystkie");setAddingAsset(false);setSelectedInstrument(null);setAssetQuery("");if(position.assetClass!=="Inne")void refreshPrices(next);
@@ -345,6 +420,19 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
   };
   useEffect(()=>{const syncView=()=>{setView(viewFromPath(window.location.pathname));setMobileMoreOpen(false);window.scrollTo({top:0,left:0,behavior:"auto"})};window.addEventListener("popstate",syncView);return()=>window.removeEventListener("popstate",syncView)},[]);
   const selectView=(next:AppView)=>{const path=viewPaths[next];if(window.location.pathname!==path)window.history.pushState({},"",path);setView(next);setMobileMoreOpen(false);window.scrollTo({top:0,left:0,behavior:"auto"})};
+  const migrateLegacyPortfolio=async()=>{
+    if(!firebaseUser||!migrationCode)return;setMigrationBusy(true);setMigrationError("");
+    try{const response=await fetch("/api/portfolio",{headers:{"x-migration-key":migrationCode}});const result=await response.json();if(!response.ok||!result.portfolio)throw new Error(result.error||"Nie znaleziono lokalnego portfela.");await saveUserPortfolio(firebaseUser.uid,result.portfolio);portfolioRef.current=result.portfolio;setData(result.portfolio);setNeedsMigration(false);setNotice("Dotychczasowy portfel został przypisany do Twojego konta.");void refreshPrices(result.portfolio)}catch(error){setMigrationError(error instanceof Error?error.message:"Nie udało się przenieść portfela.")}finally{setMigrationBusy(false)}
+  };
+  const startEmptyPortfolio=async()=>{
+    if(!firebaseUser)return;setMigrationBusy(true);setMigrationError("");
+    try{await saveUserPortfolio(firebaseUser.uid,emptyData);portfolioRef.current=emptyData;setData(emptyData);setNeedsMigration(false)}catch{setMigrationError("Nie udało się utworzyć portfela. Sprawdź reguły Firestore.")}finally{setMigrationBusy(false)}
+  };
+  if(!authReady)return <AuthLoading/>;
+  if(!firebaseConfigured)return <AuthScreen configured={false}/>;
+  if(!firebaseUser)return <AuthScreen configured/>;
+  if(!portfolioLoaded)return <AuthLoading/>;
+  if(needsMigration)return <MigrationScreen email={firebaseUser.email||"Twoje konto"} code={migrationCode} setCode={setMigrationCode} onMigrate={()=>void migrateLegacyPortfolio()} onEmpty={()=>void startEmptyPortfolio()} busy={migrationBusy} error={migrationError}/>;
   return <main className="app-shell">
     <aside className="sidebar">
       <div className="brand"><span className="brand-mark"><WalletCards size={19} strokeWidth={2}/></span><span>KAPITAŁ<small>prywatny portfel</small></span></div>
@@ -360,7 +448,8 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
         <button className={view==="bezpieczenstwo"?"active":""} onClick={()=>selectView("bezpieczenstwo")}><span><ShieldCheck size={18} strokeWidth={1.9}/></span>Bezpieczeństwo</button>
       </nav>
       <div className="privacy"><span>●</span><div><strong>Portfel zapisany w aplikacji</strong><p>Dostawcy notowań dostają symbol instrumentu, nie stan rachunku.</p></div></div>
-      <button className="text-button" onClick={()=>setData(demoData)}>Przywróć dane demo</button>
+      <button className="text-button" onClick={()=>commitPortfolio(demoData,"Przywrócono dane demonstracyjne.")}>Przywróć dane demo</button>
+      <div className="signed-user"><span>{(firebaseUser.email||"K").slice(0,1).toUpperCase()}</span><div><strong>{firebaseUser.email}</strong><small>Konto Firebase</small></div><button type="button" onClick={()=>void logout()} aria-label="Wyloguj"><LogOut size={16}/></button></div>
     </aside>
     {mobileMoreOpen&&<><button className="mobile-more-backdrop" onClick={()=>setMobileMoreOpen(false)} aria-label="Zamknij menu"/><section className="mobile-more-panel" aria-label="Więcej">
       <header><strong>Więcej</strong><button onClick={()=>setMobileMoreOpen(false)} aria-label="Zamknij"><X size={18}/></button></header>
@@ -369,6 +458,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
       <button onClick={()=>selectView("faq")}><span><CircleHelp size={18}/></span><div><strong>Najczęstsze pytania</strong><small>Import, ceny i działanie aplikacji</small></div></button>
       <button onClick={()=>selectView("bezpieczenstwo")}><span><ShieldCheck size={18}/></span><div><strong>Bezpieczeństwo</strong><small>Dane portfela i prywatność</small></div></button>
       <button onClick={()=>{setMobileMoreOpen(false);fileRef.current?.click()}}><span><Upload size={18}/></span><div><strong>Importuj XTB</strong><small>ZIP, XLSX, XLS lub CSV</small></div></button>
+      <button onClick={()=>void logout()}><span><LogOut size={18}/></span><div><strong>Wyloguj się</strong><small>{firebaseUser.email}</small></div></button>
     </section></>}
     <section className="content"><header className="topbar"><div className="topbar-title"><p className="eyebrow">{viewCopy[view].eyebrow}</p><h1>{viewCopy[view].title}</h1></div><div className="mobile-brand"><span className="brand-mark"><WalletCards size={17} strokeWidth={2}/></span><strong>KAPITAŁ</strong></div><label className="topbar-search"><span aria-hidden="true"><Search size={18} strokeWidth={1.8}/></span><input ref={portfolioSearchRef} value={portfolioQuery} onChange={e=>setPortfolioQuery(e.target.value)} placeholder="Szukaj aktywa, symbolu lub rachunku…" aria-label="Szukaj w portfelu"/><kbd>Ctrl K</kbd></label><div className="top-actions"><select className="theme-select" value={designTheme} onChange={e=>changeDesignTheme(e.target.value as DesignTheme)} aria-label="Wygląd aplikacji"><option value="lekka">Lekka</option><option value="dark">Dark</option></select><select className="currency-select" value={displayCurrency} onChange={e=>changeCurrency(e.target.value as CurrencyCode)} aria-label="Waluta prezentacji"><option value="PLN">PLN zł</option><option value="USD">USD $</option><option value="EUR">EUR €</option><option value="GBP">GBP £</option></select>{accounts.length>1&&<select className="account-select" value={account} onChange={e=>setAccount(e.target.value)} aria-label="Rachunek">{accounts.map(item=><option key={item}>{item}</option>)}</select>}<button className="add-asset-button" onClick={openAssetModal}><span><Plus size={18} strokeWidth={2.4}/></span><b>Dodaj aktywo</b></button><span className="as-of">Stan na dziś</span><button className="import-button" onClick={()=>fileRef.current?.click()} disabled={importing}><span><Upload size={18} strokeWidth={1.9}/></span><b>{importing?"Wczytuję…":"Importuj XTB"}</b></button></div><input ref={fileRef} className="sr-only" type="file" accept=".zip,.xlsx,.xls,.csv" onChange={e=>importFile(e.target.files?.[0])}/></header>
     <div className="main-shell"><div className="main-content">{view!=="bezpieczenstwo"&&<section className="dashboard-intro"><p>{viewCopy[view].eyebrow}</p><h1>{viewCopy[view].title}</h1><span>{viewCopy[view].description}</span></section>}
@@ -428,22 +518,22 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
         <div className="security-badge"><ShieldCheck size={14}/>Ochrona danych portfela</div>
         <h2>Co przechowujemy, w jakim celu i jak możesz to usunąć.</h2>
         <p>Portfel może zawierać akcje, ETF-y, kryptowaluty, gotówkę, inne składniki majątku oraz historię operacji i dywidend. Poniżej opisujemy, gdzie zapisujemy te dane i jakie informacje przekazujemy dostawcom notowań.</p>
-        <div className="security-pills" aria-label="Najważniejsze zabezpieczenia"><span><LockKeyhole size={14}/>Import pliku w przeglądarce</span><span><Database size={14}/>Zapis w bazie aplikacji</span><span><ShieldCheck size={14}/>Bez dostępu do rachunków</span><span><Upload size={14}/>Nadpisanie danych importem</span></div>
+        <div className="security-pills" aria-label="Najważniejsze zabezpieczenia"><span><LockKeyhole size={14}/>Potwierdzony adres e-mail</span><span><Database size={14}/>Osobny portfel użytkownika</span><span><ShieldCheck size={14}/>Bez dostępu do rachunków</span><span><Upload size={14}/>Import pliku w przeglądarce</span></div>
       </header>
 
       <div className="security-grid">
-        <section><span className="support-icon"><LockKeyhole size={21}/></span><h2>Logowanie i sesja</h2><p>Obecna wersja nie ma jeszcze systemu kont, hasła ani sesji użytkownika. Aplikacja otwiera się bez logowania i korzysta z jednego technicznego profilu „user-1”. Nie podajesz jej danych logowania do brokera, banku ani giełdy kryptowalut.</p></section>
-        <section><span className="support-icon"><Database size={21}/></span><h2>Dane bez konta</h2><p>Aktywa możesz dodać ręcznie albo zaimportować z obsługiwanego pliku. Po zapisaniu przetworzony portfel trafia do bazy aplikacji i wraca po odświeżeniu strony. Oryginalnego pliku nie przechowujemy.</p></section>
-        <section><span className="support-icon"><UserCheck size={21}/></span><h2>Dane zespołu</h2><p>Obecne MVP nie ma zespołów ani rozdzielonych uprawnień. Wszystkie dane są zapisane pod profilem „user-1”, dlatego każda osoba z dostępem do tej instancji aplikacji może otworzyć ten sam portfel.</p></section>
-        <section><span className="support-icon"><Trash2 size={21}/></span><h2>Usuwanie i eksport</h2><p>Nowy import nadpisuje poprzedni zapis profilu „user-1”. Aplikacja nie ma jeszcze osobnej funkcji trwałego usunięcia portfela z bazy ani eksportu wszystkich zapisanych danych.</p></section>
+        <section><span className="support-icon"><LockKeyhole size={21}/></span><h2>Logowanie i sesja</h2><p>Konto chroni Firebase Authentication. Pierwsze logowanie wymaga potwierdzenia adresu e-mail. Możesz zapamiętać sesję na swoim urządzeniu albo ograniczyć ją do bieżącej karty przeglądarki.</p></section>
+        <section><span className="support-icon"><Database size={21}/></span><h2>Dane bez konta</h2><p>Portfel nie jest dostępny bez zalogowania. Po imporcie zapisujemy w Firestore przetworzone pozycje i operacje; oryginalnego pliku ZIP, XLSX ani CSV nie przechowujemy.</p></section>
+        <section><span className="support-icon"><UserCheck size={21}/></span><h2>Dane zespołu</h2><p>Nie ma wspólnych portfeli ani zespołów. Reguły Firestore pozwalają zalogowanemu użytkownikowi odczytać i zmienić wyłącznie dokument przypisany do jego identyfikatora konta.</p></section>
+        <section><span className="support-icon"><Trash2 size={21}/></span><h2>Usuwanie i eksport</h2><p>Import zastępuje zapisany portfel, a raport podatkowy możesz pobrać do XLSX lub CSV. Usunięcie całego konta i jego danych wymaga obecnie działania administratora instancji.</p></section>
       </div>
 
       <section className="security-wide-card">
         <div className="security-section-head"><CheckCircle2 size={22}/><h2>Zabezpieczenia techniczne</h2></div>
         <div className="security-feature-grid">
           <div><ShieldCheck size={18}/><p>Połączenie z aplikacją jest szyfrowane przez HTTPS podczas korzystania z wersji hostowanej.</p></div>
-          <div><LockKeyhole size={18}/><p>Dodawanie aktywów i import nie wymagają loginu, hasła, kodu SMS ani połączenia z zewnętrznym rachunkiem.</p></div>
-          <div><Database size={18}/><p>Przetworzony portfel trafia do backendu aplikacji i jest zapisywany w jej bazie danych.</p></div>
+          <div><LockKeyhole size={18}/><p>Hasła i sesje obsługuje Firebase Authentication; aplikacja nie zapisuje haseł w danych portfela.</p></div>
+          <div><Database size={18}/><p>Przetworzony portfel zapisujemy w Firestore pod identyfikatorem zalogowanego użytkownika.</p></div>
           <div><ServerCog size={18}/><p>Dostawcy notowań otrzymują symbole i dane rynku, ale nie liczbę jednostek ani koszty zakupu.</p></div>
           <div><BellRing size={18}/><p>Moduł wyniku przetwarza na backendzie partie zakupu, transakcje i bieżące pozycje.</p></div>
           <div><CheckCircle2 size={18}/><p>Kursy walut pobieramy z NBP bez przekazywania danych portfela.</p></div>
@@ -452,13 +542,13 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
 
       <section className="security-wide-card">
         <div className="security-section-head"><ServerCog size={22}/><h2>Dostawcy usług technicznych</h2></div>
-        <p className="security-provider-copy">Aplikacja korzysta z Yahoo Finance do notowań akcji i ETF-ów, CoinGecko do danych o kryptowalutach oraz NBP do kursów walut. Serwer wysyła do tych usług zapytania potrzebne do znalezienia instrumentu albo ceny.</p>
-        <p className="security-provider-copy">Zewnętrzni dostawcy nie otrzymują pliku importu, liczby posiadanych jednostek, kosztów zakupu ani łącznej wartości portfela. Przetworzony portfel jest jednak zapisywany i analizowany przez backend tej aplikacji.</p>
+        <p className="security-provider-copy">Firebase (Google) obsługuje konto, sesję i zapis portfela. Aplikacja korzysta też z Yahoo Finance do notowań akcji i ETF-ów, CoinGecko do danych o kryptowalutach oraz NBP do kursów walut.</p>
+        <p className="security-provider-copy">Dostawcy notowań otrzymują zapytania o symbole instrumentów, ale nie otrzymują pliku importu, liczby jednostek, kosztów zakupu ani łącznej wartości portfela. Przetworzone dane portfela są natomiast przechowywane w Firestore.</p>
         <div className="security-links"><button onClick={()=>selectView("faq")}>Jak działa import</button><button onClick={()=>selectView("pulpit")}>Wróć do portfela</button></div>
       </section>
 
       <div className="security-grid security-bottom-grid">
-        <section><span className="support-icon"><ShieldCheck size={21}/></span><h2>Ochrona Twojego konta</h2><p>Obecne MVP nie ma jeszcze konta chronionego hasłem. Dostęp do portfela ma każda osoba, która może otworzyć tę instancję aplikacji, dlatego nie należy wystawiać jej publicznie bez dodania logowania.</p><div className="security-links"><button onClick={()=>selectView("faq")}>Najczęstsze pytania</button></div></section>
+        <section><span className="support-icon"><ShieldCheck size={21}/></span><h2>Ochrona Twojego konta</h2><p>Używaj unikalnego hasła i wyloguj się na współdzielonym urządzeniu. Jeśli nie pamiętasz hasła, na ekranie logowania możesz wysłać link do jego bezpiecznego ustawienia.</p><div className="security-links"><button onClick={()=>void logout()}>Wyloguj się</button><button onClick={()=>selectView("faq")}>Najczęstsze pytania</button></div></section>
         <section><span className="support-icon"><ShieldAlert size={21}/></span><h2>Zgłaszanie podatności</h2><p>Jeśli zauważysz błąd bezpieczeństwa, zgłoś go właścicielowi tej instancji. Opisz, jak odtworzyć problem, jakiego widoku dotyczy i czy mógł ujawnić albo zmienić dane portfela.</p></section>
       </div>
 
