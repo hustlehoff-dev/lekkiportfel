@@ -268,7 +268,7 @@ export function calculateLossCarryforward({
     const remainingBeforeCurrentYear = Math.max(0, declaredLoss - usedBefore);
     const strategy = setting.oneTimeUsed ? "50-percent" : "one-time";
     const annualLimit = strategy === "one-time" ? Math.min(5_000_000, remainingBeforeCurrentYear) : Math.min(declaredLoss * 0.5, remainingBeforeCurrentYear);
-    const enabled = setting.enabled !== false;
+    const enabled = setting.enabled === true;
     const deduction = enabled ? Math.min(availableIncome, annualLimit, remainingBeforeCurrentYear) : 0;
     availableIncome -= deduction;
     rows.push({ year, expiresAfter: year + 5, detectedLoss, declaredLoss, usedBefore, remainingBeforeCurrentYear, annualLimit, deduction, remainingAfterCurrentYear: remainingBeforeCurrentYear - deduction, strategy, enabled });

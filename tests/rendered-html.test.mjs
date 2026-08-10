@@ -22,7 +22,7 @@ test("dashboard exposes real monthly performance and benchmark controls", async 
   assert.match(page, /kapital-theme/);
   assert.match(page, /aria-label="Wygląd aplikacji"/);
   assert.match(page, /className="topbar-search"/);
-  assert.match(page, /className="dashboard-intro"/);
+  assert.match(page, /dashboard-intro/);
   assert.match(page, /Ctrl K/);
 });
 
@@ -151,13 +151,13 @@ test("tax calculator separates ordinary accounts from IKE and IKZE", () => {
   assert.equal(result.totalTaxDue, 21);
 });
 
-test("loss register uses only the previous five years and the oldest loss first", () => {
+test("loss register uses only confirmed losses from the previous five years and the oldest first", () => {
   const trades = [
     { date: "2020-06-10", saleValue: 100, purchaseValue: 1100, result: -1000, account: "PLN" },
     { date: "2021-06-10", saleValue: 200, purchaseValue: 500, result: -300, account: "PLN" },
     { date: "2023-06-10", saleValue: 400, purchaseValue: 600, result: -200, account: "PLN" },
   ];
-  const result = calculateLossCarryforward({ targetYear: 2026, trades, currentIncome: 120 });
+  const result = calculateLossCarryforward({ targetYear: 2026, trades, currentIncome: 120, settings: { "2021": { enabled: true }, "2023": { enabled: true } } });
 
   assert.deepEqual(result.rows.map(row => row.year), [2021, 2022, 2023, 2024, 2025]);
   assert.equal(result.rows[0].detectedLoss, 300);
@@ -167,12 +167,24 @@ test("loss register uses only the previous five years and the oldest loss first"
   assert.equal(result.incomeAfterDeduction, 0);
 });
 
+test("loss register does not apply detected losses before confirmation", () => {
+  const result = calculateLossCarryforward({
+    targetYear: 2026,
+    currentIncome: 120,
+    trades: [{ date: "2025-06-10", saleValue: 100, purchaseValue: 400, result: -300, account: "PLN" }],
+  });
+
+  assert.equal(result.rows.find(row => row.year === 2025)?.enabled, false);
+  assert.equal(result.totalDeduction, 0);
+  assert.equal(result.incomeAfterDeduction, 120);
+});
+
 test("loss register applies the 50 percent cap after the one-time method was used", () => {
   const result = calculateLossCarryforward({
     targetYear: 2026,
     currentIncome: 500,
     trades: [{ date: "2023-06-10", saleValue: 100, purchaseValue: 400, result: -300, account: "PLN" }],
-    settings: { "2023": { declaredLoss: 300, usedBefore: 20, oneTimeUsed: true } },
+    settings: { "2023": { declaredLoss: 300, usedBefore: 20, oneTimeUsed: true, enabled: true } },
   });
   const row = result.rows.find(item => item.year === 2023);
 

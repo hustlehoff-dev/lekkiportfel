@@ -32,7 +32,7 @@ export function calculateLiquidationTax({
     const beforeLoss=calculateTaxSummary({year,trades:scenarioTrades,cash});
     const losses=calculateLossCarryforward({targetYear:year,trades:scenarioTrades,currentIncome:beforeLoss.trades.result,settings:lossSettings});
     const summary=calculateTaxSummary({year,trades:scenarioTrades,cash,eligiblePriorLoss:losses.totalDeduction});
-    return{summary,losses};
+    return{summary,losses,beforeLoss};
   };
   const existingSecurities=summaryFor(trades);
   const afterSecurities=summaryFor([...trades,...hypotheticalTrades]);
@@ -54,8 +54,9 @@ export function calculateLiquidationTax({
   const excludedUnknown=[...unknownSecurities,...(usesCryptoLedger?uncoveredCrypto:unknownCrypto)];
   const existingTotal=existingSecurities.summary.totalTaxDue+existingCrypto.tax;
   const totalTax=afterSecurities.summary.totalTaxDue+afterCrypto.tax;
+  const totalTaxBeforePriorLoss=afterSecurities.beforeLoss.totalTaxDue+afterCrypto.tax;
   return{
-    year,date,totalTax,existingTotal,taxChange:totalTax-existingTotal,
+    year,date,totalTax,totalTaxBeforePriorLoss,existingTotal,taxChange:totalTax-existingTotal,
     securities:{
       saleValue:knownSecurities.reduce((sum,position)=>sum+position.value,0),
       cost:knownSecurities.reduce((sum,position)=>sum+position.cost,0),
@@ -63,6 +64,7 @@ export function calculateLiquidationTax({
       currentYearResult:existingSecurities.summary.trades.result,
       taxableBase:afterSecurities.summary.trades.taxableBase,
       priorLossDeduction:afterSecurities.losses.totalDeduction,
+      taxBeforePriorLoss:afterSecurities.beforeLoss.trades.tax,
       tax:afterSecurities.summary.trades.tax,
       positions:knownSecurities.length,
     },
