@@ -27,6 +27,7 @@ test("dashboard exposes real monthly performance and benchmark controls", async 
   assert.match(page, /className="topbar-search"/);
   assert.match(page, /dashboard-intro/);
   assert.match(page, /Ctrl K/);
+  assert.doesNotMatch(page, /Przywróć dane demo|Zobacz demo|demoData/);
 });
 
 test("metric cards stay dense at desktop and mobile widths", async () => {

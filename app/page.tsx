@@ -71,38 +71,6 @@ type PerformanceResponse = { points:PerformancePoint[]; benchmark:{symbol:string
 const sectors: Sector[] = ["Technologia","Finanse","Zdrowie","Konsumpcja","Przemysł","Energia","Nieruchomości","ETF","Inne"];
 const today = new Date();
 const iso = (date:Date) => date.toISOString().slice(0,10);
-const dateBack = (months:number, day=12) => iso(new Date(today.getFullYear(),today.getMonth()-months,day));
-
-const demoData: PortfolioData = {
-  source:"Portfel demonstracyjny",
-  positions:[
-    {id:"p1",symbol:"MSFT.US",name:"Microsoft",sector:"Technologia",assetClass:"Akcje",quantity:7,cost:9864,value:12462,currency:"PLN"},
-    {id:"p2",symbol:"CSPX.UK",name:"iShares Core S&P 500",sector:"ETF",assetClass:"ETF",quantity:11,cost:11840,value:13776,currency:"PLN"},
-    {id:"p3",symbol:"PKO.PL",name:"PKO Bank Polski",sector:"Finanse",assetClass:"Akcje",quantity:120,cost:5760,value:6828,currency:"PLN"},
-    {id:"p4",symbol:"NOVO-B.DK",name:"Novo Nordisk",sector:"Zdrowie",assetClass:"Akcje",quantity:12,cost:5140,value:4632,currency:"PLN"},
-    {id:"p5",symbol:"XOM.US",name:"Exxon Mobil",sector:"Energia",assetClass:"Akcje",quantity:9,cost:3720,value:4023,currency:"PLN"},
-    {id:"p6",symbol:"O.US",name:"Realty Income",sector:"Nieruchomości",assetClass:"REIT",quantity:14,cost:3180,value:3374,currency:"PLN"},
-  ],
-  cash:[
-    {id:"c1",date:dateBack(1,18),type:"DIVIDENT",symbol:"O.US",comment:"O.US USD 0.2685 / SHR",amount:14.74},
-    {id:"c2",date:dateBack(1,18),type:"Withholding Tax",symbol:"O.US",comment:"O.US USD WHT 15%",amount:-2.21},
-    {id:"c3",date:dateBack(2,10),type:"DIVIDENT",symbol:"MSFT.US",comment:"MSFT.US USD 0.83 / SHR",amount:23.61},
-    {id:"c4",date:dateBack(2,10),type:"Withholding Tax",symbol:"MSFT.US",comment:"MSFT.US USD WHT 15%",amount:-3.54},
-    {id:"c5",date:dateBack(3,18),type:"DIVIDENT",symbol:"O.US",comment:"O.US USD 0.2680 / SHR",amount:14.48},
-    {id:"c6",date:dateBack(3,18),type:"Withholding Tax",symbol:"O.US",comment:"O.US USD WHT 15%",amount:-2.17},
-    {id:"c7",date:dateBack(4,22),type:"DIVIDENT",symbol:"PKO.PL",comment:"PKO.PL PLN 5.48 / SHR",amount:657.6},
-    {id:"c8",date:dateBack(5,18),type:"DIVIDENT",symbol:"O.US",comment:"O.US USD 0.2675 / SHR",amount:14.22},
-    {id:"c9",date:dateBack(5,18),type:"Withholding Tax",symbol:"O.US",comment:"O.US USD WHT 15%",amount:-2.13},
-    {id:"c10",date:dateBack(8,10),type:"DIVIDENT",symbol:"MSFT.US",comment:"MSFT.US USD 0.83 / SHR",amount:22.94},
-    {id:"c11",date:dateBack(8,10),type:"Withholding Tax",symbol:"MSFT.US",comment:"MSFT.US USD WHT 15%",amount:-3.44},
-    {id:"c12",date:dateBack(14,4),type:"Deposit",symbol:"",comment:"Wpłata środków",amount:30000},
-  ],
-  trades:[
-    {id:"t1",date:dateBack(2,4),symbol:"AAPL.US",side:"SELL",volume:5,result:1240.4},
-    {id:"t2",date:dateBack(6,21),symbol:"CDR.PL",side:"SELL",volume:18,result:-416.2},
-    {id:"t3",date:dateBack(10,8),symbol:"VWCE.DE",side:"SELL",volume:4,result:583.6},
-  ],
-};
 
 const emptyData: PortfolioData = { positions:[], cash:[], trades:[], lots:[], source:"Nowy portfel" };
 
@@ -245,7 +213,7 @@ function MigrationScreen({email,code,setCode,onMigrate,onEmpty,busy,error}:{emai
 }
 
 export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
-  const [data,setData]=useState<PortfolioData>(demoData);
+  const [data,setData]=useState<PortfolioData>(emptyData);
   const [firebaseUser,setFirebaseUser]=useState<FirebaseUser|null>(null);
   const [authReady,setAuthReady]=useState(!firebaseConfigured);
   const [portfolioLoaded,setPortfolioLoaded]=useState(false);
@@ -300,7 +268,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
   const [importing,setImporting]=useState(false); const [notice,setNotice]=useState(""); const [dragging,setDragging]=useState(false); const fileRef=useRef<HTMLInputElement>(null);
   const aiImageRef=useRef<HTMLInputElement>(null);const aiAudioRef=useRef<HTMLInputElement>(null);
   const portfolioSearchRef=useRef<HTMLInputElement>(null);
-  const portfolioRef=useRef<PortfolioData>(demoData);
+  const portfolioRef=useRef<PortfolioData>(emptyData);
   const money=useCallback((value:number,digits=0)=>new Intl.NumberFormat("pl-PL",{style:"currency",currency:displayCurrency,maximumFractionDigits:digits,minimumFractionDigits:digits}).format(value/(fxRates[displayCurrency]||1)),[displayCurrency,fxRates]);
   const pln=useCallback((value:number,digits=2)=>new Intl.NumberFormat("pl-PL",{style:"currency",currency:"PLN",maximumFractionDigits:digits,minimumFractionDigits:digits}).format(value),[]);
   const changeCurrency=(currency:CurrencyCode)=>{setDisplayCurrency(currency);try{window.localStorage.setItem("kapital-currency",currency)}catch{}};
@@ -585,7 +553,6 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
         <button className={view==="bezpieczenstwo"?"active":""} onClick={()=>selectView("bezpieczenstwo")}><span><ShieldCheck size={18} strokeWidth={1.9}/></span>Bezpieczeństwo</button>
       </nav>
       <div className="privacy"><span>●</span><div><strong>Portfel zapisany w aplikacji</strong><p>Dostawcy notowań dostają symbol instrumentu, nie stan rachunku.</p></div></div>
-      <button className="text-button" onClick={()=>commitPortfolio(demoData,"Przywrócono dane demonstracyjne.")}>Przywróć dane demo</button>
       <div className="signed-user"><span>{(firebaseUser.email||"K").slice(0,1).toUpperCase()}</span><div><strong>{firebaseUser.email}</strong><small>Konto Firebase</small></div><button type="button" onClick={()=>void logout()} aria-label="Wyloguj"><LogOut size={16}/></button></div>
     </aside>
     {mobileMoreOpen&&<><button className="mobile-more-backdrop" onClick={()=>setMobileMoreOpen(false)} aria-label="Zamknij menu"/><section className="mobile-more-panel" aria-label="Więcej">
@@ -609,7 +576,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
       <div className="performance-foot"><span><i className="legend-swatch portfolio"/>Portfel</span>{performanceMode==="market"&&<span><i className="legend-swatch benchmark"/>S&P 500 (PLN)</span>}<p>Bieżący miesiąc jest liczony do dziś. Najedź na słupek, aby zobaczyć dokładną wartość.{performance.missing.length?` Brak historii: ${performance.missing.join(", ")}.`:""}</p></div>
     </section>
     <section className="dashboard-grid"><article className="panel allocation-panel"><div className="panel-head"><div><p className="eyebrow">Struktura</p><h3>Rozkład portfela</h3></div><div className="segmented">{(["firma","sektor","klasa"] as const).map(item=><button key={item} className={allocation===item?"active":""} onClick={()=>setAllocation(item)}>{item==="firma"?"Spółka":item==="sektor"?"Sektor":"Klasa"}</button>)}</div></div><div className="allocation-body"><Donut items={allocationItems} total={totalValue} formatMoney={money}/><div className="legend">{allocationItems.slice(0,7).map(item=><div key={item.label}><span className="legend-dot" style={{background:item.color}}/><strong>{item.label}</strong><span>{totalValue?number(item.value/totalValue*100,1):"0,0"}%</span></div>)}</div></div></article><article className="panel forecast-panel"><div className="panel-head"><div><p className="eyebrow">Najbliższe 12 miesięcy</p><h3>Kalendarz wypłat</h3></div><button className="arrow-button" aria-label="Pokaż wszystkie dywidendy" onClick={()=>selectView("dywidendy")}><ArrowRight size={18} strokeWidth={1.9}/></button></div><div className="forecast-list">{forecast.slice(0,4).map(item=><div key={`${item.symbol}-${item.date}`}><div className="date-tile"><b>{new Date(item.date).getDate()}</b><span>{new Intl.DateTimeFormat("pl-PL",{month:"short"}).format(new Date(item.date))}</span></div><div><strong>{item.symbol}</strong><small>Prognoza · {item.confidence}</small></div><b>{money(item.net,2)}</b></div>)}{!forecast.length&&<div className="empty-inline">Brak historii dywidend do zbudowania prognozy.</div>}</div></article></section>
-    <section className="panel positions-panel"><div className="panel-head"><div><p className="eyebrow">Aktywne pozycje</p><h3>Aktywa</h3></div><span className="count-pill">{visiblePositions.length}{portfolioQuery?` z ${groupedPositions.length}`:""} {plural(visiblePositions.length,"instrument","instrumenty","instrumentów")}{positions.length!==groupedPositions.length?` · ${positions.length} ${plural(positions.length,"pozycja","pozycje","pozycji")}`:""}</span></div>{visiblePositions.length?<div className="table-wrap"><table><thead><tr><th>Instrument</th><th>Rachunek</th><th>Sektor</th><th>Ilość</th><th>Aktualna cena</th><th>Wartość</th><th>Koszt</th><th>Wynik</th><th>Udział</th></tr></thead><tbody>{visiblePositions.map(p=>{const profit=p.value-p.cost,costKnown=hasKnownCost(p);return <tr key={p.id}><td><div className="asset"><span>{p.symbol.slice(0,2)}</span><div><strong>{p.symbol}</strong><small>{p.name}{p.positionCount>1?` · ${p.positionCount} ${plural(p.positionCount,"pozycja","pozycje","pozycji")}`:""}</small></div></div></td><td><span className="account-pill" title={p.accounts.join(", ")}>{p.accounts.length>1?`${p.accounts.length} ${plural(p.accounts.length,"rachunek","rachunki","rachunków")}`:p.accounts[0]||"PLN"}</span></td><td><select value={p.sector} onChange={e=>updateSector(p.positionIds,e.target.value as Sector)} aria-label={`Sektor ${p.symbol}`}>{sectors.map(sector=><option key={sector}>{sector}</option>)}</select></td><td>{number(p.quantity)}</td><td className="market-price">{p.marketPrice?<><strong>{money(p.marketPrice,p.marketPrice<10?3:2)}</strong>{p.priceChangePct!=null&&<small className={p.priceChangePct>=0?"positive":"negative-text"}>{p.priceChangePct>=0?"+":""}{number(p.priceChangePct,2)}%</small>}</>:<span>—</span>}</td><td><strong>{money(p.value)}</strong></td><td>{costKnown?<button type="button" className="known-cost-button" onClick={()=>setEditingCost(p)}>{money(p.cost)}</button>:<button type="button" className="missing-cost-button" onClick={()=>setEditingCost(p)}>Uzupełnij</button>}</td><td className={!costKnown?"unknown-result":profit>=0?"positive":"negative-text"}>{costKnown?<><strong>{profit>=0?"+":""}{money(profit)}</strong><small>{p.cost?`${profit>=0?"+":""}${number(profit/p.cost*100,1)}%`:"—"}</small></>:<><strong>—</strong><small>brak kosztu</small></>}</td><td><div className="weight"><span style={{width:`${totalValue?p.value/totalValue*100:0}%`}}/></div><small>{totalValue?number(p.value/totalValue*100,1):"0,0"}%</small></td></tr>})}</tbody></table></div>:positions.length?<div className="empty-positions search-empty-state"><div><Search size={28} strokeWidth={1.8}/></div><h4>Brak pasujących aktywów</h4><p>Zmień wyszukiwaną frazę albo wyczyść pole w górnym pasku.</p><span><button onClick={()=>setPortfolioQuery("")}>Wyczyść wyszukiwanie</button></span></div>:<EmptyPositions onImport={()=>fileRef.current?.click()} onDemo={()=>setData(demoData)}/>}</section>
+    <section className="panel positions-panel"><div className="panel-head"><div><p className="eyebrow">Aktywne pozycje</p><h3>Aktywa</h3></div><span className="count-pill">{visiblePositions.length}{portfolioQuery?` z ${groupedPositions.length}`:""} {plural(visiblePositions.length,"instrument","instrumenty","instrumentów")}{positions.length!==groupedPositions.length?` · ${positions.length} ${plural(positions.length,"pozycja","pozycje","pozycji")}`:""}</span></div>{visiblePositions.length?<div className="table-wrap"><table><thead><tr><th>Instrument</th><th>Rachunek</th><th>Sektor</th><th>Ilość</th><th>Aktualna cena</th><th>Wartość</th><th>Koszt</th><th>Wynik</th><th>Udział</th></tr></thead><tbody>{visiblePositions.map(p=>{const profit=p.value-p.cost,costKnown=hasKnownCost(p);return <tr key={p.id}><td><div className="asset"><span>{p.symbol.slice(0,2)}</span><div><strong>{p.symbol}</strong><small>{p.name}{p.positionCount>1?` · ${p.positionCount} ${plural(p.positionCount,"pozycja","pozycje","pozycji")}`:""}</small></div></div></td><td><span className="account-pill" title={p.accounts.join(", ")}>{p.accounts.length>1?`${p.accounts.length} ${plural(p.accounts.length,"rachunek","rachunki","rachunków")}`:p.accounts[0]||"PLN"}</span></td><td><select value={p.sector} onChange={e=>updateSector(p.positionIds,e.target.value as Sector)} aria-label={`Sektor ${p.symbol}`}>{sectors.map(sector=><option key={sector}>{sector}</option>)}</select></td><td>{number(p.quantity)}</td><td className="market-price">{p.marketPrice?<><strong>{money(p.marketPrice,p.marketPrice<10?3:2)}</strong>{p.priceChangePct!=null&&<small className={p.priceChangePct>=0?"positive":"negative-text"}>{p.priceChangePct>=0?"+":""}{number(p.priceChangePct,2)}%</small>}</>:<span>—</span>}</td><td><strong>{money(p.value)}</strong></td><td>{costKnown?<button type="button" className="known-cost-button" onClick={()=>setEditingCost(p)}>{money(p.cost)}</button>:<button type="button" className="missing-cost-button" onClick={()=>setEditingCost(p)}>Uzupełnij</button>}</td><td className={!costKnown?"unknown-result":profit>=0?"positive":"negative-text"}>{costKnown?<><strong>{profit>=0?"+":""}{money(profit)}</strong><small>{p.cost?`${profit>=0?"+":""}${number(profit/p.cost*100,1)}%`:"—"}</small></>:<><strong>—</strong><small>brak kosztu</small></>}</td><td><div className="weight"><span style={{width:`${totalValue?p.value/totalValue*100:0}%`}}/></div><small>{totalValue?number(p.value/totalValue*100,1):"0,0"}%</small></td></tr>})}</tbody></table></div>:positions.length?<div className="empty-positions search-empty-state"><div><Search size={28} strokeWidth={1.8}/></div><h4>Brak pasujących aktywów</h4><p>Zmień wyszukiwaną frazę albo wyczyść pole w górnym pasku.</p><span><button onClick={()=>setPortfolioQuery("")}>Wyczyść wyszukiwanie</button></span></div>:<EmptyPositions onImport={()=>fileRef.current?.click()}/>}</section>
     <section className={`dropzone ${dragging?"dragging":""}`} onDragOver={e=>{e.preventDefault();setDragging(true)}} onDragLeave={()=>setDragging(false)} onDrop={e=>{e.preventDefault();setDragging(false);importFile(e.dataTransfer.files[0])}} onClick={()=>fileRef.current?.click()}><span className="upload-icon"><Upload size={18} strokeWidth={1.9}/></span><div><strong>Upuść pełny eksport XTB</strong><p>ZIP, XLSX, XLS lub CSV · obsługa wielu rachunków</p></div><button>Wybierz plik</button></section></>}
     {view==="dywidendy"&&<section className="subpage-grid">
       <article className="dividend-summary"><p className="eyebrow">Cały portfel · wszystkie rachunki łącznie</p><h2>{money(divNet,2)}</h2><p>Dywidendy netto od początku historii</p><div><span>Brutto <b>{money(divGross,2)}</b></span><span>Podatek u źródła <b>{money(Math.abs(divGross-divNet),2)}</b></span><span>Kolejne 12 miesięcy <b>{money(forecastTotal,2)}</b></span></div></article>
@@ -781,4 +748,4 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
   </main>
 }
 
-function EmptyPositions({onImport,onDemo}:{onImport:()=>void;onDemo:()=>void}){return <div className="empty-positions"><div><WalletCards size={20} strokeWidth={1.9}/></div><h4>Brakuje otwartych pozycji</h4><p>Historia XTB często zawiera tylko zamknięte transakcje. Wczytaj raport z tabelą „OPEN POSITION”, aby policzyć bieżący wynik i alokację.</p><span><button onClick={onImport}>Wczytaj raport</button><button className="secondary" onClick={onDemo}>Zobacz demo</button></span></div>}
+function EmptyPositions({onImport}:{onImport:()=>void}){return <div className="empty-positions"><div><WalletCards size={20} strokeWidth={1.9}/></div><h4>Brakuje otwartych pozycji</h4><p>Historia XTB często zawiera tylko zamknięte transakcje. Wczytaj raport z tabelą „OPEN POSITION”, aby policzyć bieżący wynik i alokację.</p><span><button onClick={onImport}>Wczytaj raport</button></span></div>}
