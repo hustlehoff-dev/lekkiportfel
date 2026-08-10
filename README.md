@@ -25,6 +25,20 @@ Logowanie działa przez Firebase Authentication, a portfel jest zapisywany w
 `LEGACY_MIGRATION_KEY` służy tylko do jednorazowego przeniesienia starego,
 lokalnego portfela do pierwszego konta.
 
+## Dodawanie aktywów z tekstu, głosu i screenshota
+
+1. Wpisz serwerowy klucz xAI w ignorowanym przez Git pliku `.env.local`:
+
+```bash
+XAI_API_KEY=tu_wpisz_klucz
+XAI_MODEL=grok-4.3
+```
+
+2. Uruchom serwer ponownie i wybierz na pulpicie **Dodaj przez AI**.
+
+Klucz nie jest udostępniany przeglądarce. Analiza wymaga ważnej sesji Firebase,
+a rozpoznane pozycje trafiają do portfela dopiero po zatwierdzeniu podglądu.
+
 ## Quick Start
 
 ```bash

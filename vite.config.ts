@@ -37,6 +37,8 @@ export default defineConfig(async ({ mode }) => {
   const fileEnv = loadEnv(mode, process.cwd(), "");
   const publicEnv = (name: string) => JSON.stringify(process.env[name] ?? fileEnv[name] ?? "");
   process.env.LEGACY_MIGRATION_KEY ??= fileEnv.LEGACY_MIGRATION_KEY;
+  process.env.XAI_API_KEY ??= fileEnv.XAI_API_KEY;
+  process.env.XAI_MODEL ??= fileEnv.XAI_MODEL;
   // Keep Wrangler and Miniflare state project-local. These are non-secret tool
   // settings; application environment belongs in ignored `.env*` files.
   process.env.WRANGLER_WRITE_LOGS ??= "false";

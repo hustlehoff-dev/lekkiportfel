@@ -17,9 +17,11 @@ import {
   Ellipsis,
   History,
   Info,
+  ImagePlus,
   LockKeyhole,
   LogOut,
   Mail,
+  Mic,
   Plus,
   RefreshCw,
   ReceiptText,
@@ -29,6 +31,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   Sigma,
+  Sparkles,
   Trash2,
   Upload,
   UserCheck,
@@ -39,6 +42,7 @@ import { auditTradesWithNbp, calculateCryptoTax, calculateLossCarryforward, calc
 import { buildCsvZipBytes, buildXlsxBytes, downloadBytes, type SpreadsheetSheet } from "../lib/spreadsheet-export";
 import { firebaseConfigured, loadUserPortfolio, loginWithGoogle, loginWithPassword, logout, observeUser, registerWithPassword, resetPassword, saveUserPortfolio, type FirebaseUser } from "../lib/firebase-client";
 import { buildPortfolioCopy, defaultPortfolioCopySettings, portfolioCopyOptions, type CopySection, type PortfolioCopySettings } from "../lib/portfolio-copy";
+import type { AiPortfolioProposal } from "../lib/ai-portfolio";
 
 type Sector = "Technologia" | "Finanse" | "Zdrowie" | "Konsumpcja" | "Przemysł" | "Energia" | "Nieruchomości" | "ETF" | "Inne";
 type Position = { id:string; symbol:string; name:string; sector:Sector; assetClass:string; quantity:number; cost:number; value:number; currency:string; account?:string; manual?:boolean; priceId?:string; marketPrice?:number; priceUpdatedAt?:string; priceProvider?:string; priceChangePct?:number|null };
@@ -248,6 +252,13 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
   const [allocation,setAllocation]=useState<"firma"|"sektor"|"klasa">("firma");
   const [account,setAccount]=useState("Wszystkie");
   const [addingAsset,setAddingAsset]=useState(false);
+  const [aiOpen,setAiOpen]=useState(false);
+  const [aiPrompt,setAiPrompt]=useState("");
+  const [aiImage,setAiImage]=useState<{name:string;dataUrl:string}|null>(null);
+  const [aiProposal,setAiProposal]=useState<AiPortfolioProposal|null>(null);
+  const [aiBusy,setAiBusy]=useState(false);
+  const [aiTranscribing,setAiTranscribing]=useState(false);
+  const [aiError,setAiError]=useState("");
   const [addingCryptoTransaction,setAddingCryptoTransaction]=useState(false);
   const [cryptoTransactionType,setCryptoTransactionType]=useState<CryptoTransaction["type"]>("buy");
   const [cryptoInstrument,setCryptoInstrument]=useState<InstrumentResult|null>(null);
@@ -276,6 +287,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
   const [taxNbpMissing,setTaxNbpMissing]=useState(0);
   const [priceStatus,setPriceStatus]=useState<PriceStatus>({loading:false,updatedAt:null,updated:0,missing:[]});
   const [importing,setImporting]=useState(false); const [notice,setNotice]=useState(""); const [dragging,setDragging]=useState(false); const fileRef=useRef<HTMLInputElement>(null);
+  const aiImageRef=useRef<HTMLInputElement>(null);const aiAudioRef=useRef<HTMLInputElement>(null);
   const portfolioSearchRef=useRef<HTMLInputElement>(null);
   const portfolioRef=useRef<PortfolioData>(demoData);
   const money=useCallback((value:number,digits=0)=>new Intl.NumberFormat("pl-PL",{style:"currency",currency:displayCurrency,maximumFractionDigits:digits,minimumFractionDigits:digits}).format(value/(fxRates[displayCurrency]||1)),[displayCurrency,fxRates]);
@@ -368,6 +380,54 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
   function updateSector(id:string,sector:Sector){const next={...data,positions:data.positions.map(p=>p.id===id?{...p,sector}:p)};commitPortfolio(next)}
   function updateTaxLoss(year:number,patch:Partial<LossSetting>){const key=String(year);const next={...data,taxLosses:{...(data.taxLosses||{}),[key]:{...(data.taxLosses?.[key]||{}),...patch}}};commitPortfolio(next)}
   function updateCryptoCostOverride(year:number,amount?:number){const key=String(year);const overrides={...(data.cryptoCostOverrides||{})};if(amount===undefined)delete overrides[key];else overrides[key]=Math.max(0,amount);commitPortfolio({...data,cryptoCostOverrides:overrides})}
+  function openAiModal(){setAiPrompt("");setAiImage(null);setAiProposal(null);setAiError("");setAiBusy(false);setAiOpen(true)}
+  function chooseAiImage(file?:File){
+    if(!file)return;if(!/^image\/(png|jpeg)$/i.test(file.type)){setAiError("Wybierz screenshot PNG albo JPEG.");return}if(file.size>10*1024*1024){setAiError("Screenshot może mieć maksymalnie 10 MB.");return}
+    const reader=new FileReader();reader.onload=()=>{if(typeof reader.result==="string"){setAiImage({name:file.name,dataUrl:reader.result});setAiProposal(null);setAiError("")}};reader.onerror=()=>setAiError("Nie udało się odczytać screenshota.");reader.readAsDataURL(file);
+  }
+  async function analyzePortfolioWithAi(){
+    if(!aiPrompt.trim()&&!aiImage){setAiError("Wpisz, co chcesz dodać, albo dołącz screenshot.");return}
+    setAiBusy(true);setAiError("");setAiProposal(null);
+    try{
+      const token=await firebaseUser!.getIdToken();
+      const response=await fetch("/api/ai/portfolio",{method:"POST",headers:{authorization:`Bearer ${token}`,"content-type":"application/json"},body:JSON.stringify({prompt:aiPrompt.trim(),imageDataUrl:aiImage?.dataUrl})});
+      const result=await response.json() as AiPortfolioProposal&{error?:string};if(!response.ok)throw new Error(result.error||"Analiza nie powiodła się.");
+      const duplicateWarnings=result.items.filter(item=>item.symbol&&data.positions.some(position=>position.symbol.toUpperCase()===item.symbol!.toUpperCase()&&(item.account?position.account===item.account:true))).map(item=>`${item.symbol} już występuje w portfelu — zatwierdzenie doda kolejną pozycję.`);
+      setAiProposal({...result,warnings:[...result.warnings,...duplicateWarnings]});
+    }catch(error){setAiError(error instanceof Error?error.message:"Nie udało się przeanalizować danych.")}finally{setAiBusy(false)}
+  }
+  async function transcribeAiAudio(file?:File){
+    if(!file)return;if(file.size>20*1024*1024){setAiError("Nagranie może mieć maksymalnie 20 MB.");return}
+    setAiTranscribing(true);setAiError("");
+    try{
+      const token=await firebaseUser!.getIdToken();const form=new FormData();form.append("file",file,file.name||"nagranie.webm");
+      const response=await fetch("/api/ai/transcribe",{method:"POST",headers:{authorization:`Bearer ${token}`},body:form});const result=await response.json() as {text?:string;error?:string};if(!response.ok||!result.text)throw new Error(result.error||"Nie udało się rozpoznać mowy.");
+      setAiPrompt(current=>[current.trim(),result.text].filter(Boolean).join(" "));setAiProposal(null);
+    }catch(error){setAiError(error instanceof Error?error.message:"Nie udało się rozpoznać mowy.")}finally{setAiTranscribing(false)}
+  }
+  async function confirmAiProposal(){
+    if(!aiProposal?.items.length)return;setAiBusy(true);setAiError("");
+    try{
+      const cashRows=aiProposal.items.map((item,index)=>({item,index})).filter(row=>row.item.kind==="cash");
+      const rates=new Map<number,number>();
+      if(cashRows.length){
+        const result=await fetch("/api/prices",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({items:cashRows.map(row=>({id:String(row.index),symbol:row.item.currency||"PLN",assetClass:"Gotówka",currency:row.item.currency||"PLN"}))})}).then(response=>response.ok?response.json():Promise.reject(new Error("Nie udało się pobrać kursów gotówki.")));
+        for(const quote of result.quotes||[])rates.set(Number(quote.id),Number(quote.pricePln)||1);
+      }
+      const added:Position[]=aiProposal.items.map((item,index)=>{
+        const accountName=item.account&&item.account!=="Wszystkie"?item.account:"Poza XTB";
+        if(item.kind==="cash"){
+          const currency=item.currency||"PLN",quantity=item.amount||0,rate=rates.get(index)??(currency==="PLN"?1:1);
+          return{id:clientId("ai"),symbol:currency,name:`Gotówka ${currency}`,sector:"Inne",assetClass:"Gotówka",quantity,cost:quantity*rate,value:quantity*rate,currency,account:accountName,manual:true,marketPrice:rate,priceUpdatedAt:new Date().toISOString(),priceProvider:"NBP"};
+        }
+        const assetClass=item.kind==="stock"?"Akcje":item.kind==="etf"?"ETF":item.kind==="crypto"?"Krypto":"Inne";
+        const quantity=item.kind==="other"?(item.quantity||1):(item.quantity||0);const cost=Math.max(0,item.totalCostPln||0);const value=Math.max(0,item.currentValuePln??cost);
+        return{id:clientId("ai"),symbol:(item.symbol||item.name||"INNE").toUpperCase(),name:item.name||item.symbol||"Inne aktywo",sector:assetClass==="ETF"?"ETF":"Inne",assetClass,quantity,cost,value,currency:"PLN",account:accountName,manual:true};
+      });
+      const next={...data,positions:[...data.positions,...added],source:data.source.includes("własne aktywa")?data.source:`${data.source} · własne aktywa`};
+      commitPortfolio(next,`Dodano ${added.length} ${added.length===1?"pozycję":"pozycji"} z zatwierdzonego podglądu.`);setAccount("Wszystkie");setAiOpen(false);setAiProposal(null);setAiImage(null);setAiPrompt("");void refreshPrices(next);
+    }catch(error){setAiError(error instanceof Error?error.message:"Nie udało się zapisać pozycji.")}finally{setAiBusy(false)}
+  }
   function openCryptoTransactionModal(){setCryptoTransactionType("buy");setCryptoInstrument(null);setCryptoTargetInstrument(null);setAddingCryptoTransaction(true)}
   async function addCryptoTransaction(event:React.FormEvent<HTMLFormElement>){
     event.preventDefault();if(!cryptoInstrument){setNotice("Wyszukaj i wybierz kryptowalutę.");return}if(cryptoTransactionType==="swap"&&!cryptoTargetInstrument){setNotice("Wybierz kryptowalutę otrzymaną w zamianie.");return}
@@ -497,6 +557,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
     </aside>
     {mobileMoreOpen&&<><button className="mobile-more-backdrop" onClick={()=>setMobileMoreOpen(false)} aria-label="Zamknij menu"/><section className="mobile-more-panel" aria-label="Więcej">
       <header><strong>Więcej</strong><button onClick={()=>setMobileMoreOpen(false)} aria-label="Zamknij"><X size={18}/></button></header>
+      <button onClick={()=>{setMobileMoreOpen(false);openAiModal()}}><span><Sparkles size={18}/></span><div><strong>Dodaj przez AI</strong><small>Tekst, głos lub screenshot portfela</small></div></button>
       <button onClick={()=>{setMobileMoreOpen(false);openAssetModal()}}><span><Plus size={18}/></span><div><strong>Dodaj aktywo</strong><small>Akcje, ETF, krypto, gotówka lub inne</small></div></button>
       <button onClick={()=>selectView("historia")}><span><History size={18}/></span><div><strong>Historia konta</strong><small>Wszystkie operacje i przepływy</small></div></button>
       <button onClick={()=>selectView("faq")}><span><CircleHelp size={18}/></span><div><strong>Najczęstsze pytania</strong><small>Import, ceny i działanie aplikacji</small></div></button>
@@ -505,7 +566,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
       <button onClick={()=>void logout()}><span><LogOut size={18}/></span><div><strong>Wyloguj się</strong><small>{firebaseUser.email}</small></div></button>
     </section></>}
     <section className="content"><header className="topbar"><div className="topbar-title"><p className="eyebrow">{viewCopy[view].eyebrow}</p><h1>{viewCopy[view].title}</h1></div><div className="mobile-brand"><span className="brand-mark"><WalletCards size={17} strokeWidth={2}/></span><strong>KAPITAŁ</strong></div><label className="topbar-search"><span aria-hidden="true"><Search size={18} strokeWidth={1.8}/></span><input ref={portfolioSearchRef} value={portfolioQuery} onChange={e=>setPortfolioQuery(e.target.value)} placeholder="Szukaj aktywa, symbolu lub rachunku…" aria-label="Szukaj w portfelu"/><kbd>Ctrl K</kbd></label><div className="top-actions"><select className="theme-select" value={designTheme} onChange={e=>changeDesignTheme(e.target.value as DesignTheme)} aria-label="Wygląd aplikacji"><option value="lekka">Lekka</option><option value="dark">Dark</option></select><select className="currency-select" value={displayCurrency} onChange={e=>changeCurrency(e.target.value as CurrencyCode)} aria-label="Waluta prezentacji"><option value="PLN">PLN zł</option><option value="USD">USD $</option><option value="EUR">EUR €</option><option value="GBP">GBP £</option></select>{accounts.length>1&&<select className="account-select" value={account} onChange={e=>setAccount(e.target.value)} aria-label="Rachunek">{accounts.map(item=><option key={item}>{item}</option>)}</select>}<button className="add-asset-button" onClick={openAssetModal}><span><Plus size={18} strokeWidth={2.4}/></span><b>Dodaj aktywo</b></button><span className="as-of">Stan na dziś</span><button className="import-button" onClick={()=>fileRef.current?.click()} disabled={importing}><span><Upload size={18} strokeWidth={1.9}/></span><b>{importing?"Wczytuję…":"Importuj XTB"}</b></button></div><input ref={fileRef} className="sr-only" type="file" accept=".zip,.xlsx,.xls,.csv" onChange={e=>importFile(e.target.files?.[0])}/></header>
-    <div className="main-shell"><div className="main-content">{view!=="bezpieczenstwo"&&<section className={`dashboard-intro ${view==="pulpit"?"with-copy-actions":""}`}><p>{viewCopy[view].eyebrow}</p><h1>{viewCopy[view].title}</h1><span>{viewCopy[view].description}</span>{view==="pulpit"&&<div className="copy-actions"><button type="button" className="copy-portfolio-button" onClick={()=>void copyPortfolioData()}><Copy size={16} strokeWidth={2}/><b>Kopiuj dane</b></button><button type="button" className="copy-settings-button" onClick={()=>setCopySettingsOpen(true)} aria-label="Ustaw zakres kopiowanych danych" title="Ustaw zakres"><Settings2 size={16} strokeWidth={2}/></button></div>}</section>}
+    <div className="main-shell"><div className="main-content">{view!=="bezpieczenstwo"&&<section className={`dashboard-intro ${view==="pulpit"?"with-copy-actions":""}`}><p>{viewCopy[view].eyebrow}</p><h1>{viewCopy[view].title}</h1><span>{viewCopy[view].description}</span>{view==="pulpit"&&<div className="copy-actions"><button type="button" className="ai-portfolio-button" onClick={openAiModal}><Sparkles size={16} strokeWidth={2}/><b>Dodaj przez AI</b></button><button type="button" className="copy-portfolio-button" onClick={()=>void copyPortfolioData()}><Copy size={16} strokeWidth={2}/><b>Kopiuj dane</b></button><button type="button" className="copy-settings-button" onClick={()=>setCopySettingsOpen(true)} aria-label="Ustaw zakres kopiowanych danych" title="Ustaw zakres"><Settings2 size={16} strokeWidth={2}/></button></div>}</section>}
     {view!=="bezpieczenstwo"&&<div className={`price-status ${priceStatus.loading?"loading":priceStatus.missing.length?"partial":"live"}`} role="status"><span className="live-dot"/><div><strong>{priceStatus.loading?"Pobieram aktualne ceny…":priceStatus.updatedAt?"Notowania są aktualne":"Oczekiwanie na notowania"}</strong><small>{priceStatus.updatedAt?`${priceStatus.updated} instrumentów · aktualizacja ${new Intl.DateTimeFormat("pl-PL",{hour:"2-digit",minute:"2-digit"}).format(new Date(priceStatus.updatedAt))}${priceStatus.missing.length?` · ${new Set(priceStatus.missing).size} bez ceny`:""}`:"Ceny odświeżą się automatycznie"}</small></div><button type="button" onClick={()=>void refreshPrices(undefined,true)} disabled={priceStatus.loading}><RefreshCw size={13} strokeWidth={1.9}/> Odśwież</button></div>}
     {notice&&<div className="notice" role="status"><span><Info size={14} strokeWidth={2}/></span>{notice}<button onClick={()=>setNotice("")} aria-label="Zamknij"><X size={15} strokeWidth={2}/></button></div>}
     {view==="pulpit"&&<><section className="hero-grid"><article className="value-card"><div className="metric-icon yellow"><WalletCards size={18} strokeWidth={1.9}/></div><p>Wartość portfela</p><h2>{money(totalValue)}</h2><div className={`profit-pill ${openProfit<0?"negative":""}`}>{openProfit>=0?"↑":"↓"} {money(Math.abs(openProfit),2)} <span>({totalCost?number(openProfit/totalCost*100):"0,00"}%)</span></div><small>Niezrealizowany wynik na aktywach</small></article><article className="metric-card"><div className="metric-icon green"><ArrowUpRight size={18} strokeWidth={1.9}/></div><p>Dywidendy netto</p><h3>{money(divNet,2)}</h3><small>Zebrane · cała historia</small><span className="micro">Brutto {money(divGross,2)}</span></article><article className="metric-card"><div className="metric-icon amber"><CalendarClock size={18} strokeWidth={1.9}/></div><p>Prognoza 12 mies.</p><h3>{money(forecastTotal,2)}</h3><small>Na bazie poprzednich wypłat</small><span className="micro">{forecast.length} przewidywanych wypłat</span></article><article className="metric-card"><div className="metric-icon dark"><Sigma size={18} strokeWidth={1.9}/></div><p>Wynik zrealizowany</p><h3 className={realized<0?"red":""}>{money(realized,2)}</h3><small>Zamknięte transakcje</small><span className="micro">{trades.length} operacje</span></article></section>
@@ -579,15 +640,15 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
           <div><LockKeyhole size={18}/><p>Hasła i sesje obsługuje Firebase Authentication; aplikacja nie zapisuje haseł w danych portfela.</p></div>
           <div><Database size={18}/><p>Przetworzony portfel zapisujemy w Firestore pod identyfikatorem zalogowanego użytkownika.</p></div>
           <div><ServerCog size={18}/><p>Dostawcy notowań otrzymują symbole i dane rynku, ale nie liczbę jednostek ani koszty zakupu.</p></div>
-          <div><BellRing size={18}/><p>Moduł wyniku przetwarza na backendzie partie zakupu, transakcje i bieżące pozycje.</p></div>
+          <div><BellRing size={18}/><p>AI przygotowuje wyłącznie podgląd. Portfel zmienia się dopiero po wyraźnym zatwierdzeniu pozycji.</p></div>
           <div><CheckCircle2 size={18}/><p>Kursy walut pobieramy z NBP bez przekazywania danych portfela.</p></div>
         </div>
       </section>
 
       <section className="security-wide-card">
         <div className="security-section-head"><ServerCog size={22}/><h2>Dostawcy usług technicznych</h2></div>
-        <p className="security-provider-copy">Firebase (Google) obsługuje konto, sesję i zapis portfela. Aplikacja korzysta też z Yahoo Finance do notowań akcji i ETF-ów, CoinGecko do danych o kryptowalutach oraz NBP do kursów walut.</p>
-        <p className="security-provider-copy">Dostawcy notowań otrzymują zapytania o symbole instrumentów, ale nie otrzymują pliku importu, liczby jednostek, kosztów zakupu ani łącznej wartości portfela. Przetworzone dane portfela są natomiast przechowywane w Firestore.</p>
+        <p className="security-provider-copy">Firebase (Google) obsługuje konto, sesję i zapis portfela. Yahoo Finance dostarcza notowania akcji i ETF-ów, CoinGecko dane o kryptowalutach, NBP kursy walut, a xAI analizuje polecenia, nagrania i screenshoty przekazane w funkcji „Dodaj przez AI”.</p>
+        <p className="security-provider-copy">Do xAI nic nie trafia w tle. Materiał wysyłamy dopiero po kliknięciu „Analizuj”. Screenshot i nagranie nie są zapisywane w Firestore; zapisujemy dopiero pozycje zatwierdzone w podglądzie. xAI deklaruje, że nie trenuje na danych API bez wyraźnej zgody; standardowo przechowuje żądania do 30 dni, chyba że na koncie xAI włączono Zero Data Retention.</p>
         <div className="security-links"><button onClick={()=>selectView("faq")}>Jak działa import</button><button onClick={()=>selectView("pulpit")}>Wróć do portfela</button></div>
       </section>
 
@@ -596,8 +657,19 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
         <section><span className="support-icon"><ShieldAlert size={21}/></span><h2>Zgłaszanie podatności</h2><p>Jeśli zauważysz błąd bezpieczeństwa, zgłoś go właścicielowi tej instancji. Opisz, jak odtworzyć problem, jakiego widoku dotyczy i czy mógł ujawnić albo zmienić dane portfela.</p></section>
       </div>
 
-      <p className="security-note">Ten opis odzwierciedla sposób działania widoczny w aktualnym kodzie aplikacji. Po dodaniu logowania, osobnych kont użytkowników albo nowych integracji tę stronę trzeba zaktualizować.</p>
+      <p className="security-note">Klucz xAI pozostaje na serwerze. Każde żądanie AI wymaga ważnej sesji Firebase i podlega limitowi użycia.</p>
     </article>}
+    {aiOpen&&<div className="modal-backdrop" role="presentation" tabIndex={-1} onKeyDown={event=>{if(event.key==="Escape"&&!aiBusy&&!aiTranscribing)setAiOpen(false)}} onMouseDown={event=>{if(event.currentTarget===event.target&&!aiBusy&&!aiTranscribing)setAiOpen(false)}}>
+      <section className="asset-modal ai-portfolio-modal" role="dialog" aria-modal="true" aria-labelledby="ai-portfolio-title">
+        <header><div><p className="eyebrow">Tekst · głos · screenshot</p><h2 id="ai-portfolio-title">Dodaj przez AI</h2></div><button className="modal-close" type="button" disabled={aiBusy||aiTranscribing} onClick={()=>setAiOpen(false)} aria-label="Zamknij"><X size={18} strokeWidth={2}/></button></header>
+        <div className="ai-composer"><textarea value={aiPrompt} onChange={event=>{setAiPrompt(event.target.value);setAiProposal(null)}} maxLength={5000} placeholder="Np. Mam 12 500 zł na koncie oszczędnościowym i 0,08 BTC kupione łącznie za 18 000 zł…" autoFocus/><div className="ai-composer-actions"><button type="button" onClick={()=>aiImageRef.current?.click()}><ImagePlus size={15}/>{aiImage?"Zmień screenshot":"Dodaj screenshot"}</button><button type="button" disabled={aiTranscribing} onClick={()=>aiAudioRef.current?.click()}><Mic size={15}/>{aiTranscribing?"Przepisuję…":"Dodaj głos"}</button><span>{aiPrompt.length}/5000</span></div><input ref={aiImageRef} className="sr-only" type="file" accept="image/png,image/jpeg" onChange={event=>{chooseAiImage(event.target.files?.[0]);event.currentTarget.value=""}}/><input ref={aiAudioRef} className="sr-only" type="file" accept="audio/*" capture="user" onChange={event=>{void transcribeAiAudio(event.target.files?.[0]);event.currentTarget.value=""}}/></div>
+        {aiImage&&<div className="ai-attachment"><span><ImagePlus size={15}/></span><div><strong>{aiImage.name}</strong><small>Screenshot zostanie wysłany dopiero podczas analizy.</small></div><button type="button" onClick={()=>{setAiImage(null);setAiProposal(null)}} aria-label="Usuń screenshot"><X size={15}/></button></div>}
+        {aiError&&<p className="ai-error" role="alert">{aiError}</p>}
+        {aiProposal&&<div className="ai-preview"><div className="ai-preview-head"><div><p className="eyebrow">Podgląd przed zapisem</p><h3>{aiProposal.summary}</h3></div><span>{aiProposal.items.length} {aiProposal.items.length===1?"pozycja":"pozycji"}</span></div><div className="ai-preview-list">{aiProposal.items.map((item,index)=><article key={`${item.kind}-${item.symbol}-${index}`}><span className={`ai-kind ${item.kind}`}>{item.kind==="cash"?"GOT":item.kind==="stock"?"AKC":item.kind==="etf"?"ETF":item.kind==="crypto"?"KRY":"INN"}</span><div><strong>{item.kind==="cash"?`Gotówka ${item.currency||"PLN"}`:item.name||item.symbol||"Inne aktywo"}</strong><p>{item.kind==="cash"?`${number(item.amount||0,2)} ${item.currency||"PLN"}`:`${number(item.quantity||1,8)} ${item.symbol||"szt."}`}{item.account?` · ${item.account}`:""}</p>{(item.totalCostPln!=null||item.currentValuePln!=null)&&<small>{item.totalCostPln!=null?`koszt ${pln(item.totalCostPln)}`:""}{item.totalCostPln!=null&&item.currentValuePln!=null?" · ":""}{item.currentValuePln!=null?`wartość ${pln(item.currentValuePln)}`:""}</small>}{item.notes&&<small>{item.notes}</small>}</div><span className={`ai-confidence ${item.confidence}`}>{item.confidence==="high"?"pewne":item.confidence==="medium"?"sprawdź":"niska pewność"}</span><button type="button" onClick={()=>setAiProposal(current=>current?{...current,items:current.items.filter((_,row)=>row!==index)}:current)} aria-label={`Pomiń ${item.name||item.symbol||"pozycję"}`}><X size={14}/></button></article>)}</div>{aiProposal.warnings.length>0&&<div className="ai-warnings"><strong>Sprawdź przed zatwierdzeniem</strong>{aiProposal.warnings.map((warning,index)=><p key={`${warning}-${index}`}>{warning}</p>)}</div>}</div>}
+        <div className="ai-privacy"><ShieldCheck size={16}/><p>Model tylko przygotowuje podgląd. Nic nie zmieni się bez Twojego zatwierdzenia. xAI standardowo przechowuje dane API do 30 dni, chyba że na koncie włączono Zero Data Retention.</p></div>
+        <div className="modal-actions ai-modal-actions"><button type="button" className="secondary-action" disabled={aiBusy||aiTranscribing} onClick={()=>setAiOpen(false)}>Anuluj</button>{aiProposal?<><button type="button" className="secondary-action" disabled={aiBusy} onClick={()=>void analyzePortfolioWithAi()}>Analizuj ponownie</button><button type="button" className="primary-action" disabled={aiBusy||!aiProposal.items.length} onClick={()=>void confirmAiProposal()}><CheckCircle2 size={15}/>{aiBusy?"Zapisuję…":`Zatwierdź i dodaj (${aiProposal.items.length})`}</button></>:<button type="button" className="primary-action" disabled={aiBusy||aiTranscribing||(!aiPrompt.trim()&&!aiImage)} onClick={()=>void analyzePortfolioWithAi()}><Sparkles size={15}/>{aiBusy?"Analizuję…":"Analizuj"}</button>}</div>
+      </section>
+    </div>}
     {copySettingsOpen&&<div className="modal-backdrop" role="presentation" tabIndex={-1} onKeyDown={event=>{if(event.key==="Escape")setCopySettingsOpen(false)}} onMouseDown={event=>{if(event.currentTarget===event.target)setCopySettingsOpen(false)}}>
       <section className="asset-modal copy-settings-modal" role="dialog" aria-modal="true" aria-labelledby="copy-settings-title">
         <header><div><p className="eyebrow">Raport tekstowy</p><h2 id="copy-settings-title">Co kopiować?</h2></div><button className="modal-close" type="button" onClick={()=>setCopySettingsOpen(false)} aria-label="Zamknij"><X size={18} strokeWidth={2}/></button></header>
