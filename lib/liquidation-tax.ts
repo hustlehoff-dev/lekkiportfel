@@ -1,5 +1,5 @@
-import { calculateCryptoTax, calculateLossCarryforward, calculateTaxSummary, isRetirementAccount, type CryptoTaxTransaction, type LossSetting, type TaxCashEvent, type TaxTrade } from "./tax-calculator";
-import { hasKnownCost } from "./portfolio-metrics";
+import { calculateCryptoTax, calculateLossCarryforward, calculateTaxSummary, isRetirementAccount, type CryptoTaxTransaction, type LossSetting, type TaxCashEvent, type TaxTrade } from "./tax-calculator.ts";
+import { hasKnownCost } from "./portfolio-metrics.ts";
 
 export type LiquidationPosition={symbol:string;name:string;assetClass:string;account?:string;cost:number;costKnown?:boolean;value:number};
 export type LiquidationCryptoTransaction=CryptoTaxTransaction&{symbol?:string;toSymbol?:string};
@@ -19,10 +19,12 @@ export function calculateLiquidationTax({
   const ordinary=positions.filter(position=>!isRetirementAccount(position.account));
   const retirement=positions.filter(position=>isRetirementAccount(position.account));
   const securities=ordinary.filter(position=>/^(Akcje|ETF|REIT)$/i.test(position.assetClass));
+  const retirementSecurities=retirement.filter(position=>/^(Akcje|ETF|REIT)$/i.test(position.assetClass));
   const crypto=ordinary.filter(position=>/^Krypto$/i.test(position.assetClass));
   const other=ordinary.filter(position=>!securities.includes(position)&&!crypto.includes(position)&&position.assetClass!=="Gotówka");
   const cashPositions=ordinary.filter(position=>position.assetClass==="Gotówka");
   const knownSecurities=securities.filter(hasKnownCost),unknownSecurities=securities.filter(position=>!hasKnownCost(position));
+  const knownRetirementSecurities=retirementSecurities.filter(hasKnownCost);
   const hypotheticalTrades:TaxTrade[]=knownSecurities.map((position,index)=>({
     id:`liquidation-${index}`,date,symbol:position.symbol,result:position.value-position.cost,
     saleValue:position.value,purchaseValue:position.cost,account:position.account,
@@ -61,6 +63,7 @@ export function calculateLiquidationTax({
       saleValue:knownSecurities.reduce((sum,position)=>sum+position.value,0),
       cost:knownSecurities.reduce((sum,position)=>sum+position.cost,0),
       liquidationResult:knownSecurities.reduce((sum,position)=>sum+position.value-position.cost,0),
+      allAccountsResult:[...knownSecurities,...knownRetirementSecurities].reduce((sum,position)=>sum+position.value-position.cost,0),
       currentYearResult:existingSecurities.summary.trades.result,
       taxableBase:afterSecurities.summary.trades.taxableBase,
       priorLossDeduction:afterSecurities.losses.totalDeduction,
@@ -77,6 +80,8 @@ export function calculateLiquidationTax({
       unknownCost:excludedUnknown,
       unknownCostValue:excludedUnknown.reduce((sum,position)=>sum+position.value,0),
       retirementValue:retirement.reduce((sum,position)=>sum+position.value,0),
+      retirementResult:knownRetirementSecurities.reduce((sum,position)=>sum+position.value-position.cost,0),
+      retirementResultPositions:knownRetirementSecurities.length,
       cashValue:cashPositions.reduce((sum,position)=>sum+position.value,0),
       otherValue:other.reduce((sum,position)=>sum+position.value,0),
     },

@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { strFromU8, unzipSync } from "fflate";
 import { auditTradesWithNbp, calculateCryptoTax, calculateLossCarryforward, calculateTaxSummary } from "../lib/tax-calculator.ts";
+import { calculateLiquidationTax } from "../lib/liquidation-tax.ts";
 import { buildCsvZipBytes, buildXlsxBytes } from "../lib/spreadsheet-export.ts";
 
 const root = new URL("../", import.meta.url);
@@ -192,6 +193,27 @@ test("loss register applies the 50 percent cap after the one-time method was use
   assert.equal(row?.deduction, 150);
   assert.equal(row?.remainingAfterCurrentYear, 130);
   assert.equal(result.incomeAfterDeduction, 350);
+});
+
+test("liquidation tax separates ordinary profit from IKE and IKZE profit", () => {
+  const result = calculateLiquidationTax({
+    asOf: new Date("2026-08-10T12:00:00Z"),
+    positions: [
+      { symbol: "XTB.PL", name: "XTB", assetClass: "Akcje", account: "PLN", cost: 3900, value: 5495.6 },
+      { symbol: "XTB.PL", name: "XTB", assetClass: "Akcje", account: "IKE", cost: 40000, value: 55500 },
+      { symbol: "KRU.PL", name: "Kruk", assetClass: "Akcje", account: "IKZE", cost: 3100, value: 3400 },
+    ],
+    trades: [],
+    cash: [],
+    cryptoTransactions: [],
+  });
+
+  assert.ok(Math.abs(result.securities.liquidationResult - 1595.6) < 0.001);
+  assert.equal(result.excluded.retirementResult, 15800);
+  assert.ok(Math.abs(result.securities.allAccountsResult - 17395.6) < 0.001);
+  assert.equal(result.excluded.retirementValue, 58900);
+  assert.equal(result.securities.tax, 303);
+  assert.equal(result.taxChange, 303);
 });
 
 test("crypto tax carries unused costs forward and ignores crypto-to-crypto swaps", () => {
