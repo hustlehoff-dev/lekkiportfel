@@ -4,7 +4,7 @@ import test from "node:test";
 import { strFromU8, unzipSync } from "fflate";
 import { auditTradesWithNbp, calculateCryptoTax, calculateLossCarryforward, calculateTaxSummary } from "../lib/tax-calculator.ts";
 import { calculateLiquidationTax, calculateRetirementExitTax } from "../lib/liquidation-tax.ts";
-import { buildDividendForecast } from "../lib/dividend-forecast.ts";
+import { buildDividendForecast, inferMonthlyContribution } from "../lib/dividend-forecast.ts";
 import { buildCsvZipBytes, buildXlsxBytes } from "../lib/spreadsheet-export.ts";
 
 const root = new URL("../", import.meta.url);
@@ -259,6 +259,33 @@ test("dividend forecast requires six dates before treating a payer as monthly", 
   const result = buildDividendForecast(rows, [], today, { positions: [{ symbol: "ADC.US", quantity: 1, account: "IKE" }] });
 
   assert.equal(result.length, 0);
+});
+
+test("next-year dividend projection grows with recurring contributions", () => {
+  const today = new Date("2026-08-10T12:00:00Z");
+  const dividends = [
+    { date: "2025-06-25", symbol: "XTB.PL", amount: 54.5, comment: "XTB.PL PLN 5.4500/ SHR", account: "PLN" },
+    { date: "2026-06-24", symbol: "XTB.PL", amount: 40.7, comment: "XTB.PL PLN 4.0700/ SHR", account: "PLN" },
+  ];
+  const positions = [{ symbol: "XTB.PL", quantity: 10, value: 1600, account: "PLN" }];
+  const until = new Date("2027-12-31T12:00:00Z");
+  const unchanged = buildDividendForecast(dividends, [], today, { positions, fxRates: { PLN: 1 }, until }).filter(item => item.date.startsWith("2027-"));
+  const growing = buildDividendForecast(dividends, [], today, { positions, fxRates: { PLN: 1 }, until, monthlyContribution: 1000 }).filter(item => item.date.startsWith("2027-"));
+
+  assert.equal(unchanged.length, 1);
+  assert.equal(growing.length, 1);
+  assert.ok(growing[0].net > unchanged[0].net);
+});
+
+test("monthly contribution uses external deposits without double-counting IKE transfers", () => {
+  const today = new Date("2026-08-10T12:00:00Z");
+  const monthly = inferMonthlyContribution([
+    { date: "2026-02-01", type: "Deposit", amount: 12000, account: "PLN" },
+    { date: "2026-03-01", type: "IKE deposit", amount: -6000, account: "PLN" },
+    { date: "2026-03-01", type: "IKE deposit", amount: 6000, account: "IKE" },
+  ], today);
+
+  assert.equal(monthly, 1000);
 });
 
 test("crypto tax carries unused costs forward and ignores crypto-to-crypto swaps", () => {

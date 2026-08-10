@@ -1,7 +1,8 @@
 export type DividendForecastInput={date:string;symbol:string;amount:number;comment?:string;account?:string};
-export type DividendForecastPosition={symbol:string;quantity:number;account?:string};
+export type DividendForecastPosition={symbol:string;quantity:number;value?:number;account?:string};
 export type DividendForecastItem={date:string;symbol:string;gross:number;net:number;confidence:string;accounts:string[]};
-export type DividendForecastOptions={positions:DividendForecastPosition[];fxRates?:Record<string,number>};
+export type DividendForecastOptions={positions:DividendForecastPosition[];fxRates?:Record<string,number>;until?:Date;monthlyContribution?:number};
+export type DividendContributionInput={date:string;type:string;amount:number;account?:string};
 
 const day=86_400_000;
 const cadences=[
@@ -23,13 +24,23 @@ function perShareFromComment(comment=""){
   return Number.isFinite(amount)&&amount>0?{currency:match[1].toUpperCase(),amount}:null;
 }
 
+export function inferMonthlyContribution(cash:DividendContributionInput[],today:Date){
+  const start=new Date(today);start.setUTCFullYear(start.getUTCFullYear()-1);
+  const recent=cash.filter(item=>atNoon(item.date)>=start&&atNoon(item.date)<=today&&Number.isFinite(item.amount)&&item.amount>0);
+  const external=recent.filter(item=>/^(deposit|wp[lł]ata)$/i.test(item.type.trim()));
+  const deposits=external.length?external:recent.filter(item=>/deposit|wp[lł]ata/i.test(item.type));
+  return deposits.reduce((sum,item)=>sum+item.amount,0)/12;
+}
+
 export function buildDividendForecast(dividends:DividendForecastInput[],cash:DividendForecastInput[],today:Date,options:DividendForecastOptions){
-  const active=new Map<string,{symbol:string;account:string;quantity:number}>();
+  const active=new Map<string,{symbol:string;account:string;quantity:number;value:number}>();
+  let portfolioValue=0;
   for(const position of options.positions){
-    const symbol=normalized(position.symbol),account=normalized(position.account)||"PLN",quantity=Number(position.quantity);
+    const symbol=normalized(position.symbol),account=normalized(position.account)||"PLN",quantity=Number(position.quantity),positionValue=Math.max(0,Number(position.value)||0);
     if(!symbol||!Number.isFinite(quantity)||quantity<=0)continue;
     const key=accountKey(symbol,account),current=active.get(key);
-    active.set(key,{symbol,account,quantity:(current?.quantity||0)+quantity});
+    active.set(key,{symbol,account,quantity:(current?.quantity||0)+quantity,value:(current?.value||0)+positionValue});
+    portfolioValue+=positionValue;
   }
   if(!active.size)return[];
 
@@ -50,7 +61,8 @@ export function buildDividendForecast(dividends:DividendForecastInput[],cash:Div
     taxByPayment.set(key,(taxByPayment.get(key)||0)+row.amount);
   }
 
-  const horizon=plusMonths(today,12);
+  const horizon=options.until||plusMonths(today,12);
+  const monthlyContribution=Math.max(0,Number(options.monthlyContribution)||0);
   const rawEvents:Array<DividendForecastItem&{cadence:string;history:number}>=[];
   for(const [key,dates] of grouped){
     const owner=active.get(key)!;
@@ -69,13 +81,18 @@ export function buildDividendForecast(dividends:DividendForecastInput[],cash:Div
 
     const perShare=lastPayment.comments.map(perShareFromComment).find(Boolean);
     const fx=perShare?options.fxRates?.[perShare.currency]:undefined;
-    const gross=perShare&&Number.isFinite(fx)&&Number(fx)>0?perShare.amount*owner.quantity*Number(fx):lastPayment.gross;
     const tax=taxByPayment.get(`${key}:${lastDate}`)||0;
     const netRatio=lastPayment.gross>0?Math.max(0,Math.min(1,(lastPayment.gross+tax)/lastPayment.gross)):1;
-    const net=gross*netRatio;
     let next=plusMonths(atNoon(lastDate),cadence.months);let guard=0;
     while(next<=today&&guard++<24)next=plusMonths(next,cadence.months);
     while(next<=horizon){
+      const monthsAhead=Math.max(0,(next.getUTCFullYear()-today.getUTCFullYear())*12+next.getUTCMonth()-today.getUTCMonth());
+      const currentPrice=owner.quantity>0&&owner.value>0?owner.value/owner.quantity:0;
+      const allocation=portfolioValue>0?owner.value/portfolioValue:0;
+      const addedQuantity=currentPrice>0?monthlyContribution*allocation*monthsAhead/currentPrice:0;
+      const projectedQuantity=owner.quantity+addedQuantity;
+      const gross=perShare&&Number.isFinite(fx)&&Number(fx)>0?perShare.amount*projectedQuantity*Number(fx):lastPayment.gross*(projectedQuantity/owner.quantity);
+      const net=gross*netRatio;
       rawEvents.push({date:iso(next),symbol:owner.symbol,gross,net,accounts:[owner.account],cadence:cadence.label,history:history.length,confidence:`${history.length} dat · cykl ${cadence.label} · ${owner.quantity.toLocaleString("pl-PL")} szt.`});
       next=plusMonths(next,cadence.months);
     }
