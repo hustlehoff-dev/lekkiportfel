@@ -552,7 +552,6 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
         <button className={view==="faq"?"active":""} onClick={()=>selectView("faq")}><span><CircleHelp size={18} strokeWidth={1.9}/></span>Najczęstsze pytania</button>
         <button className={view==="bezpieczenstwo"?"active":""} onClick={()=>selectView("bezpieczenstwo")}><span><ShieldCheck size={18} strokeWidth={1.9}/></span>Bezpieczeństwo</button>
       </nav>
-      <div className="privacy"><span>●</span><div><strong>Portfel zapisany w aplikacji</strong><p>Dostawcy notowań dostają symbol instrumentu, nie stan rachunku.</p></div></div>
       <div className="signed-user"><span>{(firebaseUser.email||"K").slice(0,1).toUpperCase()}</span><div><strong>{firebaseUser.email}</strong><small>Konto Firebase</small></div><button type="button" onClick={()=>void logout()} aria-label="Wyloguj"><LogOut size={16}/></button></div>
     </aside>
     {mobileMoreOpen&&<><button className="mobile-more-backdrop" onClick={()=>setMobileMoreOpen(false)} aria-label="Zamknij menu"/><section className="mobile-more-panel" aria-label="Więcej">

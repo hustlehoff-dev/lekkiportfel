@@ -2383,7 +2383,7 @@ html[data-portfolio-theme="lekka"] .tax-disclaimer { border-color: #ead98a; back
 .migration-card .auth-submit { margin-bottom: 5px; }
 .migration-card .auth-back { padding: 9px; }
 .migration-note { margin: 16px 0 0; padding-top: 15px; border-top: 1px solid #e2e7e1; color: #7a847e; font-size: 9px; line-height: 1.55; }
-.signed-user { display: grid; grid-template-columns: 31px minmax(0,1fr) 28px; align-items: center; gap: 8px; margin-top: 12px; padding: 10px 8px; border-top: 1px solid #2d3c34; }
+.signed-user { display: grid; grid-template-columns: 31px minmax(0,1fr) 28px; align-items: center; gap: 8px; margin-top: auto; padding: 10px 8px; border-top: 1px solid #2d3c34; }
 .signed-user > span { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; background: #2f493b; color: #91d0ad; font-size: 11px; font-weight: 800; }
 .signed-user > div { min-width: 0; display: grid; gap: 2px; }
 .signed-user strong { overflow: hidden; color: #e8eee9; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
