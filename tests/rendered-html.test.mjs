@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { auditTradesWithNbp, calculateTaxSummary } from "../lib/tax-calculator.ts";
+import { auditTradesWithNbp, calculateLossCarryforward, calculateTaxSummary } from "../lib/tax-calculator.ts";
 
 const root = new URL("../", import.meta.url);
 
@@ -121,6 +121,37 @@ test("tax calculator separates ordinary accounts from IKE and IKZE", () => {
   assert.equal(result.totalTaxDue, 21);
 });
 
+test("loss register uses only the previous five years and the oldest loss first", () => {
+  const trades = [
+    { date: "2020-06-10", saleValue: 100, purchaseValue: 1100, result: -1000, account: "PLN" },
+    { date: "2021-06-10", saleValue: 200, purchaseValue: 500, result: -300, account: "PLN" },
+    { date: "2023-06-10", saleValue: 400, purchaseValue: 600, result: -200, account: "PLN" },
+  ];
+  const result = calculateLossCarryforward({ targetYear: 2026, trades, currentIncome: 120 });
+
+  assert.deepEqual(result.rows.map(row => row.year), [2021, 2022, 2023, 2024, 2025]);
+  assert.equal(result.rows[0].detectedLoss, 300);
+  assert.equal(result.rows[0].deduction, 120);
+  assert.equal(result.rows[2].deduction, 0);
+  assert.equal(result.totalDeduction, 120);
+  assert.equal(result.incomeAfterDeduction, 0);
+});
+
+test("loss register applies the 50 percent cap after the one-time method was used", () => {
+  const result = calculateLossCarryforward({
+    targetYear: 2026,
+    currentIncome: 500,
+    trades: [{ date: "2023-06-10", saleValue: 100, purchaseValue: 400, result: -300, account: "PLN" }],
+    settings: { "2023": { declaredLoss: 300, usedBefore: 20, oneTimeUsed: true } },
+  });
+  const row = result.rows.find(item => item.year === 2023);
+
+  assert.equal(row?.annualLimit, 150);
+  assert.equal(row?.deduction, 150);
+  assert.equal(row?.remainingAfterCurrentYear, 130);
+  assert.equal(result.incomeAfterDeduction, 350);
+});
+
 test("tax view has a local PIT-38 route and data-quality warnings", async () => {
   const [page, route, nbpRoute] = await Promise.all([
     readFile(new URL("app/page.tsx", root), "utf8"),
@@ -138,6 +169,9 @@ test("tax view has a local PIT-38 route and data-quality warnings", async () => 
   assert.match(page, /\["23","Inne przychody"/);
   assert.match(page, /\["50","Łączny podatek do zapłaty"/);
   assert.match(page, /Oficjalne API NBP/);
+  assert.match(page, /Rejestr strat do odliczenia/);
+  assert.match(page, /Limit jednorazowy użyty/);
+  assert.match(page, /taxLosses/);
   assert.match(route, /initialView="podatki"/);
   assert.match(nbpRoute, /https:\/\/api\.nbp\.pl\/api\/exchangerates\/rates\/a\//);
   assert.match(nbpRoute, /end\.setUTCDate\(end\.getUTCDate\(\) - 1\)/);

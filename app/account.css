@@ -1975,6 +1975,7 @@ html[data-portfolio-theme="lekka"] .security-links button:hover { background: #f
 .tax-rows .tax-result { min-height: 44px; }
 .tax-rows .tax-result span,.tax-rows .tax-result b { color: #f8fffa; font-size: 12px; font-weight: 800; }
 .tax-inputs { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin-top: 16px; }
+.tax-inputs.single { grid-template-columns: minmax(0,1fr); }
 .tax-inputs label { display: grid; gap: 7px; }
 .tax-inputs label span { color: #aebdb4; font-size: 9px; line-height: 1.4; }
 .tax-inputs input { width: 100%; min-height: 38px; padding: 0 10px; border: 1px solid #43604d; border-radius: 8px; background: #0e1611; color: #f5fff8; font: inherit; font-size: 11px; }
@@ -1983,6 +1984,21 @@ html[data-portfolio-theme="lekka"] .security-links button:hover { background: #f
 .tax-control-card li { display: grid; grid-template-columns: 8px minmax(0,1fr); align-items: start; gap: 9px; color: #aebdb4; font-size: 10px; line-height: 1.55; }
 .tax-control-card li > span { width: 7px; height: 7px; margin-top: 4px; border-radius: 50%; background: #72ffac; box-shadow: 0 0 0 3px rgba(114,255,172,.1); }
 .tax-control-card li.warning > span { background: #ffd84d; box-shadow: 0 0 0 3px rgba(255,216,77,.12); }
+.tax-loss-register { overflow: hidden; }
+.loss-register-intro { max-width: 920px; margin: -2px 0 17px; color: #91a097; font-size: 10px; line-height: 1.65; }
+.tax-loss-register table { min-width: 1060px; }
+.tax-loss-register tbody tr.disabled-row { opacity: .48; }
+.tax-loss-register td { vertical-align: middle; }
+.loss-number-input { width: 112px; min-height: 34px; padding: 0 8px; border: 1px solid #43604d; border-radius: 7px; background: #0e1611; color: #f5fff8; font: inherit; font-size: 10px; font-variant-numeric: tabular-nums; }
+.loss-check { display: inline-grid; place-items: center; cursor: pointer; }
+.loss-check input { position: absolute; opacity: 0; pointer-events: none; }
+.loss-check span { width: 18px; height: 18px; display: grid; place-items: center; border: 1px solid #486151; border-radius: 5px; background: #0e1611; }
+.loss-check input:checked + span { border-color: #55f59a; background: #55f59a; box-shadow: inset 0 0 0 4px #0e1611; }
+.loss-method { display: flex; align-items: center; gap: 7px; color: #aebdb4; font-size: 8px; white-space: nowrap; cursor: pointer; }
+.loss-method input { accent-color: #55f59a; }
+.loss-register-summary { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1px; margin-top: 14px; overflow: hidden; border: 1px solid #293c31; border-radius: 9px; background: #293c31; }
+.loss-register-summary span { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; background: #101713; color: #aebdb4; font-size: 9px; }
+.loss-register-summary b { font-size: 10px; }
 .pit-fields { padding: 20px; }
 .pit-fields-intro { max-width: 820px; margin: -3px 0 17px; color: #91a097; font-size: 10px; line-height: 1.6; }
 .pit-fields-intro.warning-copy { margin-bottom: 0; color: #ffd84d; }
@@ -2029,7 +2045,16 @@ html[data-portfolio-theme="lekka"] .tax-rows > div { border-bottom-color: #edf0f
 html[data-portfolio-theme="lekka"] .tax-source-line,
 html[data-portfolio-theme="lekka"] .tax-audit-foot { color: #64748b; }
 html[data-portfolio-theme="lekka"] .pit-fields-intro,
-html[data-portfolio-theme="lekka"] .pit-fields-grid p { color: #64748b; }
+html[data-portfolio-theme="lekka"] .pit-fields-grid p,
+html[data-portfolio-theme="lekka"] .loss-register-intro,
+html[data-portfolio-theme="lekka"] .loss-method,
+html[data-portfolio-theme="lekka"] .loss-register-summary span { color: #64748b; }
+html[data-portfolio-theme="lekka"] .loss-number-input { border-color: #d9dee7; background: #fff; color: #0f172a; }
+html[data-portfolio-theme="lekka"] .loss-check span { border-color: #cbd5e1; background: #fff; }
+html[data-portfolio-theme="lekka"] .loss-check input:checked + span { border-color: #22a55d; background: #22a55d; box-shadow: inset 0 0 0 4px #fff; }
+html[data-portfolio-theme="lekka"] .loss-method input { accent-color: #22a55d; }
+html[data-portfolio-theme="lekka"] .loss-register-summary { border-color: #edf0f3; background: #edf0f3; }
+html[data-portfolio-theme="lekka"] .loss-register-summary span { background: #fff; }
 html[data-portfolio-theme="lekka"] .pit-fields-intro.warning-copy { color: #806400; }
 html[data-portfolio-theme="lekka"] .pit-fields-grid { border-top-color: #edf0f3; border-left-color: #edf0f3; }
 html[data-portfolio-theme="lekka"] .pit-fields-grid > div { border-right-color: #edf0f3; border-bottom-color: #edf0f3; }
@@ -2064,5 +2089,6 @@ html[data-portfolio-theme="lekka"] .tax-disclaimer { border-color: #ead98a; back
   .pit-fields { padding: 16px 14px; }
   .pit-fields-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .tax-inputs { grid-template-columns: 1fr; }
+  .loss-register-summary { grid-template-columns: 1fr; }
   .tax-transactions table { min-width: 680px; }
 }

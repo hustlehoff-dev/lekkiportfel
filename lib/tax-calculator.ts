@@ -44,6 +44,27 @@ export type TradeTaxAudit = {
   closeRate?: NbpRate;
 };
 
+export type LossSetting = {
+  declaredLoss?: number;
+  usedBefore?: number;
+  oneTimeUsed?: boolean;
+  enabled?: boolean;
+};
+
+export type LossCarryforwardRow = {
+  year: number;
+  expiresAfter: number;
+  detectedLoss: number;
+  declaredLoss: number;
+  usedBefore: number;
+  remainingBeforeCurrentYear: number;
+  annualLimit: number;
+  deduction: number;
+  remainingAfterCurrentYear: number;
+  strategy: "one-time" | "50-percent";
+  enabled: boolean;
+};
+
 export type TaxSummary = {
   year: number;
   trades: {
@@ -154,6 +175,42 @@ export function taxYears(trades: TaxTrade[], cash: TaxCashEvent[], currentYear =
     if (Number.isFinite(year)) years.push(year);
   }
   return [...new Set(years)].sort((a, b) => b - a);
+}
+
+export function calculateLossCarryforward({
+  targetYear,
+  trades,
+  currentIncome,
+  settings = {},
+}: {
+  targetYear: number;
+  trades: TaxTrade[];
+  currentIncome: number;
+  settings?: Record<string, LossSetting>;
+}) {
+  const rows: LossCarryforwardRow[] = [];
+  let availableIncome = Math.max(0, value(currentIncome));
+
+  for (let year = targetYear - 5; year < targetYear; year += 1) {
+    const detectedResult = calculateTaxSummary({ year, trades, cash: [] }).trades.result;
+    const detectedLoss = Math.max(0, -detectedResult);
+    const setting = settings[String(year)] || {};
+    const declaredLoss = Math.max(0, setting.declaredLoss === undefined ? detectedLoss : value(setting.declaredLoss));
+    const usedBefore = Math.min(declaredLoss, Math.max(0, value(setting.usedBefore)));
+    const remainingBeforeCurrentYear = Math.max(0, declaredLoss - usedBefore);
+    const strategy = setting.oneTimeUsed ? "50-percent" : "one-time";
+    const annualLimit = strategy === "one-time" ? Math.min(5_000_000, remainingBeforeCurrentYear) : Math.min(declaredLoss * 0.5, remainingBeforeCurrentYear);
+    const enabled = setting.enabled !== false;
+    const deduction = enabled ? Math.min(availableIncome, annualLimit, remainingBeforeCurrentYear) : 0;
+    availableIncome -= deduction;
+    rows.push({ year, expiresAfter: year + 5, detectedLoss, declaredLoss, usedBefore, remainingBeforeCurrentYear, annualLimit, deduction, remainingAfterCurrentYear: remainingBeforeCurrentYear - deduction, strategy, enabled });
+  }
+
+  return {
+    rows,
+    totalDeduction: rows.reduce((sum, row) => sum + row.deduction, 0),
+    incomeAfterDeduction: availableIncome,
+  };
 }
 
 export function calculateTaxSummary({
