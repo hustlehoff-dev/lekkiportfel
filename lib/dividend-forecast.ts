@@ -104,5 +104,5 @@ export function buildDividendForecast(dividends:DividendForecastInput[],cash:Div
     if(current){current.gross+=event.gross;current.net+=event.net;current.accounts=[...new Set([...current.accounts,...event.accounts])];current.history=Math.max(current.history,event.history);current.cadences.add(event.cadence)}
     else merged.set(key,{date:event.date,symbol:event.symbol,gross:event.gross,net:event.net,accounts:event.accounts,history:event.history,cadences:new Set([event.cadence]),confidence:event.confidence});
   }
-  return[...merged.values()].map(item=>({...item,confidence:`${item.history} ${item.history===1?"data":item.history<5?"daty":"dat"} · cykl ${[...item.cadences].join("/")} · ${item.accounts.join(" + ")}`})).sort((a,b)=>a.date.localeCompare(b.date));
+  return[...merged.values()].map(item=>({...item,confidence:`${item.history} ${item.history===1?"data":item.history<5?"daty":"dat"} · cykl ${[...item.cadences].join("/")} · łącznie ${item.accounts.length} ${item.accounts.length===1?"rachunek":item.accounts.length<5?"rachunki":"rachunków"}`})).sort((a,b)=>a.date.localeCompare(b.date));
 }

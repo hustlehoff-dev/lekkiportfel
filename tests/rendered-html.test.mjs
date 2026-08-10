@@ -275,6 +275,8 @@ test("dividend forecast shares payment cadence across accounts for the same tick
   assert.equal(result.length, 1);
   assert.equal(result[0].gross, 81.4);
   assert.deepEqual(result[0].accounts, ["IKE", "PLN"]);
+  assert.match(result[0].confidence, /łącznie 2 rachunki/);
+  assert.doesNotMatch(result[0].confidence, /IKE \+ PLN/);
 });
 
 test("dividend forecast keeps a low-confidence annual estimate after one Polish payout", () => {
