@@ -2517,10 +2517,15 @@ html[data-portfolio-theme="lekka"] .copy-settings-foot > p strong { color: #1018
 .unknown-result strong, .unknown-result small { display: block; }
 .cost-modal { max-width: 500px; }
 .cost-modal-copy { margin: 15px 0 18px; color: #8e9aa2; font-size: 13px; line-height: 1.6; }
+.cost-position-list { display: grid; gap: 10px; }
+.cost-position-list .field { display: grid; grid-template-columns: minmax(0,1fr) 180px; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #293c31; }
+.cost-position-list .field > span { line-height: 1.45; }
+.cost-position-list .field input { width: 100%; }
 .cost-modal-actions { flex-wrap: wrap; }
 .cost-modal-actions .clear-cost-action { margin-right: auto; color: #b45309; }
 
 html[data-portfolio-theme="lekka"] .cost-modal-copy { color: #667085; }
+html[data-portfolio-theme="lekka"] .cost-position-list .field { border-bottom-color: #edf0f3; }
 html[data-portfolio-theme="lekka"] .missing-cost-button { color: #7a5b00; background: #fff4bf; }
 html[data-portfolio-theme="lekka"] .unknown-result { color: #667085; }
 
@@ -2569,4 +2574,5 @@ html[data-portfolio-theme="lekka"] .ai-privacy svg { color: #22a55d; }
   .ai-modal-actions .primary-action:last-child { grid-column: 1 / -1; }
   .cost-modal-actions { display: grid; grid-template-columns: 1fr 1fr; }
   .cost-modal-actions .clear-cost-action { grid-column: 1 / -1; margin: 0; }
+  .cost-position-list .field { grid-template-columns: 1fr; gap: 7px; }
 }
