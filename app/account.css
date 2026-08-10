@@ -54,6 +54,12 @@
 .price-status button:disabled { opacity: .55; cursor: wait; }
 @keyframes price-pulse { to { opacity: .45; transform: scale(.8); } }
 
+.portfolio-scope-filter { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 14px 0 0; }
+.portfolio-scope-filter > span { margin-right: 3px; color: #84918a; font-size: 9px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.portfolio-scope-filter button { min-height: 32px; padding: 0 11px; border: 1px solid #2c3b33; border-radius: 999px; background: #111914; color: #aab7af; font-size: 10px; font-weight: 700; }
+.portfolio-scope-filter button:hover { border-color: #527c64; color: #f5fff8; }
+.portfolio-scope-filter button.active { border-color: #67b58f; background: #193326; color: #91ddb4; }
+
 .modal-backdrop {
   position: fixed;
   z-index: 50;
@@ -575,6 +581,10 @@ html[data-portfolio-theme="lekka"] .price-status strong { color: #344054; }
 html[data-portfolio-theme="lekka"] .price-status small { color: #667085; }
 html[data-portfolio-theme="lekka"] .price-status button { background: #fff; border-color: #e2e8f0; color: #475569; }
 html[data-portfolio-theme="lekka"] .price-status button:hover { border-color: #f7c400; color: #0f1722; }
+html[data-portfolio-theme="lekka"] .portfolio-scope-filter > span { color: #667085; }
+html[data-portfolio-theme="lekka"] .portfolio-scope-filter button { border-color: #e2e8f0; background: #fff; color: #475569; box-shadow: 0 4px 14px rgba(15,23,42,.035); }
+html[data-portfolio-theme="lekka"] .portfolio-scope-filter button:hover { border-color: #d6c35d; color: #101828; }
+html[data-portfolio-theme="lekka"] .portfolio-scope-filter button.active { border-color: #e7ce43; background: #fff9da; color: #5f4b00; box-shadow: inset 0 0 0 1px rgba(247,196,0,.16); }
 html[data-portfolio-theme="lekka"] .notice { background: #fff9da; border-color: #eee0a0; color: #5f4b00; }
 html[data-portfolio-theme="lekka"] .notice > span { background: #f7c400; color: #0f1722; }
 html[data-portfolio-theme="lekka"] .notice button { color: #75621b; }
@@ -2645,6 +2655,9 @@ html[data-portfolio-theme="lekka"] .ai-privacy { background: #f8fafc; color: #66
 html[data-portfolio-theme="lekka"] .ai-privacy svg { color: #22a55d; }
 
 @media (max-width: 760px) {
+  .portfolio-scope-filter { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); margin-top: 12px; }
+  .portfolio-scope-filter > span { grid-column: 1 / -1; margin: 0 0 1px; }
+  .portfolio-scope-filter button { width: 100%; min-height: 36px; padding: 0 8px; }
   .copy-actions { flex-wrap: wrap; }
   .ai-portfolio-button { flex: 1 0 100%; }
   .ai-portfolio-modal { width: 100%; }

@@ -26,6 +26,12 @@ test("dashboard exposes real monthly performance and benchmark controls", async 
   assert.match(page, /aria-label="Wygląd aplikacji"/);
   assert.match(page, /className="topbar-search"/);
   assert.match(page, /dashboard-intro/);
+  assert.match(page, /aria-label="Zakres majątku"/);
+  assert.match(page, /Rachunki zwykłe/);
+  assert.match(page, /Emerytalne · IKE \+ IKZE/);
+  assert.match(page, /Dodane ręcznie/);
+  assert.match(page, /matchesPortfolioScope/);
+  assert.doesNotMatch(page, /accounts\.map\(item=>.*Cały portfel/);
   assert.match(page, /Ctrl K/);
   assert.doesNotMatch(page, /Przywróć dane demo|Zobacz demo|demoData/);
   assert.doesNotMatch(page, /Portfel zapisany w aplikacji|Dostawcy notowań dostają symbol instrumentu/);
