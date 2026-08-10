@@ -369,6 +369,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
   const dividendTaxes=useMemo(()=>cash.filter(item=>/withholding|podatek.*zrodl/i.test(norm(item.type))),[cash]);
   const forecast=useMemo(()=>buildDividendForecast(dividends,dividendTaxes,today,{positions,fxRates}),[dividendTaxes,dividends,fxRates,positions]);
   const forecastTotal=forecast.reduce((s,i)=>s+i.net,0);
+  const currentYearDividendNet=useMemo(()=>dividends.filter(item=>Number(item.date.slice(0,4))===today.getFullYear()).reduce((sum,item)=>sum+item.amount,0)+dividendTaxes.filter(item=>Number(item.date.slice(0,4))===today.getFullYear()).reduce((sum,item)=>sum+item.amount,0),[dividendTaxes,dividends]);
   const forecastGroups=useMemo(()=>groupDividendForecast(forecast),[forecast]);
   const dividendHistoryGroups=useMemo(()=>groupDividendHistory(dividends,dividendTaxes),[dividendTaxes,dividends]);
   const inferredMonthlyContribution=useMemo(()=>inferMonthlyContribution(cash,today),[cash]);
@@ -619,6 +620,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
       </article>
       <article className="panel full dividend-projection">
         <div className="panel-head"><div><p className="eyebrow">Rok kalendarzowy {nextDividendYear}</p><h3>Ile dywidend może wpłynąć w {nextDividendYear}</h3></div><label className="contribution-input"><span>Miesięczna wpłata</span><span><input type="number" min="0" step="100" value={Math.round(monthlyContribution)} onChange={event=>setMonthlyContributionOverride(Math.max(0,Number(event.target.value)||0))}/><b>PLN</b></span><small>{monthlyContributionOverride===null?"Średnia z importu z ostatnich 12 mies.":"Kwota ustawiona ręcznie"}</small>{monthlyContributionOverride!==null&&<button type="button" onClick={()=>setMonthlyContributionOverride(null)}>Przywróć średnią</button>}</label></div>
+        <div className="projection-comparison"><span>W {today.getFullYear()} zaksięgowano już</span><strong>{money(currentYearDividendNet,2)}</strong><small>netto · stan na dziś</small></div>
         <div className="projection-formula"><div><span>Dzisiejszy portfel</span><strong>{money(nextYearForecastTotal,2)}</strong><small>dywidendy bez nowych zakupów</small></div><i>+</i><div><span>Wpływ nowych wpłat</span><strong>{money(nextYearContributionEffect,2)}</strong><small>{pln(monthlyContribution,0)}/mies. inwestowane od dziś</small></div><i>=</i><div className="projection-primary"><span>Razem w {nextDividendYear}</span><strong>{money(nextYearGrowthTotal,2)}</strong><small>szacowane dywidendy netto</small></div></div>
         <p className="projection-note">Prosty model: od dziś co miesiąc inwestujesz {pln(monthlyContribution,0)} w obecne aktywa, zachowując ich dzisiejsze proporcje. Zakładamy niezmienne ceny oraz dywidendę na akcję. To scenariusz, nie obietnica wyniku.</p>
       </article>

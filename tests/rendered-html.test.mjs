@@ -262,6 +262,34 @@ test("dividend forecast requires six dates before treating a payer as monthly", 
   assert.equal(result.length, 0);
 });
 
+test("dividend forecast shares payment cadence across accounts for the same ticker", () => {
+  const today = new Date("2026-08-10T12:00:00Z");
+  const result = buildDividendForecast([
+    { date: "2025-06-25", symbol: "XTB.PL", amount: 54.5, comment: "XTB.PL PLN 5.4500/ SHR", account: "IKE" },
+    { date: "2026-06-24", symbol: "XTB.PL", amount: 40.7, comment: "XTB.PL PLN 4.0700/ SHR", account: "PLN" },
+  ], [], today, { positions: [
+    { symbol: "XTB.PL", quantity: 10, value: 1600, account: "IKE" },
+    { symbol: "XTB.PL", quantity: 10, value: 1600, account: "PLN" },
+  ], fxRates: { PLN: 1 } });
+
+  assert.equal(result.length, 1);
+  assert.equal(result[0].gross, 81.4);
+  assert.deepEqual(result[0].accounts, ["IKE", "PLN"]);
+});
+
+test("dividend forecast keeps a low-confidence annual estimate after one Polish payout", () => {
+  const result = buildDividendForecast([
+    { date: "2026-05-10", symbol: "ABE.PL", amount: 10, comment: "ABE.PL PLN 5.0000/ SHR", account: "IKE" },
+  ], [], new Date("2026-08-10T12:00:00Z"), { positions: [
+    { symbol: "ABE.PL", quantity: 4, value: 400, account: "IKE" },
+  ], fxRates: { PLN: 1 } });
+
+  assert.equal(result.length, 1);
+  assert.equal(result[0].date, "2027-05-10");
+  assert.equal(result[0].gross, 20);
+  assert.match(result[0].confidence, /niska pewność/);
+});
+
 test("next-year dividend projection grows with recurring contributions", () => {
   const today = new Date("2026-08-10T12:00:00Z");
   const dividends = [

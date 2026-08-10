@@ -15,7 +15,6 @@ const cadences=[
 const atNoon=(date:string)=>new Date(`${date.slice(0,10)}T12:00:00Z`);
 const iso=(date:Date)=>date.toISOString().slice(0,10);
 const normalized=(value="")=>value.trim().toUpperCase();
-const accountKey=(symbol:string,account="")=>`${normalized(account)||"PLN"}::${normalized(symbol)}`;
 function plusMonths(date:Date,months:number){const next=new Date(date);next.setUTCMonth(next.getUTCMonth()+months);return next}
 function perShareFromComment(comment=""){
   const match=comment.replace(",",".").match(/\b(PLN|USD|EUR|GBP)\s+([0-9]+(?:\.[0-9]+)?)\s*\/\s*SHR\b/i);
@@ -33,55 +32,56 @@ export function inferMonthlyContribution(cash:DividendContributionInput[],today:
 }
 
 export function buildDividendForecast(dividends:DividendForecastInput[],cash:DividendForecastInput[],today:Date,options:DividendForecastOptions){
-  const active=new Map<string,{symbol:string;account:string;quantity:number;value:number}>();
+  const active=new Map<string,{symbol:string;accounts:Set<string>;quantity:number;value:number}>();
   let portfolioValue=0;
   for(const position of options.positions){
     const symbol=normalized(position.symbol),account=normalized(position.account)||"PLN",quantity=Number(position.quantity),positionValue=Math.max(0,Number(position.value)||0);
     if(!symbol||!Number.isFinite(quantity)||quantity<=0)continue;
-    const key=accountKey(symbol,account),current=active.get(key);
-    active.set(key,{symbol,account,quantity:(current?.quantity||0)+quantity,value:(current?.value||0)+positionValue});
+    const current=active.get(symbol);
+    active.set(symbol,{symbol,accounts:new Set([...(current?.accounts||[]),account]),quantity:(current?.quantity||0)+quantity,value:(current?.value||0)+positionValue});
     portfolioValue+=positionValue;
   }
   if(!active.size)return[];
 
   const grouped=new Map<string,Map<string,{gross:number;comments:string[]}>>();
   for(const row of dividends){
-    const key=accountKey(row.symbol,row.account);
-    if(!active.has(key)||!/^\d{4}-\d{2}-\d{2}$/.test(row.date)||!Number.isFinite(row.amount)||row.amount<=0)continue;
-    const dates=grouped.get(key)||new Map<string,{gross:number;comments:string[]}>();
+    const symbol=normalized(row.symbol);
+    if(!active.has(symbol)||!/^\d{4}-\d{2}-\d{2}$/.test(row.date)||!Number.isFinite(row.amount)||row.amount<=0)continue;
+    const dates=grouped.get(symbol)||new Map<string,{gross:number;comments:string[]}>();
     const payment=dates.get(row.date)||{gross:0,comments:[]};
     payment.gross+=row.amount;
     if(row.comment)payment.comments.push(row.comment);
-    dates.set(row.date,payment);grouped.set(key,dates);
+    dates.set(row.date,payment);grouped.set(symbol,dates);
   }
   const taxByPayment=new Map<string,number>();
   for(const row of cash){
     if(!Number.isFinite(row.amount)||row.amount>=0)continue;
-    const key=`${accountKey(row.symbol,row.account)}:${row.date}`;
+    const key=`${normalized(row.symbol)}:${row.date}`;
     taxByPayment.set(key,(taxByPayment.get(key)||0)+row.amount);
   }
 
   const horizon=options.until||plusMonths(today,12);
   const monthlyContribution=Math.max(0,Number(options.monthlyContribution)||0);
   const rawEvents:Array<DividendForecastItem&{cadence:string;history:number}>=[];
-  for(const [key,dates] of grouped){
-    const owner=active.get(key)!;
+  for(const [symbol,dates] of grouped){
+    const owner=active.get(symbol)!;
     const history=[...dates.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
     const recent=history.slice(-8);
     const gaps=recent.slice(1).map((row,index)=>(atNoon(row[0]).getTime()-atNoon(recent[index][0]).getTime())/day);
-    const cadence=cadences
+    let cadence:typeof cadences[number]|{months:12;minDays:300;maxDays:540;minDates:1;label:"roczny · niska pewność"}|undefined=cadences
       .filter(item=>recent.length>=item.minDates)
       .map(item=>({...item,matches:gaps.filter(gap=>gap>=item.minDays&&gap<=item.maxDays).length}))
       .filter(item=>item.matches>=item.minDates-1)
       .sort((a,b)=>b.matches-a.matches||a.months-b.months)[0];
-    if(!cadence)continue;
     const [lastDate,lastPayment]=history.at(-1)!;
+    const perShare=lastPayment.comments.map(perShareFromComment).find(Boolean);
+    if(!cadence&&symbol.endsWith(".PL")&&perShare?.currency==="PLN")cadence={months:12,minDays:300,maxDays:540,minDates:1,label:"roczny · niska pewność"};
+    if(!cadence)continue;
     const age=(today.getTime()-atNoon(lastDate).getTime())/day;
     if(age>cadence.maxDays*1.5)continue;
 
-    const perShare=lastPayment.comments.map(perShareFromComment).find(Boolean);
     const fx=perShare?options.fxRates?.[perShare.currency]:undefined;
-    const tax=taxByPayment.get(`${key}:${lastDate}`)||0;
+    const tax=taxByPayment.get(`${symbol}:${lastDate}`)||0;
     const netRatio=lastPayment.gross>0?Math.max(0,Math.min(1,(lastPayment.gross+tax)/lastPayment.gross)):1;
     let next=plusMonths(atNoon(lastDate),cadence.months);let guard=0;
     while(next<=today&&guard++<24)next=plusMonths(next,cadence.months);
@@ -93,7 +93,7 @@ export function buildDividendForecast(dividends:DividendForecastInput[],cash:Div
       const projectedQuantity=owner.quantity+addedQuantity;
       const gross=perShare&&Number.isFinite(fx)&&Number(fx)>0?perShare.amount*projectedQuantity*Number(fx):lastPayment.gross*(projectedQuantity/owner.quantity);
       const net=gross*netRatio;
-      rawEvents.push({date:iso(next),symbol:owner.symbol,gross,net,accounts:[owner.account],cadence:cadence.label,history:history.length,confidence:`${history.length} dat · cykl ${cadence.label} · ${owner.quantity.toLocaleString("pl-PL")} szt.`});
+      rawEvents.push({date:iso(next),symbol:owner.symbol,gross,net,accounts:[...owner.accounts],cadence:cadence.label,history:history.length,confidence:`${history.length} dat · cykl ${cadence.label} · ${owner.quantity.toLocaleString("pl-PL")} szt.`});
       next=plusMonths(next,cadence.months);
     }
   }
@@ -104,5 +104,5 @@ export function buildDividendForecast(dividends:DividendForecastInput[],cash:Div
     if(current){current.gross+=event.gross;current.net+=event.net;current.accounts=[...new Set([...current.accounts,...event.accounts])];current.history=Math.max(current.history,event.history);current.cadences.add(event.cadence)}
     else merged.set(key,{date:event.date,symbol:event.symbol,gross:event.gross,net:event.net,accounts:event.accounts,history:event.history,cadences:new Set([event.cadence]),confidence:event.confidence});
   }
-  return[...merged.values()].map(item=>({...item,confidence:`${item.history} dat · cykl ${[...item.cadences].join("/")} · ${item.accounts.join(" + ")}`})).sort((a,b)=>a.date.localeCompare(b.date));
+  return[...merged.values()].map(item=>({...item,confidence:`${item.history} ${item.history===1?"data":item.history<5?"daty":"dat"} · cykl ${[...item.cadences].join("/")} · ${item.accounts.join(" + ")}`})).sort((a,b)=>a.date.localeCompare(b.date));
 }

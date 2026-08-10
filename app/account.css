@@ -1979,6 +1979,10 @@ html[data-portfolio-theme="lekka"] .security-links button:hover { background: #f
 .contribution-input b { padding-right: 9px; color: #85948b; font-size: 8px; }
 .contribution-input small { color: #78867e; font-size: 7.5px; font-weight: 600; text-transform: none; letter-spacing: 0; }
 .contribution-input button { border: 0; background: transparent; color: #72ffac; font-size: 8px; font-weight: 750; }
+.projection-comparison { min-height: 38px; display: flex; align-items: baseline; gap: 7px; margin-bottom: 10px; padding: 9px 12px; border: 1px solid #34443b; border-radius: 9px; background: #0f1712; }
+.projection-comparison span,.projection-comparison small { color: #87948c; font-size: 8.5px; }
+.projection-comparison strong { color: #eef7f0; font-size: 12px; }
+.projection-comparison small { margin-left: auto; }
 .projection-formula { display: grid; grid-template-columns: minmax(0,1fr) 22px minmax(0,1fr) 22px minmax(0,1fr); align-items: center; gap: 4px; }
 .projection-formula > div { min-width: 0; padding: 15px; border: 1px solid #2c3a32; border-radius: 10px; background: #101713; }
 .projection-formula > i { color: #6e7b73; font-size: 18px; font-style: normal; font-weight: 500; text-align: center; }
@@ -2201,6 +2205,10 @@ html[data-portfolio-theme="lekka"] .contribution-input > span:nth-child(2) { bor
 html[data-portfolio-theme="lekka"] .contribution-input input { color: #17231c; }
 html[data-portfolio-theme="lekka"] .contribution-input b { color: #64748b; }
 html[data-portfolio-theme="lekka"] .contribution-input button { color: #18753c; }
+html[data-portfolio-theme="lekka"] .projection-comparison { border-color: #d9e1db; background: #f8fbf9; }
+html[data-portfolio-theme="lekka"] .projection-comparison span,
+html[data-portfolio-theme="lekka"] .projection-comparison small { color: #64748b; }
+html[data-portfolio-theme="lekka"] .projection-comparison strong { color: #17231c; }
 html[data-portfolio-theme="lekka"] .projection-formula > div { border-color: #e2e8e3; background: #fff; }
 html[data-portfolio-theme="lekka"] .projection-formula > i { color: #94a3b8; }
 html[data-portfolio-theme="lekka"] .projection-formula span { color: #64748b; }
@@ -2404,6 +2412,8 @@ html[data-portfolio-theme="lekka"] .tax-disclaimer { border-color: #ead98a; back
   .dividend-projection .panel-head { align-items: flex-start; }
   .projection-formula { grid-template-columns: 1fr; }
   .projection-formula > i { height: 12px; line-height: 12px; }
+  .projection-comparison { flex-wrap: wrap; }
+  .projection-comparison small { width: 100%; margin-left: 0; }
   .contribution-input { justify-items: start; }
   .dividend-list-intro { margin-right: 14px; margin-left: 14px; }
   .dividend-group > summary { grid-template-columns: 8px minmax(0,1fr) auto 15px; gap: 8px; padding-right: 14px; padding-left: 14px; }
