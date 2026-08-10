@@ -72,7 +72,7 @@ async function yahooHistory(symbol: string, start: string) {
     const period1 = Math.floor(new Date(`${start}T00:00:00Z`).getTime() / 1000) - 75 * 86400;
     const period2 = Math.floor(Date.now() / 1000) + 3 * 86400;
     const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?period1=${period1}&period2=${period2}&interval=1mo&events=history`;
-    const response = await fetch(url, { headers: { accept: "application/json", "user-agent": "Kapital-Portfolio/1.0" } });
+    const response = await fetch(url, { headers: { accept: "application/json", "user-agent": "LekkiPortfel/1.0" } });
     if (!response.ok) throw new Error(`${symbol}: HTTP ${response.status}`);
     const body = await response.json() as {
       chart?: { result?: Array<{ meta?: { currency?: string }; timestamp?: number[]; indicators?: { quote?: Array<{ close?: Array<number | null> }> } }> };

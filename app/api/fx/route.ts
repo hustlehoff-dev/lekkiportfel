@@ -9,7 +9,7 @@ export async function GET() {
   try {
     if (cached && cached.expires > Date.now()) return Response.json(cached.payload);
     const response = await fetch("https://api.nbp.pl/api/exchangerates/tables/A/?format=json", {
-      headers: { accept: "application/json", "user-agent": "Kapital-Portfolio/1.0" },
+      headers: { accept: "application/json", "user-agent": "LekkiPortfel/1.0" },
     });
     if (!response.ok) throw new Error(`NBP ${response.status}`);
     const table = (await response.json() as NbpTable)[0];

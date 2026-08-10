@@ -47,7 +47,7 @@ function isCashAsset(assetClass: string) {
 
 async function yahooMeta(symbol: string) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=5d`;
-  const response = await fetch(url, { headers: { "accept": "application/json", "user-agent": "Kapital-Portfolio/1.0" } });
+  const response = await fetch(url, { headers: { "accept": "application/json", "user-agent": "LekkiPortfel/1.0" } });
   if (!response.ok) throw new Error(`notowanie ${response.status}`);
   const body = await response.json() as { chart?: { result?: Array<{ meta?: Record<string, unknown>; indicators?: { quote?: Array<{ close?: Array<number | null> }> } }> } };
   const result = body.chart?.result?.[0];
@@ -68,7 +68,7 @@ async function getFx(currency: string, rates: Map<string, Promise<number>>) {
   if (normalized === "PLN") return currency === "GBp" ? 0.01 : 1;
   if (!rates.has(normalized)) rates.set(normalized, (async () => {
     if (!fxCached || fxCached.expires <= Date.now()) {
-      const response = await fetch("https://api.nbp.pl/api/exchangerates/tables/A/?format=json", { headers: { accept: "application/json", "user-agent": "Kapital-Portfolio/1.0" } });
+      const response = await fetch("https://api.nbp.pl/api/exchangerates/tables/A/?format=json", { headers: { accept: "application/json", "user-agent": "LekkiPortfel/1.0" } });
       if (!response.ok) throw new Error(`NBP ${response.status}`);
       const table = await response.json() as Array<{ rates?: Array<{ code: string; mid: number }> }>;
       fxCached = { expires: Date.now() + 15 * 60_000, rates: new Map((table[0]?.rates || []).map(rate => [rate.code, rate.mid])) };
@@ -106,7 +106,7 @@ export async function POST(request: Request) {
       if (ids.length) {
         const url = `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(ids.join(","))}&vs_currencies=pln&include_24hr_change=true&include_last_updated_at=true`;
         try {
-          const response = await fetch(url, { headers: { "accept": "application/json", "user-agent": "Kapital-Portfolio/1.0" } });
+          const response = await fetch(url, { headers: { "accept": "application/json", "user-agent": "LekkiPortfel/1.0" } });
           if (!response.ok) throw new Error(`CoinGecko ${response.status}`);
           const result = await response.json() as Record<string, { pln?: number; pln_24h_change?: number; last_updated_at?: number }>;
           for (const item of crypto) {

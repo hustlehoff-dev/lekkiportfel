@@ -15,10 +15,11 @@ export async function generateMetadata(): Promise<Metadata> {
   const protocol = incoming.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
   const image = `${protocol}://${host}/og.png`;
   return {
-    title: "Kapitał — prywatny portfel XTB",
-    description: "Prywatny dashboard portfela: import XTB, wyniki, dywidendy i alokacja.",
-    openGraph: { title: "Kapitał — prywatny portfel XTB", description: "Twój portfel. Twoje dane.", images: [image] },
-    twitter: { card: "summary_large_image", title: "Kapitał — prywatny portfel XTB", description: "Twój portfel. Twoje dane.", images: [image] },
+    title: "LekkiPortfel — cały majątek w jednym miejscu",
+    description: "Akcje, ETF-y, krypto, gotówka, wyniki, dywidendy i podatki w jednym prywatnym portfelu.",
+    icons: { icon: "/favicon.svg" },
+    openGraph: { title: "LekkiPortfel — cały majątek w jednym miejscu", description: "Twój majątek. Jedno czytelne miejsce.", images: [image] },
+    twitter: { card: "summary_large_image", title: "LekkiPortfel — cały majątek w jednym miejscu", description: "Twój majątek. Jedno czytelne miejsce.", images: [image] },
   };
 }
 

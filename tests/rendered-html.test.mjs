@@ -20,9 +20,9 @@ test("dashboard exposes real monthly performance and benchmark controls", async 
   assert.match(page, /openDate:/);
   assert.match(page, /purchaseValue:/);
   assert.match(page, /\/api\/fx/);
-  assert.match(page, /kapital-currency/);
+  assert.match(page, /lekkiportfel-currency/);
   assert.match(page, /aria-label="Waluta prezentacji"/);
-  assert.match(page, /kapital-theme/);
+  assert.match(page, /lekkiportfel-theme/);
   assert.match(page, /aria-label="Wygląd aplikacji"/);
   assert.match(page, /className="topbar-search"/);
   assert.match(page, /dashboard-intro/);
@@ -68,11 +68,10 @@ test("security page keeps ServiceBooker section names 1:1", async () => {
   assert.doesNotMatch(page, /Raport XTB zawiera otwarte pozycje/);
 });
 
-test("Firebase accounts isolate portfolios and protect the legacy migration", async () => {
+test("Firebase accounts isolate portfolios and initialize new accounts", async () => {
   const client = await readFile(new URL("lib/firebase-client.ts", root), "utf8");
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
   const rules = await readFile(new URL("firestore.rules", root), "utf8");
-  const legacyRoute = await readFile(new URL("app/api/portfolio/route.ts", root), "utf8");
   const env = await readFile(new URL(".env.example", root), "utf8");
 
   assert.match(client, /createUserWithEmailAndPassword/);
@@ -89,11 +88,26 @@ test("Firebase accounts isolate portfolios and protect the legacy migration", as
   assert.match(page, /Kontynuuj z Google/);
   assert.match(page, /loadUserPortfolio<PortfolioData>/);
   assert.match(page, /saveUserPortfolio\(firebaseUser\.uid/);
+  assert.match(page, /portfolio\|\|\{\.\.\.emptyData,positions:\[\],cash:\[\],trades:\[\],lots:\[\]\}/);
+  assert.doesNotMatch(page, /MigrationScreen|needsMigration|LEGACY_MIGRATION_KEY|x-migration-key/);
   assert.match(rules, /request\.auth\.uid == userId/);
   assert.match(rules, /request\.auth\.token\.email_verified == true/);
-  assert.match(legacyRoute, /LEGACY_MIGRATION_KEY/);
-  assert.match(legacyRoute, /x-migration-key/);
   assert.match(env, /NEXT_PUBLIC_FIREBASE_PROJECT_ID=/);
+  assert.doesNotMatch(env, /LEGACY_MIGRATION_KEY/);
+});
+
+test("repository contains product code instead of starter and demo leftovers", async () => {
+  const page = await readFile(new URL("app/page.tsx", root), "utf8");
+  const layout = await readFile(new URL("app/layout.tsx", root), "utf8");
+  const readme = await readFile(new URL("README.md", root), "utf8");
+  const packageJson = await readFile(new URL("package.json", root), "utf8");
+
+  assert.match(page, /LEKKIPORTFEL/);
+  assert.match(layout, /LekkiPortfel — cały majątek w jednym miejscu/);
+  assert.doesNotMatch(`${page}\n${layout}\n${readme}`, /Użytkownik 1|Lokalny zapis użytkownika 1|vinext-starter|Optional Dispatch-Owned|ChatGPT Sign-In/);
+  assert.doesNotMatch(packageJson, /drizzle|db:generate/);
+  await assert.rejects(readFile(new URL("app/api/portfolio/route.ts", root), "utf8"));
+  await assert.rejects(readFile(new URL("app/chatgpt-auth.ts", root), "utf8"));
 });
 
 test("performance API reconciles XTB sales and converts the benchmark to PLN", async () => {

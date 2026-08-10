@@ -173,10 +173,6 @@ nav button { color: #b8c6bd; }
 nav button span { color: #8ea397; }
 nav button:hover, nav button.active { background: #15251c; color: #fff; box-shadow: inset 3px 0 #55f59a; }
 nav button.active span { color: #ffd84d; }
-.privacy { background: #0d1510; border-color: #375342; }
-.privacy > span { color: #55f59a; }
-.privacy strong { color: #f5fff8; }
-.privacy p, .text-button { color: #a7b7ad; }
 .eyebrow { color: #a9bbb0; }
 h1, h2, h3, h4, strong, b { color: #f8fffa; }
 .as-of { color: #c2cec6; }
@@ -303,10 +299,6 @@ nav button span { color: #71808a; font-size: 15px; }
 nav button:hover { background: #141b20; color: #dce4e9; box-shadow: none; }
 nav button.active { background: #18211e; color: #f3f7f5; border-color: #2b3b34; box-shadow: inset 2px 0 #67b58f; }
 nav button.active span { color: #7fc39f; }
-.privacy { padding: 13px; background: #10171a; border-color: #27343b; border-radius: 9px; }
-.privacy > span { color: #67b58f; }
-.privacy strong { color: #d7dfe4; }
-.privacy p, .text-button { color: #79868f; }
 .content { max-width: 1480px; padding: 32px 38px 24px; }
 .topbar { margin-bottom: 26px; }
 .eyebrow { margin-bottom: 5px; color: #7f8c95; font-size: 9px; letter-spacing: .14em; }
@@ -554,11 +546,6 @@ html[data-portfolio-theme="lekka"] nav button span { color: #94a3b8; }
 html[data-portfolio-theme="lekka"] nav button:hover { background: #f8fafc; color: #0f172a; box-shadow: none; }
 html[data-portfolio-theme="lekka"] nav button.active { background: #fff9da; color: #0f172a; border-color: #f1e3a3; box-shadow: inset 3px 0 #f7c400; }
 html[data-portfolio-theme="lekka"] nav button.active span { color: #9a7800; }
-html[data-portfolio-theme="lekka"] .privacy { background: #fffdf3; border-color: #eee4b6; }
-html[data-portfolio-theme="lekka"] .privacy > span { color: #9a7800; }
-html[data-portfolio-theme="lekka"] .privacy strong { color: #344054; }
-html[data-portfolio-theme="lekka"] .privacy p,
-html[data-portfolio-theme="lekka"] .text-button { color: #667085; }
 html[data-portfolio-theme="lekka"] .content { max-width: 1440px; padding: 32px 36px 24px; }
 html[data-portfolio-theme="lekka"] .topbar { margin-bottom: 24px; }
 html[data-portfolio-theme="lekka"] .eyebrow { color: #737373; font-size: 10px; }
@@ -913,9 +900,7 @@ html[data-portfolio-theme="lekka"] .history-panel { margin-top: 18px; }
     background: #fff;
     box-shadow: 0 14px 45px rgba(76, 29, 149, .12);
   }
-  html[data-portfolio-theme="lekka"] .sidebar .brand,
-  html[data-portfolio-theme="lekka"] .sidebar .privacy,
-  html[data-portfolio-theme="lekka"] .sidebar .text-button { display: none; }
+  html[data-portfolio-theme="lekka"] .sidebar .brand { display: none; }
   html[data-portfolio-theme="lekka"] .sidebar nav { width: 100%; height: 100%; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
   html[data-portfolio-theme="lekka"] .sidebar nav button,
   html[data-portfolio-theme="lekka"] .sidebar nav button:not(.active),
@@ -1127,31 +1112,6 @@ html[data-portfolio-theme="lekka"] .sidebar nav button.active span {
   font-size: 17px;
 }
 
-html[data-portfolio-theme="lekka"] .privacy {
-  margin-top: auto;
-  padding: 12px;
-  gap: 9px;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, .72);
-}
-
-html[data-portfolio-theme="lekka"] .privacy > span { color: #94a3b8; }
-html[data-portfolio-theme="lekka"] .privacy strong { color: #475569; font-size: 11px; }
-html[data-portfolio-theme="lekka"] .privacy p { color: #9aa3b2; font-size: 10px; }
-html[data-portfolio-theme="lekka"] .text-button {
-  width: 100%;
-  min-height: 40px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: 12px;
-  background: #7c3aed;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  text-align: center;
-}
-
 html[data-portfolio-theme="lekka"] .content {
   width: auto;
   max-width: none;
@@ -1305,9 +1265,7 @@ html[data-portfolio-theme="lekka"] .dividend-summary {
     background: #fff;
     box-shadow: 0 14px 45px rgba(76, 29, 149, .12);
   }
-  html[data-portfolio-theme="lekka"] .sidebar .brand,
-  html[data-portfolio-theme="lekka"] .sidebar .privacy,
-  html[data-portfolio-theme="lekka"] .sidebar .text-button { display: none; }
+  html[data-portfolio-theme="lekka"] .sidebar .brand { display: none; }
   html[data-portfolio-theme="lekka"] .sidebar nav {
     width: 100%;
     height: 100%;
@@ -2351,11 +2309,10 @@ html[data-portfolio-theme="lekka"] .tax-disclaimer { border-color: #ead98a; back
 .auth-tabs button { padding: 9px; border: 0; border-radius: 7px; background: transparent; color: #768079; font-size: 11px; font-weight: 700; }
 .auth-tabs button.active { background: #fff; color: #17211c; box-shadow: 0 1px 5px rgba(20,30,24,.1); }
 .auth-form { display: grid; gap: 14px; }
-.auth-form > label,.migration-code { display: grid; gap: 7px; color: #3d4942; font-size: 11px; font-weight: 700; }
+.auth-form > label { display: grid; gap: 7px; color: #3d4942; font-size: 11px; font-weight: 700; }
 .auth-form > label > div { display: flex; align-items: center; gap: 10px; padding: 0 12px; border: 1px solid #d7ddd7; border-radius: 9px; background: #fff; color: #859088; }
-.auth-form input:not([type="checkbox"]),.migration-code input { width: 100%; min-width: 0; padding: 12px 0; border: 0; outline: 0; background: transparent; color: #17211c; font: inherit; font-size: 13px; }
-.migration-code input { padding: 12px; border: 1px solid #d7ddd7; border-radius: 9px; background: #fff; }
-.auth-form > label > div:focus-within,.migration-code input:focus { border-color: #4f976f; box-shadow: 0 0 0 3px rgba(79,151,111,.12); }
+.auth-form input:not([type="checkbox"]) { width: 100%; min-width: 0; padding: 12px 0; border: 0; outline: 0; background: transparent; color: #17211c; font: inherit; font-size: 13px; }
+.auth-form > label > div:focus-within { border-color: #4f976f; box-shadow: 0 0 0 3px rgba(79,151,111,.12); }
 .auth-options { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .auth-options label { display: flex; align-items: center; gap: 7px; color: #657069; font-size: 10px; }
 .auth-options button,.auth-back { border: 0; background: transparent; color: #29724f; font-size: 10px; font-weight: 700; }
@@ -2378,11 +2335,6 @@ html[data-portfolio-theme="lekka"] .tax-disclaimer { border-color: #ead98a; back
 .auth-setup li { padding: 8px 10px; border: 1px solid #e1e6e0; border-radius: 7px; background: #fff; color: #58635d; font: 9px var(--font-geist-mono), monospace; overflow-wrap: anywhere; }
 .auth-setup code { padding: 2px 4px; border-radius: 4px; background: #ecefea; font-size: 10px; }
 .auth-loading { display: grid; justify-items: center; gap: 12px; color: #dce8e0; font-size: 11px; }
-.migration-card { display: grid; }
-.migration-code { margin-bottom: 14px; }
-.migration-card .auth-submit { margin-bottom: 5px; }
-.migration-card .auth-back { padding: 9px; }
-.migration-note { margin: 16px 0 0; padding-top: 15px; border-top: 1px solid #e2e7e1; color: #7a847e; font-size: 9px; line-height: 1.55; }
 .sidebar-footer { margin-top: auto; display: grid; align-items: initial; gap: 14px; padding-top: 12px; color: inherit; font-size: inherit; }
 .signed-user { display: grid; grid-template-columns: 31px minmax(0,1fr) 28px; align-items: center; gap: 8px; margin-top: 0; padding: 10px 8px; border-top: 1px solid #2d3c34; }
 .signed-user > span { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; background: #2f493b; color: #91d0ad; font-size: 11px; font-weight: 800; }
