@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { auditTradesWithNbp, calculateLossCarryforward, calculateTaxSummary } from "../lib/tax-calculator.ts";
+import { auditTradesWithNbp, calculateCryptoTax, calculateLossCarryforward, calculateTaxSummary } from "../lib/tax-calculator.ts";
 
 const root = new URL("../", import.meta.url);
 
@@ -152,6 +152,39 @@ test("loss register applies the 50 percent cap after the one-time method was use
   assert.equal(result.incomeAfterDeduction, 350);
 });
 
+test("crypto tax carries unused costs forward and ignores crypto-to-crypto swaps", () => {
+  const result = calculateCryptoTax({
+    year: 2025,
+    transactions: [
+      { date: "2024-03-10", type: "buy", amountPln: 1000, feePln: 10 },
+      { date: "2025-04-10", type: "swap", amountPln: 900, feePln: 50 },
+      { date: "2025-08-10", type: "sell", amountPln: 1500, feePln: 10 },
+    ],
+  });
+
+  assert.equal(result.rows[0].unclaimedCosts, 1010);
+  assert.equal(result.revenue, 1500);
+  assert.equal(result.currentCosts, 10);
+  assert.equal(result.priorCosts, 1010);
+  assert.equal(result.income, 480);
+  assert.equal(result.neutralSwaps, 1);
+  assert.equal(result.tax, 91);
+});
+
+test("crypto tax accepts prior costs confirmed from the previous PIT-38", () => {
+  const result = calculateCryptoTax({
+    year: 2025,
+    priorCostsOverride: 700,
+    transactions: [{ date: "2025-08-10", type: "payment", amountPln: 500, feePln: 5 }],
+  });
+
+  assert.equal(result.priorCosts, 700);
+  assert.equal(result.currentCosts, 5);
+  assert.equal(result.income, 0);
+  assert.equal(result.unclaimedCosts, 205);
+  assert.equal(result.tax, 0);
+});
+
 test("tax view has a local PIT-38 route and data-quality warnings", async () => {
   const [page, route, nbpRoute] = await Promise.all([
     readFile(new URL("app/page.tsx", root), "utf8"),
@@ -162,7 +195,7 @@ test("tax view has a local PIT-38 route and data-quality warnings", async () => 
   assert.match(page, /podatki:"\/podatki"/);
   assert.match(page, /Szacowany podatek do zapłaty/);
   assert.match(page, /Wiarygodność wyliczenia/);
-  assert.match(page, /Ręcznie dodane krypto nie ma historii transakcji/);
+  assert.match(page, /Masz ręcznie dodane krypto, ale rejestr podatkowy nie zawiera jeszcze jego transakcji/);
   assert.match(page, /Zgodne z NBP/);
   assert.match(page, /Mapa pól PIT-38/);
   assert.match(page, /PIT-38\(18\)/);
@@ -172,6 +205,13 @@ test("tax view has a local PIT-38 route and data-quality warnings", async () => 
   assert.match(page, /Rejestr strat do odliczenia/);
   assert.match(page, /Limit jednorazowy użyty/);
   assert.match(page, /taxLosses/);
+  assert.match(page, /cryptoTransactions:data\.cryptoTransactions/);
+  assert.match(page, /cryptoCostOverrides:data\.cryptoCostOverrides/);
+  assert.match(page, /Dodaj transakcję krypto/);
+  assert.match(page, /Koszty krypto między latami/);
+  assert.match(page, /\["36","Przychody z walut wirtualnych"/);
+  assert.match(page, /\["43","Podatek od krypto"/);
+  assert.match(page, /kind=crypto/);
   assert.match(route, /initialView="podatki"/);
   assert.match(nbpRoute, /https:\/\/api\.nbp\.pl\/api\/exchangerates\/rates\/a\//);
   assert.match(nbpRoute, /end\.setUTCDate\(end\.getUTCDate\(\) - 1\)/);

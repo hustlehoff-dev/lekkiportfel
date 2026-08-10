@@ -65,6 +65,23 @@ export type LossCarryforwardRow = {
   enabled: boolean;
 };
 
+export type CryptoTaxTransaction = {
+  id?: string;
+  date: string;
+  type: "buy" | "sell" | "swap" | "payment";
+  amountPln?: number;
+  feePln?: number;
+};
+
+export type CryptoTaxYearRow = {
+  year: number;
+  revenue: number;
+  currentCosts: number;
+  priorCosts: number;
+  income: number;
+  unclaimedCosts: number;
+};
+
 export type TaxSummary = {
   year: number;
   trades: {
@@ -168,13 +185,64 @@ export function auditTradesWithNbp(trades: TaxTrade[], rates: NbpRate[]) {
   return { auditedTrades, audit };
 }
 
-export function taxYears(trades: TaxTrade[], cash: TaxCashEvent[], currentYear = new Date().getFullYear()) {
+export function taxYears(trades: TaxTrade[], cash: TaxCashEvent[], currentYear = new Date().getFullYear(), crypto: CryptoTaxTransaction[] = []) {
   const years = [currentYear, currentYear - 1];
-  for (const item of [...trades, ...cash]) {
+  for (const item of [...trades, ...cash, ...crypto]) {
     const year = yearOf(item.date);
     if (Number.isFinite(year)) years.push(year);
   }
   return [...new Set(years)].sort((a, b) => b - a);
+}
+
+export function calculateCryptoTax({
+  year,
+  transactions,
+  priorCostsOverride,
+}: {
+  year: number;
+  transactions: CryptoTaxTransaction[];
+  priorCostsOverride?: number;
+}) {
+  const dated = transactions.filter(item => Number.isFinite(yearOf(item.date)) && yearOf(item.date) <= year);
+  const firstYear = Math.min(year, ...dated.map(item => yearOf(item.date)));
+  const rows: CryptoTaxYearRow[] = [];
+  let carriedCosts = 0;
+
+  for (let currentYear = firstYear; currentYear <= year; currentYear += 1) {
+    const annual = dated.filter(item => yearOf(item.date) === currentYear);
+    const revenue = annual
+      .filter(item => item.type === "sell" || item.type === "payment")
+      .reduce((sum, item) => sum + Math.max(0, value(item.amountPln)), 0);
+    const acquisitionCosts = annual
+      .filter(item => item.type === "buy")
+      .reduce((sum, item) => sum + Math.max(0, value(item.amountPln)) + Math.max(0, value(item.feePln)), 0);
+    const disposalCosts = annual
+      .filter(item => item.type === "sell" || item.type === "payment")
+      .reduce((sum, item) => sum + Math.max(0, value(item.feePln)), 0);
+    const currentCosts = acquisitionCosts + disposalCosts;
+    const priorCosts = currentYear === year && priorCostsOverride !== undefined
+      ? Math.max(0, value(priorCostsOverride))
+      : carriedCosts;
+    const availableCosts = currentCosts + priorCosts;
+    const income = Math.max(0, revenue - availableCosts);
+    const unclaimedCosts = Math.max(0, availableCosts - revenue);
+    rows.push({ year: currentYear, revenue, currentCosts, priorCosts, income, unclaimedCosts });
+    carriedCosts = unclaimedCosts;
+  }
+
+  const selected = rows.at(-1) || { year, revenue: 0, currentCosts: 0, priorCosts: 0, income: 0, unclaimedCosts: 0 };
+  const taxableBase = Math.round(selected.income);
+  const taxBeforeRounding = Math.round(taxableBase * 0.19 * 100) / 100;
+  const tax = Math.round(taxBeforeRounding);
+  return {
+    ...selected,
+    taxableBase,
+    taxBeforeRounding,
+    tax,
+    rows,
+    taxableTransactions: dated.filter(item => yearOf(item.date) === year && (item.type === "sell" || item.type === "payment")).length,
+    neutralSwaps: dated.filter(item => yearOf(item.date) === year && item.type === "swap").length,
+  };
 }
 
 export function calculateLossCarryforward({
