@@ -2439,6 +2439,22 @@ html[data-portfolio-theme="lekka"] .copy-settings-foot > p strong { color: #1018
 .ai-modal-actions { align-items: center; }
 .ai-modal-actions .primary-action { display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
 
+.profit-pill.incomplete { background: rgba(180, 125, 21, .12); color: #b7791f; }
+.missing-cost-button, .known-cost-button { border: 0; font: inherit; font-weight: 750; cursor: pointer; }
+.missing-cost-button { padding: 6px 9px; border-radius: 7px; background: rgba(247, 196, 0, .14); color: #9a7200; }
+.missing-cost-button:hover { background: rgba(247, 196, 0, .24); }
+.known-cost-button { padding: 0; background: transparent; color: inherit; border-bottom: 1px dashed currentColor; }
+.unknown-result { color: #7b8794; }
+.unknown-result strong, .unknown-result small { display: block; }
+.cost-modal { max-width: 500px; }
+.cost-modal-copy { margin: 15px 0 18px; color: #8e9aa2; font-size: 13px; line-height: 1.6; }
+.cost-modal-actions { flex-wrap: wrap; }
+.cost-modal-actions .clear-cost-action { margin-right: auto; color: #b45309; }
+
+html[data-portfolio-theme="lekka"] .cost-modal-copy { color: #667085; }
+html[data-portfolio-theme="lekka"] .missing-cost-button { color: #7a5b00; background: #fff4bf; }
+html[data-portfolio-theme="lekka"] .unknown-result { color: #667085; }
+
 html[data-portfolio-theme="lekka"] .ai-composer { border-color: #d9dee7; background: #fff; }
 html[data-portfolio-theme="lekka"] .ai-composer textarea { color: #101828; }
 html[data-portfolio-theme="lekka"] .ai-composer textarea::placeholder { color: #98a2b3; }
@@ -2482,4 +2498,6 @@ html[data-portfolio-theme="lekka"] .ai-privacy svg { color: #22a55d; }
   .ai-preview-list article > button { grid-column: 3; grid-row: 1; }
   .ai-modal-actions { display: grid; grid-template-columns: 1fr 1fr; }
   .ai-modal-actions .primary-action:last-child { grid-column: 1 / -1; }
+  .cost-modal-actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .cost-modal-actions .clear-cost-action { grid-column: 1 / -1; margin: 0; }
 }

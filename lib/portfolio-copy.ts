@@ -1,3 +1,5 @@
+import { calculateOpenResult, hasKnownCost } from "./portfolio-metrics";
+
 export type CopySection = "summary"|"positions"|"performance"|"allocation"|"dividends"|"trades"|"cash"|"crypto";
 
 export type PortfolioCopySettings = Record<CopySection,boolean>;
@@ -18,7 +20,7 @@ export const defaultPortfolioCopySettings:PortfolioCopySettings={
   dividends:true,trades:true,cash:true,crypto:true,
 };
 
-type CopyPosition={symbol:string;name:string;sector:string;assetClass:string;quantity:number;cost:number;value:number;currency:string;account?:string;marketPrice?:number;priceChangePct?:number|null;priceProvider?:string;priceUpdatedAt?:string};
+type CopyPosition={symbol:string;name:string;sector:string;assetClass:string;quantity:number;cost:number;costKnown?:boolean;value:number;currency:string;account?:string;marketPrice?:number;priceChangePct?:number|null;priceProvider?:string;priceUpdatedAt?:string};
 type CopyCashEvent={date:string;type:string;symbol:string;amount:number;account?:string;comment?:string;instrument?:string};
 type CopyTrade={date:string;symbol:string;side:string;volume:number;result:number;account?:string;openDate?:string;openPrice?:number;closePrice?:number;purchaseValue?:number;saleValue?:number;commission?:number;swap?:number;rollover?:number;comment?:string};
 type CopyCrypto={date:string;type:string;symbol:string;name:string;quantity:number;toSymbol?:string;toQuantity?:number;amount:number;amountPln?:number;currency:string;nbpRate:number;nbpDate?:string;fee:number;feePln?:number;account:string;note?:string};
@@ -58,8 +60,7 @@ export function buildPortfolioCopy(input:PortfolioCopyInput,settings:PortfolioCo
   const money=(value:number,digits=2)=>new Intl.NumberFormat("pl-PL",{style:"currency",currency:input.displayCurrency,maximumFractionDigits:digits,minimumFractionDigits:digits}).format(value/rate);
   const positions=input.positions;
   const totalValue=positions.reduce((sum,item)=>sum+item.value,0);
-  const totalCost=positions.reduce((sum,item)=>sum+item.cost,0);
-  const openProfit=totalValue-totalCost;
+  const openResult=calculateOpenResult(positions);
   const realized=input.trades.reduce((sum,item)=>sum+item.result,0);
   const dividends=input.cash.filter(item=>/divident|dividend|dywidend/i.test(item.type));
   const withholding=input.cash.filter(item=>/withholding|podatek.*zrodl/i.test(item.type.normalize("NFD").replace(/[\u0300-\u036f]/g,"")));
@@ -78,8 +79,10 @@ export function buildPortfolioCopy(input:PortfolioCopyInput,settings:PortfolioCo
   if(settings.summary){
     lines.push("","## Podsumowanie",
       `- Wartość portfela: ${money(totalValue)}`,
-      `- Łączny koszt: ${money(totalCost)}`,
-      `- Wynik niezrealizowany: ${money(openProfit)} (${totalCost?percent(openProfit/totalCost*100):"0,00%"})`,
+      `- Znany koszt nabycia: ${money(openResult.cost)}`,
+      `- Wartość aktywów objętych wynikiem: ${money(openResult.value)}`,
+      `- Wynik niezrealizowany: ${openResult.included.length?`${money(openResult.profit)} (${openResult.cost?percent(openResult.profit/openResult.cost*100):"—"})`:"brak danych"}`,
+      `- Pozycje bez kosztu nabycia: ${openResult.excluded.length?openResult.excluded.map(item=>item.symbol).join(", "):"brak"}`,
       `- Wynik zrealizowany: ${money(realized)}`,
       `- Dywidendy brutto: ${money(divGross)}`,
       `- Dywidendy netto: ${money(divNet)}`,
@@ -95,7 +98,8 @@ export function buildPortfolioCopy(input:PortfolioCopyInput,settings:PortfolioCo
       ["Symbol","Nazwa","Rachunek","Klasa","Sektor","Ilość","Cena","24h","Wartość","Koszt","Wynik","Wynik %","Udział"],
       positions.map(item=>{
         const profit=item.value-item.cost;
-        return[item.symbol,item.name,item.account||"PLN",item.assetClass,item.sector,decimal(item.quantity,6),item.marketPrice==null?"—":money(item.marketPrice,item.marketPrice<10?3:2),item.priceChangePct==null?"—":percent(item.priceChangePct),money(item.value),money(item.cost),money(profit),item.cost?percent(profit/item.cost*100):"—",totalValue?`${decimal(item.value/totalValue*100,2)}%`:"0,00%"];
+        const costKnown=hasKnownCost(item);
+        return[item.symbol,item.name,item.account||"PLN",item.assetClass,item.sector,decimal(item.quantity,6),item.marketPrice==null?"—":money(item.marketPrice,item.marketPrice<10?3:2),item.priceChangePct==null?"—":percent(item.priceChangePct),money(item.value),costKnown?money(item.cost):"brak danych",costKnown?money(profit):"nie liczony",costKnown&&item.cost?percent(profit/item.cost*100):"—",totalValue?`${decimal(item.value/totalValue*100,2)}%`:"0,00%"];
       }),
     ):"Brak aktywnych pozycji.");
   }
