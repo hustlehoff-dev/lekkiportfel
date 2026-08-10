@@ -99,6 +99,15 @@ const dateLabel = (value:string) => new Intl.DateTimeFormat("pl-PL",{day:"2-digi
 const norm = (value:unknown) => String(value??"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 const reportText = (value:unknown) => { const text=String(value??"").trim(); return text==="3"?"":text };
 const num = (value:unknown) => { if(typeof value==="number") return value; const clean=String(value??"").replace(/\s/g,"").replace(/[^0-9,.-]/g,""); const normalized=clean.includes(",")&&!clean.includes(".")?clean.replace(",","."):clean.replace(/,/g,""); return Number(normalized)||0 };
+function clientId(prefix:string){
+  const webCrypto=globalThis.crypto;
+  if(typeof webCrypto?.randomUUID==="function")return`${prefix}-${webCrypto.randomUUID()}`;
+  if(typeof webCrypto?.getRandomValues==="function"){
+    const bytes=new Uint8Array(16);webCrypto.getRandomValues(bytes);
+    return`${prefix}-${Array.from(bytes,byte=>byte.toString(16).padStart(2,"0")).join("")}`;
+  }
+  return`${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
 const asDate = (value:unknown) => { if(value instanceof Date)return iso(value); if(typeof value==="number")return iso(new Date(Date.UTC(1899,11,30+value))); const s=String(value??"").trim(); const dm=s.match(/(\d{1,2})[./-](\d{1,2})[./-](\d{4})/); if(dm)return `${dm[3]}-${dm[2].padStart(2,"0")}-${dm[1].padStart(2,"0")}`; const parsed=new Date(s); return Number.isNaN(parsed.getTime())?iso(today):iso(parsed) };
 const sectorFor = (symbol:string):Sector => { const s=symbol.toUpperCase(); const known:Record<string,Sector>={"ABE.PL":"Technologia","ASB.PL":"Technologia","CBF.PL":"Technologia","DIG.PL":"Konsumpcja","EQIX.US":"Nieruchomości","PAS.PL":"Technologia","PLTR.US":"Technologia","S2B.PL":"Technologia","SNT.PL":"Zdrowie","XTB.PL":"Finanse","ADC.US":"Nieruchomości","DNP.PL":"Konsumpcja","KRU.PL":"Finanse","LPP.PL":"Konsumpcja","NNN.US":"Nieruchomości","CVX.US":"Energia","DTLA.UK":"ETF","MBR.PL":"Przemysł","TSLA.US":"Konsumpcja"}; if(known[s])return known[s]; if(/CSPX|VWCE|IWDA|ETF|SPY|QQQ|IUIT/.test(s))return"ETF"; if(/MSFT|AAPL|NVDA|GOOG|META|AMD|ASML|CDR/.test(s))return"Technologia"; if(/PKO|PEO|ING|JPM|BAC|V|MA/.test(s))return"Finanse"; if(/NOVO|JNJ|PFE|MRK|ABBV/.test(s))return"Zdrowie"; if(/XOM|CVX|SHEL|ORLEN|PKN/.test(s))return"Energia"; if(/O\.US|PLD|AMT|REIT/.test(s))return"Nieruchomości"; return"Inne" };
 const sectorFromSearch = (value?:string):Sector => {const sector=norm(value);if(/tech|communication/.test(sector))return"Technologia";if(/financial/.test(sector))return"Finanse";if(/health/.test(sector))return"Zdrowie";if(/consumer/.test(sector))return"Konsumpcja";if(/industrial|materials/.test(sector))return"Przemysł";if(/energy|utilities/.test(sector))return"Energia";if(/real estate/.test(sector))return"Nieruchomości";return"Inne"};
@@ -354,7 +363,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
         if(!response.ok)throw new Error("Nie udało się pobrać kursu NBP dla tej daty.");
         const result=await response.json();const rate=result.rates?.[0] as NbpRate|undefined;if(!rate)throw new Error("Brak tabeli NBP dla tej daty.");nbpRate=rate.rate;nbpDate=rate.effectiveDate;
       }
-      const transaction:CryptoTransaction={id:`crypto-${crypto.randomUUID()}`,date,type:cryptoTransactionType,symbol:cryptoInstrument.symbol,name:cryptoInstrument.name,quantity,toSymbol:cryptoTargetInstrument?.symbol,toName:cryptoTargetInstrument?.name,toQuantity:cryptoTransactionType==="swap"?toQuantity:undefined,amount:cryptoTransactionType==="swap"?0:transactionAmount,currency,amountPln:cryptoTransactionType==="swap"?0:Math.round(transactionAmount*nbpRate*100)/100,nbpRate,nbpDate,fee:cryptoTransactionType==="swap"?0:fee,feePln:cryptoTransactionType==="swap"?0:Math.round(fee*nbpRate*100)/100,account:accountName,note:text("note")||undefined};
+      const transaction:CryptoTransaction={id:clientId("crypto"),date,type:cryptoTransactionType,symbol:cryptoInstrument.symbol,name:cryptoInstrument.name,quantity,toSymbol:cryptoTargetInstrument?.symbol,toName:cryptoTargetInstrument?.name,toQuantity:cryptoTransactionType==="swap"?toQuantity:undefined,amount:cryptoTransactionType==="swap"?0:transactionAmount,currency,amountPln:cryptoTransactionType==="swap"?0:Math.round(transactionAmount*nbpRate*100)/100,nbpRate,nbpDate,fee:cryptoTransactionType==="swap"?0:fee,feePln:cryptoTransactionType==="swap"?0:Math.round(fee*nbpRate*100)/100,account:accountName,note:text("note")||undefined};
       const next={...data,cryptoTransactions:[...(data.cryptoTransactions||[]),transaction]};commitPortfolio(next,`Zapisano transakcję ${cryptoInstrument.symbol}.`);setAddingCryptoTransaction(false);setCryptoInstrument(null);setCryptoTargetInstrument(null);
     }catch(error){setNotice(error instanceof Error?error.message:"Nie udało się zapisać transakcji.")}finally{setSavingCryptoTransaction(false)}
   }
@@ -365,6 +374,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
   function searchKeyDown(event:React.KeyboardEvent<HTMLInputElement>){if(event.key==="ArrowDown"){event.preventDefault();setActiveResult(current=>Math.min(current+1,searchResults.length-1))}else if(event.key==="ArrowUp"){event.preventDefault();setActiveResult(current=>Math.max(current-1,0))}else if(event.key==="Enter"&&searchResults[activeResult]){event.preventDefault();void chooseInstrument(searchResults[activeResult])}else if(event.key==="Escape"){setSearchResults([])}}
   function addManualAsset(event:React.FormEvent<HTMLFormElement>){
     event.preventDefault();
+    try{
     const form=new FormData(event.currentTarget);const text=(name:string)=>String(form.get(name)||"").trim();const amount=(name:string)=>num(text(name));
     const accountName=text("account")||"Poza XTB";let position:Position;
     if(manualKind==="Aktywa"){
@@ -372,18 +382,19 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
       if(!selectedInstrument){setNotice("Najpierw wyszukaj i wybierz instrument z listy.");return}
       if(quantity<=0){setNotice("Podaj, ile sztuk posiadasz.");return}
       const price=selectedInstrument.pricePln||cost/quantity;
-      position={id:`manual-${crypto.randomUUID()}`,symbol:selectedInstrument.symbol,name:selectedInstrument.name,sector:selectedInstrument.assetClass==="ETF"?"ETF":selectedInstrument.assetClass==="Krypto"?"Inne":sectorFromSearch(selectedInstrument.sector),assetClass:selectedInstrument.assetClass,quantity,cost,value:quantity*price,currency:"PLN",account:accountName,manual:true,priceId:selectedInstrument.priceId,marketPrice:price||undefined,priceUpdatedAt:price?new Date().toISOString():undefined,priceProvider:selectedInstrument.assetClass==="Krypto"?"CoinGecko":"Yahoo Finance"};
+      position={id:clientId("manual"),symbol:selectedInstrument.symbol,name:selectedInstrument.name,sector:selectedInstrument.assetClass==="ETF"?"ETF":selectedInstrument.assetClass==="Krypto"?"Inne":sectorFromSearch(selectedInstrument.sector),assetClass:selectedInstrument.assetClass,quantity,cost,value:quantity*price,currency:"PLN",account:accountName,manual:true,priceId:selectedInstrument.priceId,marketPrice:price||undefined,priceUpdatedAt:price?new Date().toISOString():undefined,priceProvider:selectedInstrument.assetClass==="Krypto"?"CoinGecko":"Yahoo Finance"};
     }else if(manualKind==="Gotówka"){
       const currency=text("currency").toUpperCase()||"PLN",quantity=amount("quantity");
       if(quantity<=0){setNotice("Kwota gotówki musi być większa od zera.");return}
-      position={id:`manual-${crypto.randomUUID()}`,symbol:currency,name:`Gotówka ${currency}`,sector:"Inne",assetClass:"Gotówka",quantity,cost:quantity,value:quantity,currency,account:accountName,manual:true};
+      position={id:clientId("manual"),symbol:currency,name:`Gotówka ${currency}`,sector:"Inne",assetClass:"Gotówka",quantity,cost:quantity,value:quantity,currency,account:accountName,manual:true};
     }else{
       const symbol=(text("symbol")||text("name")||"INNE").toUpperCase(),cost=amount("totalCost"),value=amount("currentValue");
       if(!text("name")||value<0){setNotice("Podaj nazwę i obecną wartość aktywa.");return}
-      position={id:`manual-${crypto.randomUUID()}`,symbol,name:text("name"),sector:"Inne",assetClass:"Inne",quantity:1,cost,value,currency:"PLN",account:accountName,manual:true};
+      position={id:clientId("manual"),symbol,name:text("name"),sector:"Inne",assetClass:"Inne",quantity:1,cost,value,currency:"PLN",account:accountName,manual:true};
     }
     const next={...data,positions:[...data.positions,position],source:data.source.includes("własne aktywa")?data.source:`${data.source} · własne aktywa`};
     commitPortfolio(next,`Dodano ${position.name} do portfela.`);setAccount("Wszystkie");setAddingAsset(false);setSelectedInstrument(null);setAssetQuery("");if(position.assetClass!=="Inne")void refreshPrices(next);
+    }catch(error){setNotice(`Nie udało się dodać aktywa: ${error instanceof Error?error.message:"nieznany błąd"}.`)}
   }
   function removeManualAsset(position:Position){if(!window.confirm(`Usunąć ${position.name} z portfela?`))return;const next={...data,positions:data.positions.filter(item=>item.id!==position.id)};commitPortfolio(next,`Usunięto ${position.name} z portfela.`)}
   const cryptoTypeLabels:Record<CryptoTransaction["type"],string>={buy:"Zakup krypto",sell:"Sprzedaż krypto",swap:"Zamiana krypto",payment:"Płatność krypto"};
