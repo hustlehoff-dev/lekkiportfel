@@ -1947,6 +1947,35 @@ html[data-portfolio-theme="lekka"] .security-links button:hover { background: #f
   font-weight: 750;
 }
 .tax-toolbar p { max-width: 430px; margin: 0; color: #aebdb4; font-size: 10px; line-height: 1.55; text-align: right; }
+.year-close-panel { padding: 20px; border-left: 4px solid #55f59a; }
+.year-close-panel.warning { border-left-color: #ffd84d; }
+.year-close-panel.blocked { border-left-color: #ff7770; }
+.year-close-main { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+.year-close-status > span { display: inline-flex; min-height: 24px; align-items: center; padding: 0 8px; border-radius: 999px; background: #173321; color: #72ffac; font-size: 8px; font-weight: 850; letter-spacing: .04em; }
+.year-close-panel.warning .year-close-status > span { background: #342b0d; color: #ffd84d; }
+.year-close-panel.blocked .year-close-status > span { background: #351814; color: #ff8f87; }
+.year-close-status strong { display: block; margin-top: 9px; font-size: 18px; letter-spacing: -.02em; }
+.year-close-status p { max-width: 650px; margin: 5px 0 0; color: #91a097; font-size: 10px; line-height: 1.55; }
+.year-close-counts { display: grid; grid-template-columns: repeat(2,90px); gap: 8px; }
+.year-close-counts div { min-height: 64px; display: grid; align-content: center; padding: 9px 11px; border: 1px solid #2f4537; border-radius: 9px; background: #0d1410; }
+.year-close-counts b,.year-close-counts span { display: block; }
+.year-close-counts b { font-size: 18px; }
+.year-close-counts span { margin-top: 2px; color: #91a097; font-size: 8px; }
+.year-close-checks { display: grid; gap: 7px; margin-top: 17px; }
+.year-close-checks > div { display: grid; grid-template-columns: 66px minmax(0,1fr); align-items: start; gap: 10px; padding: 9px 10px; border-radius: 8px; background: #0d1410; }
+.year-close-checks > div > span { color: #72ffac; font-size: 8px; font-weight: 850; }
+.year-close-checks > div.sprawdź > span { color: #ffd84d; }
+.year-close-checks > div.brak > span { color: #ff8f87; }
+.year-close-checks p { display: flex; gap: 9px; margin: 0; color: #aebdb4; font-size: 9px; line-height: 1.45; }
+.year-close-checks p b { min-width: 145px; color: #eef8f1; }
+.year-close-checks small { color: #91a097; font-size: 8px; }
+.year-close-actions { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 17px; padding-top: 15px; border-top: 1px solid #293c31; }
+.year-close-actions p { margin: 0; color: #91a097; font-size: 9px; line-height: 1.5; }
+.year-close-actions > span { display: flex; gap: 8px; }
+.year-close-actions button { min-height: 38px; display: inline-flex; align-items: center; gap: 7px; padding: 0 12px; border-radius: 8px; font-size: 9px; font-weight: 800; white-space: nowrap; }
+.year-close-actions button:disabled { opacity: .45; cursor: wait; }
+.secondary-export { border: 1px solid #43604d; background: transparent; color: #d8e6dc; }
+.primary-export { border: 1px solid #55f59a; background: #55f59a; color: #06120b; }
 .tax-hero-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; }
 .tax-hero-grid article {
   min-width: 0;
@@ -2051,6 +2080,21 @@ html[data-portfolio-theme="lekka"] .security-links button:hover { background: #f
 
 html[data-portfolio-theme="lekka"] .tax-toolbar,
 html[data-portfolio-theme="lekka"] .tax-hero-grid article { border-color: #e5e7eb; background: rgba(255,255,255,.94); }
+html[data-portfolio-theme="lekka"] .year-close-panel { background: #fff; }
+html[data-portfolio-theme="lekka"] .year-close-status > span { background: #effaf3; color: #18753c; }
+html[data-portfolio-theme="lekka"] .year-close-panel.warning .year-close-status > span { background: #fff9da; color: #725a00; }
+html[data-portfolio-theme="lekka"] .year-close-panel.blocked .year-close-status > span { background: #fff2f0; color: #b33c2f; }
+html[data-portfolio-theme="lekka"] .year-close-status p,
+html[data-portfolio-theme="lekka"] .year-close-counts span,
+html[data-portfolio-theme="lekka"] .year-close-checks p,
+html[data-portfolio-theme="lekka"] .year-close-checks small,
+html[data-portfolio-theme="lekka"] .year-close-actions p { color: #64748b; }
+html[data-portfolio-theme="lekka"] .year-close-counts div,
+html[data-portfolio-theme="lekka"] .year-close-checks > div { border-color: #e5e7eb; background: #f8fafc; }
+html[data-portfolio-theme="lekka"] .year-close-checks p b { color: #0f172a; }
+html[data-portfolio-theme="lekka"] .year-close-actions { border-top-color: #edf0f3; }
+html[data-portfolio-theme="lekka"] .secondary-export { border-color: #d9dee7; color: #475569; }
+html[data-portfolio-theme="lekka"] .primary-export { border-color: #f7c400; background: #f7c400; color: #171717; }
 html[data-portfolio-theme="lekka"] .tax-hero-grid article.tax-total-card { border-color: #ead98a; background: linear-gradient(145deg,#fffbea,#fffdf5); }
 html[data-portfolio-theme="lekka"] .tax-toolbar span,
 html[data-portfolio-theme="lekka"] .tax-toolbar p,
@@ -2124,6 +2168,15 @@ html[data-portfolio-theme="lekka"] .tax-disclaimer { border-color: #ead98a; back
   .tax-toolbar { align-items: stretch; flex-direction: column; padding: 13px; }
   .tax-toolbar > div { grid-template-columns: 1fr 150px; }
   .tax-toolbar p { text-align: left; }
+  .year-close-panel { padding: 16px 14px; }
+  .year-close-main { flex-direction: column; gap: 14px; }
+  .year-close-counts { width: 100%; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .year-close-checks > div { grid-template-columns: 58px minmax(0,1fr); }
+  .year-close-checks p { display: grid; gap: 3px; }
+  .year-close-checks p b { min-width: 0; }
+  .year-close-actions { align-items: stretch; flex-direction: column; }
+  .year-close-actions > span { display: grid; grid-template-columns: 1fr 1fr; }
+  .year-close-actions button { justify-content: center; }
   .tax-hero-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
   .tax-hero-grid article { min-height: 116px; padding: 14px; }
   .tax-hero-grid strong { font-size: 19px; }

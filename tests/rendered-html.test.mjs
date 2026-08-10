@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { strFromU8, unzipSync } from "fflate";
 import { auditTradesWithNbp, calculateCryptoTax, calculateLossCarryforward, calculateTaxSummary } from "../lib/tax-calculator.ts";
+import { buildCsvZipBytes, buildXlsxBytes } from "../lib/spreadsheet-export.ts";
 
 const root = new URL("../", import.meta.url);
 
@@ -185,6 +187,22 @@ test("crypto tax accepts prior costs confirmed from the previous PIT-38", () => 
   assert.equal(result.tax, 0);
 });
 
+test("tax report exports a valid multi-sheet XLSX and CSV bundle", () => {
+  const sheets = [
+    { name: "Podsumowanie", title: "Raport PIT-38", moneyColumns: [1], rows: [["Pozycja", "Kwota"], ["Podatek", 123.45]] },
+    { name: "Kontrola", title: "Kontrola", rows: [["Status", "Opis"], ["OK", "Dane kompletne"]] },
+  ];
+  const xlsx = unzipSync(buildXlsxBytes(sheets));
+  const csv = unzipSync(buildCsvZipBytes(sheets));
+
+  assert.ok(xlsx["[Content_Types].xml"]);
+  assert.ok(xlsx["xl/styles.xml"]);
+  assert.ok(xlsx["xl/worksheets/sheet1.xml"]);
+  assert.match(strFromU8(xlsx["xl/workbook.xml"]), /name="Podsumowanie"/);
+  assert.match(strFromU8(xlsx["xl/worksheets/sheet1.xml"]), /Raport PIT-38/);
+  assert.match(strFromU8(csv["Podsumowanie.csv"]), /Podatek;123\.45/);
+});
+
 test("tax view has a local PIT-38 route and data-quality warnings", async () => {
   const [page, route, nbpRoute] = await Promise.all([
     readFile(new URL("app/page.tsx", root), "utf8"),
@@ -212,6 +230,10 @@ test("tax view has a local PIT-38 route and data-quality warnings", async () => 
   assert.match(page, /\["36","Przychody z walut wirtualnych"/);
   assert.match(page, /\["43","Podatek od krypto"/);
   assert.match(page, /kind=crypto/);
+  assert.match(page, /Zamknięcie roku/);
+  assert.match(page, /Pobierz XLSX/);
+  assert.match(page, /CSV ZIP/);
+  assert.match(page, /Oficjalne źródła metodyki/);
   assert.match(route, /initialView="podatki"/);
   assert.match(nbpRoute, /https:\/\/api\.nbp\.pl\/api\/exchangerates\/rates\/a\//);
   assert.match(nbpRoute, /end\.setUTCDate\(end\.getUTCDate\(\) - 1\)/);
