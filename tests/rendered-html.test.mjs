@@ -29,6 +29,8 @@ test("dashboard exposes real monthly performance and benchmark controls", async 
   assert.match(page, /Ctrl K/);
   assert.doesNotMatch(page, /Przywróć dane demo|Zobacz demo|demoData/);
   assert.doesNotMatch(page, /Portfel zapisany w aplikacji|Dostawcy notowań dostają symbol instrumentu/);
+  assert.match(page, /<footer className="sidebar-footer">/);
+  assert.doesNotMatch(page, /<footer><span>Kapitał<\/span>/);
 });
 
 test("metric cards stay dense at desktop and mobile widths", async () => {

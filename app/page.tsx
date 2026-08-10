@@ -552,7 +552,11 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
         <button className={view==="faq"?"active":""} onClick={()=>selectView("faq")}><span><CircleHelp size={18} strokeWidth={1.9}/></span>Najczęstsze pytania</button>
         <button className={view==="bezpieczenstwo"?"active":""} onClick={()=>selectView("bezpieczenstwo")}><span><ShieldCheck size={18} strokeWidth={1.9}/></span>Bezpieczeństwo</button>
       </nav>
-      <div className="signed-user"><span>{(firebaseUser.email||"K").slice(0,1).toUpperCase()}</span><div><strong>{firebaseUser.email}</strong><small>Konto Firebase</small></div><button type="button" onClick={()=>void logout()} aria-label="Wyloguj"><LogOut size={16}/></button></div>
+      <footer className="sidebar-footer">
+        <div className="signed-user"><span>{(firebaseUser.email||"K").slice(0,1).toUpperCase()}</span><div><strong>{firebaseUser.email}</strong><small>Konto Firebase</small></div><button type="button" onClick={()=>void logout()} aria-label="Wyloguj"><LogOut size={16}/></button></div>
+        <div className="sidebar-footer-links" aria-label="Informacje"><button type="button" onClick={()=>selectView("faq")}>Najczęstsze pytania</button><button type="button" onClick={()=>selectView("bezpieczenstwo")}>Bezpieczeństwo</button></div>
+        <p className="sidebar-footer-note">Narzędzie informacyjne. Notowania mogą być opóźnione względem rynku.</p>
+      </footer>
     </aside>
     {mobileMoreOpen&&<><button className="mobile-more-backdrop" onClick={()=>setMobileMoreOpen(false)} aria-label="Zamknij menu"/><section className="mobile-more-panel" aria-label="Więcej">
       <header><strong>Więcej</strong><button onClick={()=>setMobileMoreOpen(false)} aria-label="Zamknij"><X size={18}/></button></header>
@@ -743,7 +747,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
         {data.positions.some(item=>item.manual)&&<div className="manual-assets"><p className="eyebrow">Dodane ręcznie</p>{data.positions.filter(item=>item.manual).map(item=><div key={item.id}><span><strong>{item.symbol}</strong><small>{item.account} · {money(item.value)}</small></span><button type="button" onClick={()=>removeManualAsset(item)} aria-label={`Usuń ${item.name}`}>Usuń</button></div>)}</div>}
       </section>
     </div>}
-    {view!=="bezpieczenstwo"&&<footer><span>Kapitał</span><p>To narzędzie informacyjne — nie stanowi porady inwestycyjnej. Notowania mogą być opóźnione względem rynku.</p><b>Notowania online</b></footer>}</div></div></section>
+    </div></div></section>
   </main>
 }
 
