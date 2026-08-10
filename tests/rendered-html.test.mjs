@@ -71,11 +71,15 @@ test("Firebase accounts isolate portfolios and protect the legacy migration", as
   assert.match(client, /createUserWithEmailAndPassword/);
   assert.match(client, /sendEmailVerification/);
   assert.match(client, /sendPasswordResetEmail/);
+  assert.match(client, /GoogleAuthProvider/);
+  assert.match(client, /signInWithPopup/);
   assert.match(client, /browserLocalPersistence/);
   assert.match(client, /browserSessionPersistence/);
   assert.match(client, /"users",uid,"portfolio","main"/);
   assert.doesNotMatch(client, /firebase\/functions/);
   assert.match(page, /loginWithPassword/);
+  assert.match(page, /loginWithGoogle/);
+  assert.match(page, /Kontynuuj z Google/);
   assert.match(page, /loadUserPortfolio<PortfolioData>/);
   assert.match(page, /saveUserPortfolio\(firebaseUser\.uid/);
   assert.match(rules, /request\.auth\.uid == userId/);

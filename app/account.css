@@ -2200,6 +2200,12 @@ html[data-portfolio-theme="lekka"] .tax-disclaimer { border-color: #ead98a; back
 .auth-submit { width: 100%; padding: 12px 15px; border: 0; border-radius: 9px; background: #286c4c; color: #fff; font-size: 12px; font-weight: 750; box-shadow: 0 7px 18px rgba(40,108,76,.2); }
 .auth-submit:hover { background: #215d41; }
 .auth-submit:disabled,.auth-back:disabled { cursor: not-allowed; opacity: .55; }
+.auth-divider { display: flex; align-items: center; gap: 10px; margin: 16px 0; color: #8a938e; font-size: 9px; text-transform: uppercase; letter-spacing: .08em; }
+.auth-divider::before,.auth-divider::after { content: ""; height: 1px; flex: 1; background: #e2e7e1; }
+.google-auth-button { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 11px 15px; border: 1px solid #d7ddd7; border-radius: 9px; background: #fff; color: #28342d; font-size: 12px; font-weight: 750; }
+.google-auth-button > span { width: 19px; height: 19px; display: grid; place-items: center; border-radius: 50%; color: #4285f4; font-size: 15px; font-weight: 800; font-family: Arial,sans-serif; }
+.google-auth-button:hover { border-color: #bfc8c1; background: #fbfcfa; }
+.google-auth-button:disabled { cursor: not-allowed; opacity: .55; }
 .auth-error,.auth-success { margin: 0; padding: 10px 12px; border: 1px solid #efc5bf; border-radius: 8px; background: #fff3f1; color: #a6382d; font-size: 10px; line-height: 1.5; }
 .auth-success { border-color: #bbddc8; background: #edf8f1; color: #226443; }
 .auth-security { display: flex; align-items: flex-start; gap: 9px; margin-top: 21px; padding-top: 18px; border-top: 1px solid #e2e7e1; color: #6e7872; font-size: 9px; line-height: 1.55; }

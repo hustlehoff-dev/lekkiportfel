@@ -1,5 +1,5 @@
 import { getApp, getApps, initializeApp, type FirebaseApp } from "firebase/app";
-import { browserLocalPersistence, browserSessionPersistence, createUserWithEmailAndPassword, getAuth, onAuthStateChanged, sendEmailVerification, sendPasswordResetEmail, setPersistence, signInWithEmailAndPassword, signOut, type User } from "firebase/auth";
+import { browserLocalPersistence, browserSessionPersistence, createUserWithEmailAndPassword, getAuth, GoogleAuthProvider, onAuthStateChanged, sendEmailVerification, sendPasswordResetEmail, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut, type User } from "firebase/auth";
 import { doc, getDoc, getFirestore, serverTimestamp, setDoc } from "firebase/firestore";
 
 const config = {
@@ -35,6 +35,16 @@ export async function loginWithPassword(email:string,password:string,remember:bo
   await setPersistence(auth,remember?browserLocalPersistence:browserSessionPersistence);
   const credential=await signInWithEmailAndPassword(auth,email,password);
   if(!credential.user.emailVerified){await sendEmailVerification(credential.user);await signOut(auth);throw new Error("Najpierw potwierdź adres e-mail. Wysłaliśmy nowy link aktywacyjny.")}
+  return credential.user;
+}
+
+export async function loginWithGoogle(remember:boolean) {
+  const auth=getAuth(firebaseApp());
+  await setPersistence(auth,remember?browserLocalPersistence:browserSessionPersistence);
+  const provider=new GoogleAuthProvider();
+  provider.setCustomParameters({prompt:"select_account"});
+  const credential=await signInWithPopup(auth,provider);
+  if(!credential.user.emailVerified){await signOut(auth);throw new Error("Konto Google nie ma potwierdzonego adresu e-mail.")}
   return credential.user;
 }
 
