@@ -11,6 +11,7 @@ import {
   CalendarDays,
   CheckCircle2,
   CircleHelp,
+  Copy,
   Database,
   Download,
   Ellipsis,
@@ -24,6 +25,7 @@ import {
   ReceiptText,
   Search,
   ServerCog,
+  Settings2,
   ShieldAlert,
   ShieldCheck,
   Sigma,
@@ -36,6 +38,7 @@ import {
 import { auditTradesWithNbp, calculateCryptoTax, calculateLossCarryforward, calculateTaxSummary, inferInstrumentCurrency, isRetirementAccount, rateKey, taxYears, type CryptoTaxTransaction, type LossSetting, type NbpRate } from "../lib/tax-calculator";
 import { buildCsvZipBytes, buildXlsxBytes, downloadBytes, type SpreadsheetSheet } from "../lib/spreadsheet-export";
 import { firebaseConfigured, loadUserPortfolio, loginWithGoogle, loginWithPassword, logout, observeUser, registerWithPassword, resetPassword, saveUserPortfolio, type FirebaseUser } from "../lib/firebase-client";
+import { buildPortfolioCopy, defaultPortfolioCopySettings, portfolioCopyOptions, type CopySection, type PortfolioCopySettings } from "../lib/portfolio-copy";
 
 type Sector = "Technologia" | "Finanse" | "Zdrowie" | "Konsumpcja" | "Przemysł" | "Energia" | "Nieruchomości" | "ETF" | "Inne";
 type Position = { id:string; symbol:string; name:string; sector:Sector; assetClass:string; quantity:number; cost:number; value:number; currency:string; account?:string; manual?:boolean; priceId?:string; marketPrice?:number; priceUpdatedAt?:string; priceProvider?:string; priceChangePct?:number|null };
@@ -107,6 +110,16 @@ function clientId(prefix:string){
     return`${prefix}-${Array.from(bytes,byte=>byte.toString(16).padStart(2,"0")).join("")}`;
   }
   return`${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+async function copyText(text:string){
+  if(window.isSecureContext&&navigator.clipboard?.writeText){
+    try{await navigator.clipboard.writeText(text);return}catch{}
+  }
+  const area=document.createElement("textarea");
+  area.value=text;area.setAttribute("readonly","");area.style.position="fixed";area.style.left="-9999px";area.style.opacity="0";
+  document.body.appendChild(area);area.select();area.setSelectionRange(0,text.length);
+  const copied=document.execCommand("copy");area.remove();
+  if(!copied)throw new Error("Przeglądarka zablokowała dostęp do schowka");
 }
 const asDate = (value:unknown) => { if(value instanceof Date)return iso(value); if(typeof value==="number")return iso(new Date(Date.UTC(1899,11,30+value))); const s=String(value??"").trim(); const dm=s.match(/(\d{1,2})[./-](\d{1,2})[./-](\d{4})/); if(dm)return `${dm[3]}-${dm[2].padStart(2,"0")}-${dm[1].padStart(2,"0")}`; const parsed=new Date(s); return Number.isNaN(parsed.getTime())?iso(today):iso(parsed) };
 const sectorFor = (symbol:string):Sector => { const s=symbol.toUpperCase(); const known:Record<string,Sector>={"ABE.PL":"Technologia","ASB.PL":"Technologia","CBF.PL":"Technologia","DIG.PL":"Konsumpcja","EQIX.US":"Nieruchomości","PAS.PL":"Technologia","PLTR.US":"Technologia","S2B.PL":"Technologia","SNT.PL":"Zdrowie","XTB.PL":"Finanse","ADC.US":"Nieruchomości","DNP.PL":"Konsumpcja","KRU.PL":"Finanse","LPP.PL":"Konsumpcja","NNN.US":"Nieruchomości","CVX.US":"Energia","DTLA.UK":"ETF","MBR.PL":"Przemysł","TSLA.US":"Konsumpcja"}; if(known[s])return known[s]; if(/CSPX|VWCE|IWDA|ETF|SPY|QQQ|IUIT/.test(s))return"ETF"; if(/MSFT|AAPL|NVDA|GOOG|META|AMD|ASML|CDR/.test(s))return"Technologia"; if(/PKO|PEO|ING|JPM|BAC|V|MA/.test(s))return"Finanse"; if(/NOVO|JNJ|PFE|MRK|ABBV/.test(s))return"Zdrowie"; if(/XOM|CVX|SHEL|ORLEN|PKN/.test(s))return"Energia"; if(/O\.US|PLD|AMT|REIT/.test(s))return"Nieruchomości"; return"Inne" };
@@ -249,6 +262,8 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
   const [portfolioQuery,setPortfolioQuery]=useState("");
   const [displayCurrency,setDisplayCurrency]=useState<CurrencyCode>("PLN");
   const [designTheme,setDesignTheme]=useState<DesignTheme>("lekka");
+  const [copySettingsOpen,setCopySettingsOpen]=useState(false);
+  const [copySettings,setCopySettings]=useState<PortfolioCopySettings>(defaultPortfolioCopySettings);
   const [fxRates,setFxRates]=useState<Record<CurrencyCode,number>>({PLN:1,USD:1,EUR:1,GBP:1});
   const [performance,setPerformance]=useState<PerformanceResponse>({points:[],benchmark:{symbol:"^GSPC",name:"S&P 500 (PLN)"},missing:[],methodology:""});
   const [performanceLoading,setPerformanceLoading]=useState(false);
@@ -267,6 +282,8 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
   const pln=useCallback((value:number,digits=2)=>new Intl.NumberFormat("pl-PL",{style:"currency",currency:"PLN",maximumFractionDigits:digits,minimumFractionDigits:digits}).format(value),[]);
   const changeCurrency=(currency:CurrencyCode)=>{setDisplayCurrency(currency);try{window.localStorage.setItem("kapital-currency",currency)}catch{}};
   const changeDesignTheme=(theme:DesignTheme)=>{setDesignTheme(theme);try{window.localStorage.setItem("kapital-theme",theme)}catch{}};
+  const saveCopySettings=(next:PortfolioCopySettings)=>{setCopySettings(next);try{window.localStorage.setItem("lekkiportfel-copy-settings",JSON.stringify(next))}catch{}};
+  const changeCopySetting=(key:CopySection,enabled:boolean)=>saveCopySettings({...copySettings,[key]:enabled});
   useEffect(()=>{
     if(!firebaseConfigured)return;
     return observeUser(user=>{setFirebaseUser(user);setAuthReady(true);setPortfolioLoaded(false);setNeedsMigration(false);setMigrationCode("");setMigrationError("")});
@@ -274,6 +291,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
   useEffect(()=>{portfolioRef.current=data},[data]);
   useEffect(()=>{document.documentElement.dataset.portfolioTheme=designTheme},[designTheme]);
   useEffect(()=>{const timer=window.setTimeout(()=>{try{const saved=window.localStorage.getItem("kapital-theme");if(saved==="lekka"||saved==="dark")setDesignTheme(saved)}catch{}},0);return()=>window.clearTimeout(timer)},[]);
+  useEffect(()=>{const timer=window.setTimeout(()=>{try{const saved=window.localStorage.getItem("lekkiportfel-copy-settings");if(!saved)return;const parsed=JSON.parse(saved) as Partial<PortfolioCopySettings>;const next={...defaultPortfolioCopySettings};for(const option of portfolioCopyOptions)if(typeof parsed[option.key]==="boolean")next[option.key]=parsed[option.key]!;setCopySettings(next)}catch{}},0);return()=>window.clearTimeout(timer)},[]);
   useEffect(()=>{const onKeyDown=(event:KeyboardEvent)=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="k"){event.preventDefault();portfolioSearchRef.current?.focus()}};window.addEventListener("keydown",onKeyDown);return()=>window.removeEventListener("keydown",onKeyDown)},[]);
   useEffect(()=>{const savedTimer=window.setTimeout(()=>{try{const saved=window.localStorage.getItem("kapital-currency");if(saved==="PLN"||saved==="USD"||saved==="EUR"||saved==="GBP")setDisplayCurrency(saved)}catch{}},0);const controller=new AbortController();const load=()=>fetch("/api/fx",{signal:controller.signal}).then(response=>response.ok?response.json():Promise.reject()).then(result=>setFxRates(current=>({...current,...result.rates}))).catch(()=>undefined);void load();const timer=window.setInterval(load,5*60_000);return()=>{window.clearTimeout(savedTimer);controller.abort();window.clearInterval(timer)}},[]);
   const refreshPrices=useCallback(async(source?:PortfolioData,announce=false)=>{
@@ -429,6 +447,13 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
   ];
   function exportTaxReport(format:"xlsx"|"csv"){const base=`kapital-pit38-${taxYear}`;if(format==="xlsx")downloadBytes(buildXlsxBytes(reportSheets),`${base}.xlsx`,"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");else downloadBytes(buildCsvZipBytes(reportSheets),`${base}-csv.zip`,"application/zip");setNotice(`Pobrano raport ${taxYear} w formacie ${format.toUpperCase()}.`)}
   const history=[...trades.map(t=>({id:t.id,date:t.date,type:"Zamknięcie pozycji",symbol:t.symbol,detail:`${t.side} · ${number(t.volume)} szt. · ${t.account||"PLN"}`,amount:t.result})),...cash.map(c=>({id:c.id,date:c.date,type:c.type,symbol:c.symbol,detail:`${c.comment||"Operacja gotówkowa"} · ${c.account||"PLN"}`,amount:c.amount})),...cryptoTransactions.map(c=>({id:c.id,date:c.date,type:cryptoTypeLabels[c.type],symbol:c.symbol,detail:c.type==="swap"?`${number(c.quantity)} ${c.symbol} → ${number(c.toQuantity||0)} ${c.toSymbol} · ${c.account}`:`${number(c.quantity)} ${c.symbol} · ${c.account}`,amount:c.type==="buy"?-(c.amountPln||0):(c.amountPln||0)}))].sort((a,b)=>+new Date(b.date)-+new Date(a.date));
+  const enabledCopySections=portfolioCopyOptions.filter(option=>copySettings[option.key]).length;
+  async function copyPortfolioData(){
+    if(!enabledCopySections){setNotice("Włącz przynajmniej jedną sekcję do skopiowania.");setCopySettingsOpen(true);return}
+    const scopedCrypto=account==="Wszystkie"?cryptoTransactions:cryptoTransactions.filter(item=>item.account===account);
+    const report=buildPortfolioCopy({source:data.source,account,displayCurrency,displayRate:fxRates[displayCurrency]||1,generatedAt:new Date(),priceUpdatedAt:priceStatus.updatedAt,positions,cash,trades,crypto:scopedCrypto,performance:performance.points,benchmarkName:performance.benchmark.name,forecast},copySettings);
+    try{await copyText(report);setNotice(`Skopiowano dane portfela · ${enabledCopySections} z ${portfolioCopyOptions.length} sekcji.`);setCopySettingsOpen(false)}catch(error){setNotice(error instanceof Error?error.message:"Nie udało się skopiować danych.")}
+  }
   const viewCopy:Record<AppView,{eyebrow:string;title:string;description:string}>={
     pulpit:{eyebrow:data.source,title:"Twój majątek",description:"Wszystkie aktywa, wyniki i przepływy w jednym prostym widoku."},
     dywidendy:{eyebrow:data.source,title:"Dywidendy",description:"Zebrane wpływy i prognoza kolejnych wypłat."},
@@ -480,7 +505,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
       <button onClick={()=>void logout()}><span><LogOut size={18}/></span><div><strong>Wyloguj się</strong><small>{firebaseUser.email}</small></div></button>
     </section></>}
     <section className="content"><header className="topbar"><div className="topbar-title"><p className="eyebrow">{viewCopy[view].eyebrow}</p><h1>{viewCopy[view].title}</h1></div><div className="mobile-brand"><span className="brand-mark"><WalletCards size={17} strokeWidth={2}/></span><strong>KAPITAŁ</strong></div><label className="topbar-search"><span aria-hidden="true"><Search size={18} strokeWidth={1.8}/></span><input ref={portfolioSearchRef} value={portfolioQuery} onChange={e=>setPortfolioQuery(e.target.value)} placeholder="Szukaj aktywa, symbolu lub rachunku…" aria-label="Szukaj w portfelu"/><kbd>Ctrl K</kbd></label><div className="top-actions"><select className="theme-select" value={designTheme} onChange={e=>changeDesignTheme(e.target.value as DesignTheme)} aria-label="Wygląd aplikacji"><option value="lekka">Lekka</option><option value="dark">Dark</option></select><select className="currency-select" value={displayCurrency} onChange={e=>changeCurrency(e.target.value as CurrencyCode)} aria-label="Waluta prezentacji"><option value="PLN">PLN zł</option><option value="USD">USD $</option><option value="EUR">EUR €</option><option value="GBP">GBP £</option></select>{accounts.length>1&&<select className="account-select" value={account} onChange={e=>setAccount(e.target.value)} aria-label="Rachunek">{accounts.map(item=><option key={item}>{item}</option>)}</select>}<button className="add-asset-button" onClick={openAssetModal}><span><Plus size={18} strokeWidth={2.4}/></span><b>Dodaj aktywo</b></button><span className="as-of">Stan na dziś</span><button className="import-button" onClick={()=>fileRef.current?.click()} disabled={importing}><span><Upload size={18} strokeWidth={1.9}/></span><b>{importing?"Wczytuję…":"Importuj XTB"}</b></button></div><input ref={fileRef} className="sr-only" type="file" accept=".zip,.xlsx,.xls,.csv" onChange={e=>importFile(e.target.files?.[0])}/></header>
-    <div className="main-shell"><div className="main-content">{view!=="bezpieczenstwo"&&<section className="dashboard-intro"><p>{viewCopy[view].eyebrow}</p><h1>{viewCopy[view].title}</h1><span>{viewCopy[view].description}</span></section>}
+    <div className="main-shell"><div className="main-content">{view!=="bezpieczenstwo"&&<section className={`dashboard-intro ${view==="pulpit"?"with-copy-actions":""}`}><p>{viewCopy[view].eyebrow}</p><h1>{viewCopy[view].title}</h1><span>{viewCopy[view].description}</span>{view==="pulpit"&&<div className="copy-actions"><button type="button" className="copy-portfolio-button" onClick={()=>void copyPortfolioData()}><Copy size={16} strokeWidth={2}/><b>Kopiuj dane</b></button><button type="button" className="copy-settings-button" onClick={()=>setCopySettingsOpen(true)} aria-label="Ustaw zakres kopiowanych danych" title="Ustaw zakres"><Settings2 size={16} strokeWidth={2}/></button></div>}</section>}
     {view!=="bezpieczenstwo"&&<div className={`price-status ${priceStatus.loading?"loading":priceStatus.missing.length?"partial":"live"}`} role="status"><span className="live-dot"/><div><strong>{priceStatus.loading?"Pobieram aktualne ceny…":priceStatus.updatedAt?"Notowania są aktualne":"Oczekiwanie na notowania"}</strong><small>{priceStatus.updatedAt?`${priceStatus.updated} instrumentów · aktualizacja ${new Intl.DateTimeFormat("pl-PL",{hour:"2-digit",minute:"2-digit"}).format(new Date(priceStatus.updatedAt))}${priceStatus.missing.length?` · ${new Set(priceStatus.missing).size} bez ceny`:""}`:"Ceny odświeżą się automatycznie"}</small></div><button type="button" onClick={()=>void refreshPrices(undefined,true)} disabled={priceStatus.loading}><RefreshCw size={13} strokeWidth={1.9}/> Odśwież</button></div>}
     {notice&&<div className="notice" role="status"><span><Info size={14} strokeWidth={2}/></span>{notice}<button onClick={()=>setNotice("")} aria-label="Zamknij"><X size={15} strokeWidth={2}/></button></div>}
     {view==="pulpit"&&<><section className="hero-grid"><article className="value-card"><div className="metric-icon yellow"><WalletCards size={18} strokeWidth={1.9}/></div><p>Wartość portfela</p><h2>{money(totalValue)}</h2><div className={`profit-pill ${openProfit<0?"negative":""}`}>{openProfit>=0?"↑":"↓"} {money(Math.abs(openProfit),2)} <span>({totalCost?number(openProfit/totalCost*100):"0,00"}%)</span></div><small>Niezrealizowany wynik na aktywach</small></article><article className="metric-card"><div className="metric-icon green"><ArrowUpRight size={18} strokeWidth={1.9}/></div><p>Dywidendy netto</p><h3>{money(divNet,2)}</h3><small>Zebrane · cała historia</small><span className="micro">Brutto {money(divGross,2)}</span></article><article className="metric-card"><div className="metric-icon amber"><CalendarClock size={18} strokeWidth={1.9}/></div><p>Prognoza 12 mies.</p><h3>{money(forecastTotal,2)}</h3><small>Na bazie poprzednich wypłat</small><span className="micro">{forecast.length} przewidywanych wypłat</span></article><article className="metric-card"><div className="metric-icon dark"><Sigma size={18} strokeWidth={1.9}/></div><p>Wynik zrealizowany</p><h3 className={realized<0?"red":""}>{money(realized,2)}</h3><small>Zamknięte transakcje</small><span className="micro">{trades.length} operacje</span></article></section>
@@ -573,6 +598,14 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
 
       <p className="security-note">Ten opis odzwierciedla sposób działania widoczny w aktualnym kodzie aplikacji. Po dodaniu logowania, osobnych kont użytkowników albo nowych integracji tę stronę trzeba zaktualizować.</p>
     </article>}
+    {copySettingsOpen&&<div className="modal-backdrop" role="presentation" tabIndex={-1} onKeyDown={event=>{if(event.key==="Escape")setCopySettingsOpen(false)}} onMouseDown={event=>{if(event.currentTarget===event.target)setCopySettingsOpen(false)}}>
+      <section className="asset-modal copy-settings-modal" role="dialog" aria-modal="true" aria-labelledby="copy-settings-title">
+        <header><div><p className="eyebrow">Raport tekstowy</p><h2 id="copy-settings-title">Co kopiować?</h2></div><button className="modal-close" type="button" onClick={()=>setCopySettingsOpen(false)} aria-label="Zamknij"><X size={18} strokeWidth={2}/></button></header>
+        <div className="copy-settings-toolbar"><p>Ustawienia zapisują się na tym urządzeniu. Główny przycisk kopiuje raport od razu.</p><div><button type="button" onClick={()=>saveCopySettings({...defaultPortfolioCopySettings})}>Włącz wszystko</button><button type="button" onClick={()=>saveCopySettings(Object.fromEntries(portfolioCopyOptions.map(option=>[option.key,false])) as PortfolioCopySettings)}>Wyłącz wszystko</button></div></div>
+        <div className="copy-settings-list">{portfolioCopyOptions.map(option=><label key={option.key} className={copySettings[option.key]?"enabled":""}><span className="copy-toggle"><input type="checkbox" checked={copySettings[option.key]} onChange={event=>changeCopySetting(option.key,event.target.checked)}/><i/></span><span><strong>{option.label}</strong><small>{option.description}</small></span></label>)}</div>
+        <div className="copy-settings-foot"><p><strong>{enabledCopySections}</strong> z {portfolioCopyOptions.length} sekcji zostanie skopiowanych.</p><div className="modal-actions"><button type="button" className="secondary-action" onClick={()=>setCopySettingsOpen(false)}>Anuluj</button><button type="button" className="primary-action" disabled={!enabledCopySections} onClick={()=>void copyPortfolioData()}><Copy size={15}/>Kopiuj dane</button></div></div>
+      </section>
+    </div>}
     {addingCryptoTransaction&&<div className="modal-backdrop" role="presentation" tabIndex={-1} onKeyDown={event=>{if(event.key==="Escape")setAddingCryptoTransaction(false)}} onMouseDown={event=>{if(event.currentTarget===event.target)setAddingCryptoTransaction(false)}}>
       <section className="asset-modal crypto-transaction-modal" role="dialog" aria-modal="true" aria-labelledby="crypto-transaction-title">
         <header><div><p className="eyebrow">Rejestr PIT-38</p><h2 id="crypto-transaction-title">Dodaj transakcję krypto</h2></div><button className="modal-close" type="button" onClick={()=>setAddingCryptoTransaction(false)} aria-label="Zamknij"><X size={18} strokeWidth={2}/></button></header>
