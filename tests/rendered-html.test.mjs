@@ -168,6 +168,16 @@ test("mobile dashboard header keeps only the title and compact actions", async (
   assert.match(css, /\.copy-actions button\s*\{[^}]*height:\s*36px;/);
 });
 
+test("dividend dashboard card compares the current year with the projection to year end", async () => {
+  const page = await readFile(new URL("app/page.tsx", root), "utf8");
+  const css = await readFile(new URL("app/account.css", root), "utf8");
+  assert.match(page, /currentYearForecastNet=forecast\.filter\(item=>Number\(item\.date\.slice\(0,4\)\)===today\.getFullYear\(\)\)/);
+  assert.match(page, /currentYearDividendProjection=currentYearDividendNet\+currentYearForecastNet/);
+  assert.match(page, /Otrzymane \/ prognoza do 31\.12/);
+  assert.match(page, /Cała historia \{money\(divNet,2\)\}/);
+  assert.match(css, /\.dividend-metric-card > \.dividend-year-progress,[\s\S]*?grid-column:\s*1 \/ -1;/);
+});
+
 test("dark mode reuses the modern shell without light color leaks", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
   const layout = await readFile(new URL("app/layout.tsx", root), "utf8");

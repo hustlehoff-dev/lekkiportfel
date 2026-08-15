@@ -936,6 +936,9 @@ html[data-portfolio-theme="lekka"] .value-card > p,
 html[data-portfolio-theme="lekka"] .metric-card > p { grid-row: 1; margin: 0; color: #344054; font-size: 13px; font-weight: 800; }
 html[data-portfolio-theme="lekka"] .value-card > h2,
 html[data-portfolio-theme="lekka"] .metric-card > h3 { grid-row: 2; margin: 0; font-size: 22px; line-height: 26px; font-weight: 900; }
+html[data-portfolio-theme="lekka"] .metric-card > .dividend-year-progress { display: flex; align-items: baseline; gap: 4px; white-space: nowrap; font-size: clamp(15px, 1.45vw, 20px); letter-spacing: -.04em; }
+html[data-portfolio-theme="lekka"] .dividend-year-progress i { color: #98a2b3; font-size: .72em; font-style: normal; font-weight: 700; }
+html[data-portfolio-theme="lekka"] .dividend-year-progress span:last-child { color: #667085; font-size: .72em; font-weight: 800; }
 html[data-portfolio-theme="lekka"] .value-card > .profit-pill { grid-row: 3; justify-self: start; margin-top: 2px; padding: 2px 5px; border: 0; background: transparent; font-size: 11px; }
 html[data-portfolio-theme="lekka"] .value-card > small,
 html[data-portfolio-theme="lekka"] .metric-card > small { grid-row: 3; color: #667085; font-size: 11px; line-height: 15px; font-weight: 600; }
@@ -1047,6 +1050,7 @@ html[data-portfolio-theme="lekka"] .history-panel { margin-top: 18px; }
   html[data-portfolio-theme="lekka"] .metric-card > .micro { grid-column: 1; grid-row: auto; }
   html[data-portfolio-theme="lekka"] .value-card > h2,
   html[data-portfolio-theme="lekka"] .metric-card > h3 { margin-top: 7px; font-size: 17px; line-height: 21px; }
+  html[data-portfolio-theme="lekka"] .metric-card > .dividend-year-progress { gap: 3px; font-size: 15px; }
   html[data-portfolio-theme="lekka"] .metric-card > .micro { margin-top: 6px; }
 }
 
@@ -1447,6 +1451,10 @@ html[data-portfolio-theme="lekka"] .dividend-summary {
     white-space: nowrap;
   }
   html[data-portfolio-theme="lekka"] .value-card > .profit-pill span { display: none; }
+  html[data-portfolio-theme="lekka"] .dividend-metric-card > .metric-icon { grid-row: 1; }
+  html[data-portfolio-theme="lekka"] .dividend-metric-card > .dividend-year-progress,
+  html[data-portfolio-theme="lekka"] .dividend-metric-card > small { grid-column: 1 / -1; }
+  html[data-portfolio-theme="lekka"] .dividend-metric-card > .micro { display: none; }
 }
 
 /* Support navigation and views, following BOOKER_FORK SupportPages. */
