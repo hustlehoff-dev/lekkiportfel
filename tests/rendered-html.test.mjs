@@ -189,6 +189,20 @@ test("dashboard greets the account owner and keeps only primary metrics at the t
   assert.match(css, /\.hero-grid\.primary-metrics\s*\{\s*grid-template-columns:\s*repeat\(2,/);
 });
 
+test("privacy eye cycles through money, percentages and the full view", async () => {
+  const page = await readFile(new URL("app/page.tsx", root), "utf8");
+  const css = await readFile(new URL("app/account.css", root), "utf8");
+  assert.match(page, /type PrivacyMode = "visible"\|"money"\|"all"/);
+  assert.match(page, /current==="visible"\?"money":current==="money"\?"all":"visible"/);
+  assert.match(page, /privacyMode==="visible"\?new Intl\.NumberFormat[\s\S]*?:"••••"/);
+  assert.match(page, /privacyMode==="all"\?"••••":/);
+  assert.match(page, /className=\{`privacy-toggle-button privacy-\$\{privacyMode\}`\}/);
+  assert.match(page, /className="dashboard-title-line"><h1>\{viewCopy\[view\]\.title\}<\/h1>\{view==="pulpit"&&<button/);
+  assert.match(page, /localStorage\.setItem\("lekkiportfel-privacy",next\)/);
+  assert.match(css, /\.privacy-toggle-button\.privacy-all::after\s*\{[\s\S]*?content:\s*"%";/);
+  assert.match(css, /\.value-card > \.profit-pill span \{ display: inline; \}/);
+});
+
 test("dividend dashboard card compares the current year with the projection to year end", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
   const css = await readFile(new URL("app/account.css", root), "utf8");

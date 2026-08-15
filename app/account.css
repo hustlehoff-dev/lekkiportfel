@@ -1451,7 +1451,7 @@ html[data-portfolio-theme="lekka"] .dividend-summary {
     line-height: 14px;
     white-space: nowrap;
   }
-  html[data-portfolio-theme="lekka"] .value-card > .profit-pill span { display: none; }
+  html[data-portfolio-theme="lekka"] .value-card > .profit-pill span { display: inline; }
   html[data-portfolio-theme="lekka"] .dividend-metric-card > .metric-icon { grid-row: 1; }
   html[data-portfolio-theme="lekka"] .dividend-metric-card > .dividend-year-progress,
   html[data-portfolio-theme="lekka"] .dividend-metric-card > small { grid-column: 1 / -1; }
@@ -2559,8 +2559,11 @@ html[data-portfolio-theme="lekka"] .sidebar-collapse-button:hover { background: 
   align-items: end;
 }
 .dashboard-intro.with-copy-actions > p,
-.dashboard-intro.with-copy-actions > h1,
+.dashboard-intro.with-copy-actions > .dashboard-title-line,
 .dashboard-intro.with-copy-actions > span { grid-column: 1; }
+.dashboard-title-line { display: flex; align-items: center; gap: 10px; }
+.dashboard-title-line h1 { min-width: 0; }
+.dashboard-title-line .privacy-toggle-button { width: 36px; height: 36px; min-width: 36px; }
 .copy-actions {
   grid-column: 2;
   grid-row: 1 / 4;
@@ -3123,7 +3126,9 @@ html[data-color-theme="dark"] .tax-control-card li > span { background: #72ffac;
 html[data-color-theme="dark"] .tax-control-card li.warning > span { background: #ffd84d; box-shadow: 0 0 0 3px rgba(255,216,77,.12); }
 html[data-color-theme="dark"] .tax-disclaimer { border-color: #3d604b; background: #0e1c13; }
 
-.topbar-settings-button {
+.topbar-settings-button,
+.privacy-toggle-button {
+  position: relative;
   width: 44px;
   height: 44px;
   min-width: 44px;
@@ -3136,30 +3141,53 @@ html[data-color-theme="dark"] .tax-disclaimer { border-color: #3d604b; backgroun
   color: #dce8e0;
 }
 
-.topbar-settings-button:hover {
+.topbar-settings-button:hover,
+.privacy-toggle-button:hover {
   border-color: #55f59a;
   color: #55f59a;
   background: #17271d;
 }
 
-html[data-portfolio-theme="lekka"] .topbar-settings-button {
+html[data-portfolio-theme="lekka"] .topbar-settings-button,
+html[data-portfolio-theme="lekka"] .privacy-toggle-button {
   border-color: rgba(255,255,255,.8);
   background: rgba(255,255,255,.9);
   color: #475569;
 }
 
-html[data-portfolio-theme="lekka"] .topbar-settings-button:hover {
+html[data-portfolio-theme="lekka"] .topbar-settings-button:hover,
+html[data-portfolio-theme="lekka"] .privacy-toggle-button:hover {
   border-color: #e2e8f0;
   background: #fff;
   color: #101828;
 }
 
 @media (max-width: 960px) {
-  .topbar-settings-button {
+  .topbar-settings-button,
+  .privacy-toggle-button {
     width: 40px;
     height: 40px;
     min-width: 40px;
   }
+}
+
+.privacy-toggle-button.privacy-money,
+.privacy-toggle-button.privacy-all { color: #67b58f; border-color: #49725e; background: #182720; }
+.privacy-toggle-button.privacy-all::after {
+  content: "%";
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  min-width: 15px;
+  height: 15px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: #67b58f;
+  color: #07100b;
+  font-size: 7px;
+  font-weight: 900;
 }
 
 /* Modern shell with the original dark palette. */
@@ -3230,8 +3258,13 @@ html[data-color-theme="dark"] .add-asset-button { background: #17211f; color: #9
 html[data-color-theme="dark"] .add-asset-button:hover { background: #1c2925; color: #c4ead6; border-color: #4e6c5d; }
 html[data-color-theme="dark"] .import-button { background: #67b58f; color: #08110c; border-color: #67b58f; }
 html[data-color-theme="dark"] .import-button:hover { background: #79c29f; border-color: #79c29f; }
-html[data-color-theme="dark"] .topbar-settings-button { background: #151d21; color: #aab5bc; border-color: #2b373e; }
-html[data-color-theme="dark"] .topbar-settings-button:hover { background: #1c272c; color: #dce4e9; border-color: #4b5b64; }
+html[data-color-theme="dark"] .topbar-settings-button,
+html[data-color-theme="dark"] .privacy-toggle-button { background: #151d21; color: #aab5bc; border-color: #2b373e; }
+html[data-color-theme="dark"] .topbar-settings-button:hover,
+html[data-color-theme="dark"] .privacy-toggle-button:hover { background: #1c272c; color: #dce4e9; border-color: #4b5b64; }
+html[data-color-theme="dark"] .privacy-toggle-button.privacy-money,
+html[data-color-theme="dark"] .privacy-toggle-button.privacy-all { background: #182720; color: #91cfad; border-color: #49725e; }
+html[data-color-theme="dark"] .privacy-toggle-button.privacy-all::after { border-color: #0b0f12; }
 html[data-color-theme="dark"] .mobile-brand strong { color: #dce4e9; }
 
 html[data-color-theme="dark"] .dashboard-intro p { color: #7f8c95; }
