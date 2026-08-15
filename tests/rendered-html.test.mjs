@@ -154,6 +154,16 @@ test("metric cards stay dense at desktop and mobile widths", async () => {
   assert.match(css, /border-radius:\s*22px/);
 });
 
+test("dashboard metrics share aligned label, value and detail rows", async () => {
+  const page = await readFile(new URL("app/page.tsx", root), "utf8");
+  const css = await readFile(new URL("app/account.css", root), "utf8");
+  assert.match(page, /money\(currentYearDividendProjection,0\)/);
+  assert.match(css, /\.primary-metrics > \.value-card,[\s\S]*?grid-template-rows:\s*28px 26px 18px;/);
+  assert.match(css, /\.primary-metrics > article > p\s*\{[\s\S]*?min-height:\s*28px;/);
+  assert.match(css, /\.primary-metrics \.dividend-year-progress\s*\{[\s\S]*?overflow:\s*visible;/);
+  assert.match(css, /data-color-theme="dark"\] \.performance-head h3,[\s\S]*?color:\s*#e8edf1;/);
+});
+
 test("mobile portfolio filters stay in one compact horizontal strip", async () => {
   const css = await readFile(new URL("app/account.css", root), "utf8");
   assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.portfolio-filters\s*\{[\s\S]*?display:\s*flex;[\s\S]*?overflow-x:\s*auto;/);

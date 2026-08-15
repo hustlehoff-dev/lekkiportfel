@@ -2891,6 +2891,126 @@ html[data-portfolio-theme="lekka"] .ai-privacy svg { color: #22a55d; }
   -webkit-backdrop-filter: none;
 }
 
+/* Consistent dashboard rhythm: labels, values and supporting text share one grid. */
+html[data-portfolio-theme="lekka"] .primary-metrics > .value-card,
+html[data-portfolio-theme="lekka"] .primary-metrics > .metric-card {
+  grid-template-columns: 40px minmax(0, 1fr);
+  grid-template-rows: 28px 26px 18px;
+  align-content: center;
+  align-items: start;
+  column-gap: 12px;
+  row-gap: 2px;
+}
+
+html[data-portfolio-theme="lekka"] .primary-metrics .metric-icon {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  align-self: center;
+}
+
+html[data-portfolio-theme="lekka"] .primary-metrics > article > p {
+  grid-column: 2;
+  grid-row: 1;
+  min-height: 28px;
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  line-height: 15px;
+}
+
+html[data-portfolio-theme="lekka"] .primary-metrics > .value-card > h2,
+html[data-portfolio-theme="lekka"] .primary-metrics > .metric-card > h3 {
+  grid-column: 2;
+  grid-row: 2;
+  width: 100%;
+  margin: 0;
+  align-self: start;
+  line-height: 26px;
+}
+
+html[data-portfolio-theme="lekka"] .primary-metrics > .value-card > .profit-pill,
+html[data-portfolio-theme="lekka"] .primary-metrics > .metric-card > small {
+  grid-column: 2;
+  grid-row: 3;
+  margin: 0;
+  align-self: start;
+  line-height: 16px;
+}
+
+html[data-portfolio-theme="lekka"] .primary-metrics .dividend-year-progress {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  overflow: visible;
+  white-space: nowrap;
+}
+
+html[data-color-theme="dark"] .performance-head h3,
+html[data-color-theme="dark"] .panel-head h3 { color: #e8edf1; }
+html[data-color-theme="dark"] .performance-head .eyebrow,
+html[data-color-theme="dark"] .panel-head .eyebrow { color: #7f8c95; }
+.performance-panel .performance-empty { min-height: 160px; }
+
+@media (max-width: 960px) {
+  html[data-portfolio-theme="lekka"] .primary-metrics > .value-card,
+  html[data-portfolio-theme="lekka"] .primary-metrics > .metric-card {
+    height: 92px;
+    min-height: 92px;
+    grid-template-columns: 34px minmax(0, 1fr);
+    grid-template-rows: 28px 20px 14px;
+    align-content: center;
+    column-gap: 8px;
+    row-gap: 2px;
+    padding: 10px 11px;
+  }
+
+  html[data-portfolio-theme="lekka"] .primary-metrics .metric-icon {
+    grid-row: 1 / span 3;
+    width: 34px;
+    height: 34px;
+    align-self: center;
+  }
+
+  html[data-portfolio-theme="lekka"] .primary-metrics > article > p {
+    min-height: 28px;
+    font-size: 11px;
+    line-height: 14px;
+  }
+
+  html[data-portfolio-theme="lekka"] .primary-metrics > .value-card > h2,
+  html[data-portfolio-theme="lekka"] .primary-metrics > .metric-card > h3 {
+    font-size: 17px;
+    line-height: 20px;
+  }
+
+  html[data-portfolio-theme="lekka"] .primary-metrics > .value-card > .profit-pill,
+  html[data-portfolio-theme="lekka"] .primary-metrics > .metric-card > small {
+    overflow: hidden;
+    font-size: 9px;
+    line-height: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  html[data-portfolio-theme="lekka"] .primary-metrics .dividend-year-progress {
+    grid-column: 2;
+    width: 100%;
+    gap: 2px;
+    overflow: visible;
+    font-size: 14px;
+    letter-spacing: -.045em;
+  }
+
+  html[data-portfolio-theme="lekka"] .primary-metrics .dividend-year-progress i,
+  html[data-portfolio-theme="lekka"] .primary-metrics .dividend-year-progress span:last-child {
+    font-size: 9px;
+    letter-spacing: -.02em;
+  }
+
+  .performance-head { gap: 12px; }
+  .performance-panel .performance-empty { min-height: 110px; padding: 24px 18px; }
+}
+
 @media (max-width: 960px) {
   html[data-color-theme="dark"][data-portfolio-theme="lekka"] .sidebar:has(.mobile-more) {
     background: #0c1114;
