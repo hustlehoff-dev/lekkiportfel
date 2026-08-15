@@ -178,6 +178,14 @@ test("dividend dashboard card compares the current year with the projection to y
   assert.match(css, /\.dividend-metric-card > \.dividend-year-progress,[\s\S]*?grid-column:\s*1 \/ -1;/);
 });
 
+test("rolling dividend forecast always exposes its exact date range", async () => {
+  const page = await readFile(new URL("app/page.tsx", root), "utf8");
+  assert.doesNotMatch(page, /Estymacja 12 mies\./);
+  assert.match(page, /Prognoza krocząca/);
+  assert.match(page, /Od dziś do \{dateLabel\(iso\(rollingDividendEnd\)\)\}/);
+  assert.match(page, /12 miesięcy · \{forecast\.length\} orientacyjnych terminów/);
+});
+
 test("dark mode reuses the modern shell without light color leaks", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
   const layout = await readFile(new URL("app/layout.tsx", root), "utf8");
