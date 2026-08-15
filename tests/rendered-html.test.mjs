@@ -7,6 +7,7 @@ import { calculateLiquidationTax, calculateRetirementExitTax } from "../lib/liqu
 import { buildDividendForecast, inferMonthlyContribution } from "../lib/dividend-forecast.ts";
 import { groupDividendForecast, groupDividendHistory } from "../lib/dividend-groups.ts";
 import { buildCsvZipBytes, buildXlsxBytes } from "../lib/spreadsheet-export.ts";
+import { marketFor, matchesMarket } from "../lib/portfolio-market.ts";
 
 const root = new URL("../", import.meta.url);
 
@@ -27,6 +28,8 @@ test("dashboard exposes real monthly performance and benchmark controls", async 
   assert.match(page, /className="topbar-search"/);
   assert.match(page, /dashboard-intro/);
   assert.match(page, /aria-label="Dostawca danych"/);
+  assert.match(page, /aria-label="Rynek aktywów"/);
+  assert.match(page, /marketFilterLabels/);
   assert.match(page, /providerName/);
   assert.match(page, /provider:"XTB"/);
   assert.match(page, /Cały portfel/);
@@ -36,6 +39,24 @@ test("dashboard exposes real monthly performance and benchmark controls", async 
   assert.doesNotMatch(page, /Portfel zapisany w aplikacji|Dostawcy notowań dostają symbol instrumentu/);
   assert.match(page, /<footer className="sidebar-footer">/);
   assert.doesNotMatch(page, /<footer><span>Kapitał<\/span>/);
+});
+
+test("market filter separates GPW and recalculates a focused portfolio", () => {
+  const positions=[
+    {symbol:"XTB.PL",assetClass:"Akcje",value:60},
+    {symbol:"DNP.WA",assetClass:"Akcje",value:40},
+    {symbol:"EQIX.US",assetClass:"Akcje",value:50},
+    {symbol:"USDT",assetClass:"Krypto",value:100},
+    {symbol:"PLN",assetClass:"Gotówka",value:25},
+  ];
+  assert.equal(marketFor(positions[0]),"gpw");
+  assert.equal(marketFor(positions[1]),"gpw");
+  assert.equal(marketFor(positions[2]),"foreign");
+  assert.equal(marketFor(positions[3]),"crypto");
+  assert.equal(marketFor(positions[4]),"cash");
+  const gpw=positions.filter(item=>matchesMarket(item,"gpw"));
+  assert.equal(gpw.reduce((sum,item)=>sum+item.value,0),100);
+  assert.deepEqual(gpw.map(item=>item.value/100),[0.6,0.4]);
 });
 
 test("metric cards stay dense at desktop and mobile widths", async () => {
