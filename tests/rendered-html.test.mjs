@@ -177,6 +177,18 @@ test("mobile viewport and metric cards stay compact across the full mobile break
   assert.match(css, /\.dividend-metric-card > \.dividend-year-progress\s*\{[^}]*overflow:\s*hidden;[^}]*font-size:\s*14px;/);
 });
 
+test("dashboard greets the account owner and keeps only primary metrics at the top", async () => {
+  const page = await readFile(new URL("app/page.tsx", root), "utf8");
+  const css = await readFile(new URL("app/account.css", root), "utf8");
+  assert.match(page, /firebaseUser\?\.displayName\|\|firebaseUser\?\.email/);
+  assert.match(page, /title:greetingName\?`Cześć, \$\{greetingName\}`:"Cześć"/);
+  assert.match(page, /className="hero-grid primary-metrics"/);
+  assert.doesNotMatch(page, /<p>Prognoza krocząca<\/p>/);
+  assert.doesNotMatch(page, /<p>Wynik zrealizowany<\/p>/);
+  assert.match(page, /<span>Wynik zrealizowany<\/span>/);
+  assert.match(css, /\.hero-grid\.primary-metrics\s*\{\s*grid-template-columns:\s*repeat\(2,/);
+});
+
 test("dividend dashboard card compares the current year with the projection to year end", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
   const css = await readFile(new URL("app/account.css", root), "utf8");
@@ -192,7 +204,7 @@ test("rolling dividend forecast always exposes its exact date range", async () =
   assert.doesNotMatch(page, /Estymacja 12 mies\./);
   assert.match(page, /Prognoza krocząca/);
   assert.match(page, /Od dziś do \{dateLabel\(iso\(rollingDividendEnd\)\)\}/);
-  assert.match(page, /12 miesięcy · \{forecast\.length\} orientacyjnych terminów/);
+  assert.match(page, /· 12 miesięcy<\/span>/);
 });
 
 test("dark mode reuses the modern shell without light color leaks", async () => {

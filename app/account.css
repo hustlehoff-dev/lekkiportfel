@@ -1274,6 +1274,7 @@ html[data-portfolio-theme="lekka"] .hero-grid {
   gap: 12px;
   margin-top: 18px;
 }
+html[data-portfolio-theme="lekka"] .hero-grid.primary-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
 html[data-portfolio-theme="lekka"] .value-card,
 html[data-portfolio-theme="lekka"] .metric-card {
