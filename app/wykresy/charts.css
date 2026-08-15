@@ -154,6 +154,8 @@
 .chart-state { min-height: 390px; display: grid; align-content: center; justify-items: center; gap: 10px; color: #98a2b3; font-size: 11px; }
 .chart-state strong { color: #667085; }
 .chart-state.error button { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border: 1px solid #e4e7ec; border-radius: 8px; background: #fff; color: #667085; font-size: 9px; }
+.chart-cache-warning { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 6px 0 2px; padding: 8px 10px; border: 1px solid #f2d49b; border-radius: 9px; background: #fff9ed; color: #8a5a08; font-size: 9px; }
+.chart-cache-warning button { display: inline-flex; align-items: center; gap: 5px; flex: 0 0 auto; color: inherit; font-weight: 800; }
 .spin { animation: chart-spin .8s linear infinite; }
 @keyframes chart-spin { to { transform: rotate(360deg); } }
 
@@ -217,6 +219,7 @@ html[data-color-theme="dark"] .chart-tooltip strong { color: #e8edf1; }
 html[data-color-theme="dark"] .chart-tooltip span, html[data-color-theme="dark"] .chart-axis, html[data-color-theme="dark"] .chart-dates { color: #7f8b94; }
 html[data-color-theme="dark"] .quote-footer { background: #10161a; border-color: #252f36; color: #7f8b94; }
 html[data-color-theme="dark"] .quote-footer strong { color: #cbd4d9; }
+html[data-color-theme="dark"] .chart-cache-warning { border-color: #5c4825; background: #251f14; color: #e7bd70; }
 
 @media (max-width: 960px) {
   .charts-shell { display: block; }

@@ -21,19 +21,67 @@ type ChartPayload = {
   updatedAt: string;
   provider: "Bankier.pl" | "CoinGecko" | "Yahoo Finance";
   points: ChartPoint[];
+  stale?: boolean;
 };
 
-const cache = new Map<string, { expires: number; value: unknown }>();
+type CacheEntry = { freshUntil: number; staleUntil: number; value: unknown };
+
+const cache = new Map<string, CacheEntry>();
+const inflight = new Map<string, Promise<unknown>>();
+const HISTORY_TTL = 3 * 60_000;
+const SEARCH_TTL = 15 * 60_000;
+const STALE_TTL = 24 * 60 * 60_000;
 
 function cached<T>(key: string): T | null {
   const entry = cache.get(key);
-  if (!entry || entry.expires <= Date.now()) return null;
+  if (!entry || entry.freshUntil <= Date.now()) return null;
   return entry.value as T;
 }
 
-function remember(key: string, value: unknown, ttl = 60_000) {
-  cache.set(key, { expires: Date.now() + ttl, value });
+function staleCached<T>(key: string): T | null {
+  const entry = cache.get(key);
+  if (!entry || entry.staleUntil <= Date.now()) return null;
+  return entry.value as T;
+}
+
+function remember(key: string, value: unknown, ttl: number) {
+  const now = Date.now();
+  cache.set(key, { freshUntil: now + ttl, staleUntil: now + STALE_TTL, value });
   return value;
+}
+
+async function loadOnce<T>(key: string, loader: () => Promise<T>, ttl: number): Promise<{ value: T; stale: boolean }> {
+  const fresh = cached<T>(key);
+  if (fresh) return { value: fresh, stale: false };
+  const running = inflight.get(key) as Promise<T> | undefined;
+  if (running) {
+    try {
+      return { value: await running, stale: false };
+    } catch (error) {
+      const stale = staleCached<T>(key);
+      if (stale) return { value: stale, stale: true };
+      throw error;
+    }
+  }
+  const request = loader().then(value => remember(key, value, ttl) as T);
+  inflight.set(key, request);
+  try {
+    return { value: await request, stale: false };
+  } catch (error) {
+    const stale = staleCached<T>(key);
+    if (stale) return { value: stale, stale: true };
+    throw error;
+  } finally {
+    if (inflight.get(key) === request) inflight.delete(key);
+  }
+}
+
+class QuoteSourceError extends Error {
+  constructor(public status: number) {
+    super(status === 429
+      ? "Dostawca chwilowo ograniczył liczbę zapytań. Spróbuj ponownie za minutę."
+      : `Źródło notowań zwróciło błąd ${status}`);
+  }
 }
 
 async function fetchJson<T>(url: string) {
@@ -41,7 +89,7 @@ async function fetchJson<T>(url: string) {
     headers: { accept: "application/json", "user-agent": "LekkiPortfel/1.0" },
     signal: AbortSignal.timeout(10_000),
   });
-  if (!response.ok) throw new Error(`Źródło notowań zwróciło błąd ${response.status}`);
+  if (!response.ok) throw new QuoteSourceError(response.status);
   return response.json() as Promise<T>;
 }
 
@@ -55,22 +103,21 @@ async function cryptoHistory(instrument: ChartInstrument, period: ChartPeriod): 
   const id = safeCoinId(instrument.providerId);
   if (!id) throw new Error("Nieprawidłowy identyfikator kryptowaluty");
   const days = coinGeckoDays[period];
-  const [history, quote] = await Promise.all([
-    fetchJson<{ prices?: Array<[number, number]> }>(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(id)}/market_chart?vs_currency=pln&days=${days}`),
-    fetchJson<Record<string, { pln?: number; pln_24h_change?: number; last_updated_at?: number }>>(`https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(id)}&vs_currencies=pln&include_24hr_change=true&include_last_updated_at=true`),
-  ]);
+  const history = await fetchJson<{ prices?: Array<[number, number]> }>(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(id)}/market_chart?vs_currency=pln&days=${days}`);
   const points = (history.prices || []).map(([time, value]) => ({ time, value })).filter(point => Number.isFinite(point.value) && point.value > 0);
-  const latest = quote[id];
-  const price = Number(latest?.pln ?? points.at(-1)?.value);
+  const latest = points.at(-1);
+  const price = Number(latest?.value);
   if (!Number.isFinite(price) || price <= 0 || points.length < 2) throw new Error("Brak notowań dla wybranego okresu");
+  const dayAgo = (latest?.time || Date.now()) - 24 * 60 * 60_000;
+  const previousDay = points.reduce((closest, point) => Math.abs(point.time - dayAgo) < Math.abs(closest.time - dayAgo) ? point : closest, points[0]);
   return {
     instrument,
     currency: "PLN",
     price,
     previousClose: null,
-    change24h: Number.isFinite(latest?.pln_24h_change) ? Number(latest.pln_24h_change) : null,
+    change24h: previousDay?.value > 0 ? (price / previousDay.value - 1) * 100 : null,
     periodChange: periodChange(points),
-    updatedAt: new Date((latest?.last_updated_at || Date.now() / 1000) * 1000).toISOString(),
+    updatedAt: new Date(latest?.time || Date.now()).toISOString(),
     provider: "CoinGecko",
     points,
   };
@@ -195,9 +242,8 @@ export async function GET(request: Request) {
     if (action === "search") {
       const query = (url.searchParams.get("q") || "").trim();
       const key = `search:${query.toLowerCase()}`;
-      const saved = cached<ChartInstrument[]>(key);
-      const results = saved || remember(key, await search(query), 5 * 60_000);
-      return Response.json({ results }, { headers: { "cache-control": "no-store" } });
+      const loaded = await loadOnce(key, () => search(query), SEARCH_TTL);
+      return Response.json({ results: loaded.value, stale: loaded.stale }, { headers: { "cache-control": "private, max-age=60" } });
     }
 
     const kind = url.searchParams.get("kind") === "crypto" ? "crypto" : "market";
@@ -208,10 +254,20 @@ export async function GET(request: Request) {
     const period = isChartPeriod(url.searchParams.get("period")) ? url.searchParams.get("period") as ChartPeriod : "1M";
     const instrument: ChartInstrument = { key: `${kind}:${providerId}`, symbol, name, kind, providerId, exchange };
     const key = `history:${kind}:${providerId}:${period}`;
-    const saved = cached<ChartPayload>(key);
     const useBankier = kind === "market" && gpwIndexSymbol(instrument) !== null && period !== "1D";
-    const payload = saved || remember(key, kind === "crypto" ? await cryptoHistory(instrument, period) : useBankier ? await bankierGpwHistory(instrument, period) : await marketHistory(instrument, period));
-    return Response.json(payload, { headers: { "cache-control": "no-store" } });
+    const loader = async () => {
+      if (kind !== "crypto") return useBankier ? bankierGpwHistory(instrument, period) : marketHistory(instrument, period);
+      try {
+        return await cryptoHistory(instrument, period);
+      } catch (error) {
+        if (!(error instanceof QuoteSourceError) || error.status !== 429) throw error;
+        const yahooInstrument = { ...instrument, providerId: `${instrument.symbol.toUpperCase()}-USD` };
+        const fallback = await marketHistory(yahooInstrument, period);
+        return { ...fallback, instrument };
+      }
+    };
+    const loaded = await loadOnce(key, loader, HISTORY_TTL);
+    return Response.json({ ...loaded.value, stale: loaded.stale }, { headers: { "cache-control": "private, max-age=60, stale-if-error=86400" } });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Nie udało się pobrać notowań" }, { status: 502 });
   }

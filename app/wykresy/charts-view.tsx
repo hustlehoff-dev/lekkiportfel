@@ -30,7 +30,30 @@ type ChartPayload = {
   updatedAt: string;
   provider: "Bankier.pl" | "CoinGecko" | "Yahoo Finance";
   points: ChartPoint[];
+  stale?: boolean;
 };
+
+const chartCacheKey = (instrument: ChartInstrument, period: ChartPeriod) => `lekkiportfel-chart:${instrument.key}:${period}`;
+
+function readSavedChart(instrument: ChartInstrument, period: ChartPeriod): ChartPayload | null {
+  try {
+    const saved = window.localStorage.getItem(chartCacheKey(instrument, period));
+    if (!saved) return null;
+    const entry = JSON.parse(saved) as { savedAt?: number; payload?: ChartPayload };
+    if (!entry.payload || entry.payload.instrument.key !== instrument.key || !entry.payload.points?.length || Date.now() - Number(entry.savedAt) > 24 * 60 * 60_000) return null;
+    return { ...entry.payload, stale: true };
+  } catch {
+    return null;
+  }
+}
+
+function saveChart(instrument: ChartInstrument, period: ChartPeriod, payload: ChartPayload) {
+  try {
+    window.localStorage.setItem(chartCacheKey(instrument, period), JSON.stringify({ savedAt: Date.now(), payload }));
+  } catch {
+    // Brak miejsca lub prywatny tryb przeglądarki nie może blokować notowań.
+  }
+}
 
 const periodNames: Record<ChartPeriod, string> = { "1D": "1 dzień", "1T": "1 tydzień", "1M": "1 miesiąc", "3M": "3 miesiące", "1R": "1 rok", "5L": "5 lat", MAX: "Maks." };
 
@@ -109,15 +132,19 @@ export default function ChartsView() {
   const searchRef = useRef<HTMLInputElement>(null);
 
   const loadChart = useCallback(async (selected: ChartInstrument, selectedPeriod: ChartPeriod, signal?: AbortSignal) => {
+    const saved = readSavedChart(selected, selectedPeriod);
+    setData(saved);
     setLoading(true);
     setError("");
     const params = new URLSearchParams({ action: "history", kind: selected.kind, id: selected.providerId, symbol: selected.symbol, name: selected.name, exchange: selected.exchange, period: selectedPeriod });
     try {
       const payload = await fetch(`/api/charts?${params}`, { signal }).then(jsonResponse<ChartPayload>);
       setData(payload);
+      saveChart(selected, selectedPeriod, payload);
     } catch (reason) {
       if (reason instanceof DOMException && reason.name === "AbortError") return;
-      setError(reason instanceof Error ? reason.message : "Nie udało się pobrać wykresu");
+      const message = reason instanceof Error ? reason.message : "Nie udało się pobrać wykresu";
+      setError(saved ? `${message} Pokazuję ostatnie zapisane notowania.` : message);
     } finally {
       if (!signal?.aborted) setLoading(false);
     }
@@ -212,10 +239,11 @@ export default function ChartsView() {
         <div className="period-picker" role="group" aria-label="Okres wykresu">{chartPeriods.map(item => <button key={item} className={item === period ? "active" : ""} aria-pressed={item === period} onClick={() => setPeriod(item)}>{item}</button>)}</div>
         <div className="chart-stage" aria-live="polite">
           {loading && <div className="chart-state"><LoaderCircle className="spin" size={26}/><strong>Pobieram notowania…</strong></div>}
-          {!loading && error && <div className="chart-state error"><strong>{error}</strong><button onClick={() => void loadChart(instrument, period)}><RefreshCw size={15}/> Spróbuj ponownie</button></div>}
-          {!loading && !error && data && <PriceChart data={data} period={period}/>} 
+          {!loading && error && !data && <div className="chart-state error"><strong>{error}</strong><button onClick={() => void loadChart(instrument, period)}><RefreshCw size={15}/> Spróbuj ponownie</button></div>}
+          {!loading && error && data && <div className="chart-cache-warning"><strong>{error}</strong><button onClick={() => void loadChart(instrument, period)}><RefreshCw size={15}/> Odśwież</button></div>}
+          {!loading && data && <PriceChart data={data} period={period}/>}
         </div>
-        {data && !loading && <footer className="quote-footer"><span>Zmiana 24h <strong className={(data.change24h ?? 0) >= 0 ? "up" : "down"}>{formatPercent(data.change24h)}</strong></span><span>Ostatnia aktualizacja <strong>{new Intl.DateTimeFormat("pl-PL", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(data.updatedAt))}</strong></span><span>Źródło <strong>{data.provider}</strong></span></footer>}
+        {data && !loading && <footer className="quote-footer"><span>Zmiana 24h <strong className={(data.change24h ?? 0) >= 0 ? "up" : "down"}>{formatPercent(data.change24h)}</strong></span><span>Ostatnia aktualizacja <strong>{new Intl.DateTimeFormat("pl-PL", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(data.updatedAt))}</strong></span><span>Źródło <strong>{data.provider}{data.stale ? " · zapisane" : ""}</strong></span></footer>}
       </section>
     </section>
   </main>;

@@ -58,6 +58,12 @@ test("charts view exposes search, periods, source and responsive dark mode", asy
   assert.match(route, /provider: "Bankier\.pl"/);
   assert.match(route, /period === "MAX" \? "max_period=true"/);
   assert.match(route, /function downsample\(points: ChartPoint\[], limit = 1200\)/);
+  assert.doesNotMatch(route, /api\/v3\/simple\/price/);
+  assert.match(route, /const inflight = new Map/);
+  assert.match(route, /stale-if-error=86400/);
+  assert.match(route, /Dostawca chwilowo ograniczył liczbę zapytań/);
+  assert.match(page, /lekkiportfel-chart:/);
+  assert.match(page, /Pokazuję ostatnie zapisane notowania/);
   assert.match(css, /data-color-theme="dark"\] \.charts-shell/);
   assert.match(css, /@media \(max-width: 960px\)/);
   assert.match(css, /grid-template-columns: repeat\(5, minmax\(0,1fr\)\)/);
