@@ -2846,6 +2846,31 @@ html[data-portfolio-theme="lekka"] .ai-privacy svg { color: #22a55d; }
   -webkit-backdrop-filter: none;
 }
 
+@media (max-width: 960px) {
+  html[data-color-theme="dark"][data-portfolio-theme="lekka"] .sidebar:has(.mobile-more) {
+    background: #0c1114;
+    border-color: #273139;
+    box-shadow: 0 14px 45px rgba(0,0,0,.4);
+  }
+
+  html[data-color-theme="dark"][data-portfolio-theme="lekka"] .sidebar nav button,
+  html[data-color-theme="dark"][data-portfolio-theme="lekka"] .sidebar nav button:not(.active),
+  html[data-color-theme="dark"][data-portfolio-theme="lekka"] .sidebar nav .mobile-more {
+    background: transparent;
+    color: #9ba7af;
+  }
+
+  html[data-color-theme="dark"][data-portfolio-theme="lekka"] .sidebar nav button.active {
+    background: #18211e;
+    color: #f3f7f5;
+  }
+
+  html[data-color-theme="dark"][data-portfolio-theme="lekka"] .sidebar nav button span,
+  html[data-color-theme="dark"][data-portfolio-theme="lekka"] .sidebar nav button.active span {
+    color: #7fc39f;
+  }
+}
+
 /* Dark mode keeps the modern Lekka layout, but restores the original palette. */
 html[data-color-theme="dark"] .history-summary { background: #11171a; border-color: #273139; }
 html[data-color-theme="dark"] .history-summary span,

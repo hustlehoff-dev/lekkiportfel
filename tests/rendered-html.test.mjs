@@ -162,6 +162,7 @@ test("dark mode reuses the modern shell without light color leaks", async () => 
   assert.match(css, /data-color-theme="dark"\] \.liquidation-card/);
   assert.match(css, /data-color-theme="dark"\] \.security-grid section/);
   assert.match(css, /data-color-theme="dark"\] \.faq-list details/);
+  assert.match(css, /data-color-theme="dark"\]\[data-portfolio-theme="lekka"\] \.sidebar:has\(\.mobile-more\)[\s\S]*?background:\s*#0c1114/);
 });
 
 test("security page keeps ServiceBooker section names 1:1", async () => {
