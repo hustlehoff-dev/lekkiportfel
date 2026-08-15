@@ -2816,10 +2816,21 @@ html[data-portfolio-theme="lekka"] .ai-privacy { background: #f8fafc; color: #66
 html[data-portfolio-theme="lekka"] .ai-privacy svg { color: #22a55d; }
 
 @media (max-width: 760px) {
-  .portfolio-filters { margin-top: 12px; gap: 10px; }
-  .portfolio-filter { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
-  .portfolio-filter > span { grid-column: 1 / -1; width: auto; margin: 0 0 1px; }
-  .portfolio-filter button { width: 100%; min-height: 36px; padding: 0 8px; }
+  .portfolio-filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px -14px 0;
+    padding: 0 14px 4px;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+  }
+  .portfolio-filters::-webkit-scrollbar { display: none; }
+  .portfolio-filter { flex: 0 0 auto; display: flex; flex-wrap: nowrap; gap: 4px; }
+  .portfolio-filter + .portfolio-filter { padding-left: 8px; border-left: 1px solid #e5e7eb; }
+  .portfolio-filter > span { width: auto; flex: none; margin: 0 2px 0 0; font-size: 7px; }
+  .portfolio-filter button { width: auto; min-height: 30px; flex: none; padding: 0 9px; font-size: 9px; white-space: nowrap; }
   .copy-actions { flex-wrap: wrap; }
   .ai-portfolio-button { flex: 1 0 100%; }
   .ai-portfolio-modal { width: 100%; }
@@ -3211,6 +3222,9 @@ html[data-color-theme="dark"] .portfolio-filter > span { color: #71808a; }
 html[data-color-theme="dark"] .portfolio-filter button { background: #11181c; color: #96a2aa; border-color: #2b373e; }
 html[data-color-theme="dark"] .portfolio-filter button:hover { background: #17211f; color: #dce4e9; border-color: #4e6c5d; }
 html[data-color-theme="dark"] .portfolio-filter button.active { background: #182720; color: #91cfad; border-color: #49725e; }
+@media (max-width: 760px) {
+  html[data-color-theme="dark"] .portfolio-filter + .portfolio-filter { border-left-color: #273139; }
+}
 html[data-color-theme="dark"] .price-status { background: #10171a; border-color: #26343a; }
 html[data-color-theme="dark"] .price-status strong { color: #c9d4da; }
 html[data-color-theme="dark"] .price-status small { color: #77858e; }

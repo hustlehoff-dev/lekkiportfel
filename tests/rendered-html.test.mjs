@@ -154,6 +154,13 @@ test("metric cards stay dense at desktop and mobile widths", async () => {
   assert.match(css, /border-radius:\s*22px/);
 });
 
+test("mobile portfolio filters stay in one compact horizontal strip", async () => {
+  const css = await readFile(new URL("app/account.css", root), "utf8");
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.portfolio-filters\s*\{[\s\S]*?display:\s*flex;[\s\S]*?overflow-x:\s*auto;/);
+  assert.match(css, /\.portfolio-filter\s*\{[^}]*flex:\s*0 0 auto;[^}]*flex-wrap:\s*nowrap;/);
+  assert.match(css, /\.portfolio-filter button\s*\{[^}]*width:\s*auto;[^}]*min-height:\s*30px;/);
+});
+
 test("dark mode reuses the modern shell without light color leaks", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
   const layout = await readFile(new URL("app/layout.tsx", root), "utf8");
