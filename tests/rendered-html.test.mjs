@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 import { strFromU8, unzipSync } from "fflate";
 import { auditTradesWithNbp, calculateCryptoTax, calculateLossCarryforward, calculateTaxSummary } from "../lib/tax-calculator.ts";
@@ -8,7 +8,7 @@ import { buildDividendForecast, inferMonthlyContribution } from "../lib/dividend
 import { groupDividendForecast, groupDividendHistory } from "../lib/dividend-groups.ts";
 import { buildCsvZipBytes, buildXlsxBytes } from "../lib/spreadsheet-export.ts";
 import { marketFor, matchesMarket } from "../lib/portfolio-market.ts";
-import { assetInitials, assetLogoSource, assetLogoSources, fallbackAssetSvg, logoTicker } from "../lib/asset-icons.ts";
+import { assetInitials, assetLogoSource, assetLogoSources, fallbackAssetSvg, localAssetLogoPath, logoTicker } from "../lib/asset-icons.ts";
 
 const root = new URL("../", import.meta.url);
 
@@ -84,11 +84,16 @@ test("allocation chart and table share selection and expose the full portfolio",
 test("asset icons support broker tickers, crypto images and safe fallbacks", async () => {
   assert.equal(logoTicker("XTB.PL"), "XTB.WA");
   assert.equal(logoTicker("EQIX.US"), "EQIX");
-  assert.match(assetLogoSource("USDT", "Krypto"), /\/crypto\/USDT/);
+  assert.equal(localAssetLogoPath("USDT"), "/asset-logos/usdt.png");
+  assert.equal(localAssetLogoPath("XTB.PL"), "/asset-logos/xtb-pl.png");
+  assert.equal(localAssetLogoPath("XTB.WA"), "/asset-logos/xtb-pl.png");
+  assert.equal(localAssetLogoPath("S2B.PL"), "/asset-logos/s2b-pl.svg");
+  assert.equal(localAssetLogoPath("UNKNOWN.US"), null);
+  assert.equal(assetLogoSource("USDT", "Krypto"), null);
   assert.equal(assetLogoSource("PLN", "Gotówka"), null);
-  assert.equal(assetLogoSource("BTC", "Krypto", "https://example.com/logo.png"), "https://img.loadlogo.com/crypto/BTC?size=96&format=webp&fit=contain&fallback=404");
+  assert.equal(assetLogoSource("BTC", "Krypto", "https://example.com/logo.png"), null);
   assert.equal(assetLogoSource("BTC", "Krypto", "https://coin-images.coingecko.com/coins/images/1/small/bitcoin.png"), "https://coin-images.coingecko.com/coins/images/1/small/bitcoin.png");
-  assert.match(assetLogoSources("XTB.PL", "Akcje")[1], /financialmodelingprep\.com\/image-stock\/XTB.WA\.png/);
+  assert.match(assetLogoSources("XTB.PL", "Akcje")[0], /financialmodelingprep\.com\/image-stock\/XTB.WA\.png/);
   assert.equal(assetInitials("XTB.PL"), "XT");
   assert.match(fallbackAssetSvg("XTB.PL", "Akcje"), />XT<\/text>/);
 
@@ -98,8 +103,14 @@ test("asset icons support broker tickers, crypto images and safe fallbacks", asy
   assert.match(page, /<AssetIcon symbol=\{p\.symbol\}/);
   assert.match(page, /className="dividend-logo"/);
   assert.match(component, /\/api\/asset-icon/);
+  assert.match(component, /localAssetLogoPath/);
   assert.match(route, /fallbackAssetSvg/);
+  assert.match(route, /missingCache/);
   assert.match(route, /max-age=604800/);
+
+  const logoCatalog = JSON.parse(await readFile(new URL("data/asset-logo-sources.json", root), "utf8"));
+  assert.equal(logoCatalog.length, 23);
+  for (const entry of logoCatalog) await access(new URL(`public/asset-logos/${entry.file}`, root));
 });
 
 test("metric cards stay dense at desktop and mobile widths", async () => {
@@ -166,6 +177,17 @@ test("Firebase accounts isolate portfolios and initialize new accounts", async (
   assert.match(rules, /request\.auth\.token\.email_verified == true/);
   assert.match(env, /NEXT_PUBLIC_FIREBASE_PROJECT_ID=/);
   assert.doesNotMatch(env, /LEGACY_MIGRATION_KEY/);
+});
+
+test("Google login works on a local network and logout requires confirmation", async () => {
+  const firebase = await readFile(new URL("lib/firebase-client.ts", root), "utf8");
+  const page = await readFile(new URL("app/page.tsx", root), "utf8");
+  assert.match(firebase, /localNetwork[\s\S]*signInWithRedirect/);
+  assert.match(firebase, /signInWithPopup/);
+  assert.match(page, /role="alertdialog"/);
+  assert.match(page, /Wylogować się\?/);
+  assert.match(page, /Zapisane dane nie zostaną usunięte/);
+  assert.doesNotMatch(page, /onClick=\{\(\)=>void logout\(\)\}/);
 });
 
 test("repository contains product code instead of starter and demo leftovers", async () => {

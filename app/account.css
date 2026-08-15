@@ -464,6 +464,7 @@ footer, .content footer > span { color: #68757e; }
 }
 .asset-icon > b { font-size: 9px; font-weight: 800; line-height: 1; letter-spacing: -.2px; }
 .asset-icon > img { position: absolute; inset: 0; width: 100%; height: 100%; padding: 4px; object-fit: contain; background: #fff; }
+.asset-icon[data-symbol="ASB.PL"] > img,.asset-icon[data-symbol="ASB.WA"] > img { background: #1d3151; }
 .asset .asset-icon { width: 32px; height: 32px; flex-basis: 32px; }
 .asset-icon.result-mark { width: 32px; height: 32px; flex-basis: 32px; }
 .forecast-asset { min-width: 0; display: grid; grid-template-columns: 28px minmax(0,1fr); align-items: center; gap: 8px; }
@@ -2744,6 +2745,13 @@ html[data-portfolio-theme="lekka"] .copy-settings-foot > p strong { color: #1018
 .unknown-result { color: #7b8794; }
 .unknown-result strong, .unknown-result small { display: block; }
 .cost-modal { max-width: 500px; }
+.logout-modal { max-width: 430px; }
+.logout-modal-body { display: grid; grid-template-columns: 42px 1fr; align-items: start; gap: 13px; margin-top: 18px; }
+.logout-modal-body > span { width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid #6e3737; border-radius: 11px; background: #321c1c; color: #ff9b91; }
+.logout-modal-body p { margin: 2px 0 0; color: #aeb8b2; font-size: 13px; line-height: 1.6; }
+.danger-action { border: 1px solid #b9473c; background: #b9473c; color: #fff; }
+.danger-action:hover { background: #a23b32; }
+.danger-action:disabled { opacity: .5; cursor: not-allowed; }
 .cost-modal-copy { margin: 15px 0 18px; color: #8e9aa2; font-size: 13px; line-height: 1.6; }
 .cost-position-list { display: grid; gap: 10px; }
 .cost-position-list .field { display: grid; grid-template-columns: minmax(0,1fr) 180px; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #293c31; }
@@ -2753,6 +2761,8 @@ html[data-portfolio-theme="lekka"] .copy-settings-foot > p strong { color: #1018
 .cost-modal-actions .clear-cost-action { margin-right: auto; color: #b45309; }
 
 html[data-portfolio-theme="lekka"] .cost-modal-copy { color: #667085; }
+html[data-portfolio-theme="lekka"] .logout-modal-body > span { border-color: #fecaca; background: #fff1f2; color: #c2413b; }
+html[data-portfolio-theme="lekka"] .logout-modal-body p { color: #667085; }
 html[data-portfolio-theme="lekka"] .cost-position-list .field { border-bottom-color: #edf0f3; }
 html[data-portfolio-theme="lekka"] .missing-cost-button { color: #7a5b00; background: #fff4bf; }
 html[data-portfolio-theme="lekka"] .unknown-result { color: #667085; }

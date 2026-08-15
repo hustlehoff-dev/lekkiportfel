@@ -1,6 +1,7 @@
 import { assetLogoSources, fallbackAssetSvg } from "../../../lib/asset-icons";
 
 const iconCache=new Map<string,{expires:number;body:ArrayBuffer;contentType:string}>();
+const missingCache=new Map<string,number>();
 const CACHE_MS=7*24*60*60_000;
 
 function svgResponse(symbol:string,assetClass:string){
@@ -15,17 +16,18 @@ export async function GET(request:Request){
   if(!symbol)return svgResponse("?",assetClass);
   const sources=assetLogoSources(symbol,assetClass,image);
   for(const source of sources){
+    if((missingCache.get(source)||0)>Date.now())continue;
     const saved=iconCache.get(source);
     if(saved&&saved.expires>Date.now())return new Response(saved.body.slice(0),{headers:{"content-type":saved.contentType,"cache-control":"public, max-age=604800, immutable"}});
     try{
-      const response=await fetch(source,{headers:{accept:"image/avif,image/webp,image/svg+xml,image/*","user-agent":"LekkiPortfel/1.0"},signal:AbortSignal.timeout(5000)});
+      const response=await fetch(source,{headers:{accept:"image/avif,image/webp,image/svg+xml,image/*","user-agent":"LekkiPortfel/1.0"},signal:AbortSignal.timeout(2500)});
       const contentType=response.headers.get("content-type")||"";
       if(!response.ok||!contentType.startsWith("image/"))continue;
       const body=await response.arrayBuffer();
       if(!body.byteLength||body.byteLength>1_000_000)continue;
       iconCache.set(source,{expires:Date.now()+CACHE_MS,body,contentType});
       return new Response(body.slice(0),{headers:{"content-type":contentType,"cache-control":"public, max-age=604800, immutable"}});
-    }catch{}
+    }catch{missingCache.set(source,Date.now()+24*60*60_000)}
   }
   return svgResponse(symbol,assetClass);
 }

@@ -1,5 +1,5 @@
 import { getApp, getApps, initializeApp, type FirebaseApp } from "firebase/app";
-import { browserLocalPersistence, browserSessionPersistence, createUserWithEmailAndPassword, getAuth, GoogleAuthProvider, onAuthStateChanged, sendEmailVerification, sendPasswordResetEmail, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut, type User } from "firebase/auth";
+import { browserLocalPersistence, browserSessionPersistence, createUserWithEmailAndPassword, getAuth, GoogleAuthProvider, onAuthStateChanged, sendEmailVerification, sendPasswordResetEmail, setPersistence, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, signOut, type User } from "firebase/auth";
 import { doc, getDoc, getFirestore, serverTimestamp, setDoc } from "firebase/firestore";
 
 const config = {
@@ -43,6 +43,9 @@ export async function loginWithGoogle(remember:boolean) {
   await setPersistence(auth,remember?browserLocalPersistence:browserSessionPersistence);
   const provider=new GoogleAuthProvider();
   provider.setCustomParameters({prompt:"select_account"});
+  const hostname=window.location.hostname;
+  const localNetwork=/^(localhost|127\.0\.0\.1|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(hostname);
+  if(localNetwork){await signInWithRedirect(auth,provider);return}
   const credential=await signInWithPopup(auth,provider);
   if(!credential.user.emailVerified){await signOut(auth);throw new Error("Konto Google nie ma potwierdzonego adresu e-mail.")}
   return credential.user;

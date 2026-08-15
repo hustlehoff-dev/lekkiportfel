@@ -266,6 +266,8 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
   const [sidebarCollapsed,setSidebarCollapsed]=useState(false);
   const [sidebarStyle,setSidebarStyle]=useState<SidebarStyle>("island");
   const [copySettingsOpen,setCopySettingsOpen]=useState(false);
+  const [logoutOpen,setLogoutOpen]=useState(false);
+  const [logoutBusy,setLogoutBusy]=useState(false);
   const [copySettings,setCopySettings]=useState<PortfolioCopySettings>(defaultPortfolioCopySettings);
   const [fxRates,setFxRates]=useState<Record<CurrencyCode,number>>({PLN:1,USD:1,EUR:1,GBP:1});
   const [performance,setPerformance]=useState<PerformanceResponse>({points:[],benchmark:{symbol:"^GSPC",name:"S&P 500 (PLN)"},missing:[],methodology:""});
@@ -292,6 +294,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
   const changeDesignTheme=(theme:DesignTheme)=>{setDesignTheme(theme);try{window.localStorage.setItem("lekkiportfel-theme",theme)}catch{}};
   const saveCopySettings=(next:PortfolioCopySettings)=>{setCopySettings(next);try{window.localStorage.setItem("lekkiportfel-copy-settings",JSON.stringify(next))}catch{}};
   const changeCopySetting=(key:CopySection,enabled:boolean)=>saveCopySettings({...copySettings,[key]:enabled});
+  const confirmLogout=async()=>{setLogoutBusy(true);try{await logout();setLogoutOpen(false)}finally{setLogoutBusy(false)}};
   useEffect(()=>{
     if(!firebaseConfigured)return;
     return observeUser(user=>{setFirebaseUser(user);setAuthReady(true);setPortfolioLoaded(false)});
@@ -575,7 +578,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
         <button className={view==="bezpieczenstwo"?"active":""} onClick={()=>selectView("bezpieczenstwo")} title="Bezpieczeństwo" aria-label="Bezpieczeństwo"><span><ShieldCheck size={18} strokeWidth={1.9}/></span>Bezpieczeństwo</button>
       </nav>
       <footer className="sidebar-footer">
-        <div className="signed-user"><span>{(firebaseUser.email||"K").slice(0,1).toUpperCase()}</span><div><strong>{firebaseUser.email}</strong><small>Konto Firebase</small></div><button type="button" onClick={()=>void logout()} aria-label="Wyloguj"><LogOut size={16}/></button></div>
+        <div className="signed-user"><span>{(firebaseUser.email||"K").slice(0,1).toUpperCase()}</span><div><strong>{firebaseUser.email}</strong><small>Konto Firebase</small></div><button type="button" onClick={()=>setLogoutOpen(true)} aria-label="Wyloguj"><LogOut size={16}/></button></div>
         <div className="sidebar-footer-links" aria-label="Informacje"><button type="button" onClick={()=>selectView("faq")}>Najczęstsze pytania</button><button type="button" onClick={()=>selectView("bezpieczenstwo")}>Bezpieczeństwo</button></div>
         <p className="sidebar-footer-note">Narzędzie informacyjne. Notowania mogą być opóźnione względem rynku.</p>
       </footer>
@@ -588,7 +591,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
       <button onClick={()=>selectView("faq")}><span><CircleHelp size={18}/></span><div><strong>Najczęstsze pytania</strong><small>Import, ceny i działanie aplikacji</small></div></button>
       <button onClick={()=>selectView("bezpieczenstwo")}><span><ShieldCheck size={18}/></span><div><strong>Bezpieczeństwo</strong><small>Dane portfela i prywatność</small></div></button>
       <button onClick={()=>{setMobileMoreOpen(false);fileRef.current?.click()}}><span><Upload size={18}/></span><div><strong>Importuj XTB</strong><small>ZIP, XLSX, XLS lub CSV</small></div></button>
-      <button onClick={()=>void logout()}><span><LogOut size={18}/></span><div><strong>Wyloguj się</strong><small>{firebaseUser.email}</small></div></button>
+      <button onClick={()=>{setMobileMoreOpen(false);setLogoutOpen(true)}}><span><LogOut size={18}/></span><div><strong>Wyloguj się</strong><small>{firebaseUser.email}</small></div></button>
     </section></>}
     <section className="content"><header className="topbar"><div className="topbar-title"><p className="eyebrow">{viewCopy[view].eyebrow}</p><h1>{viewCopy[view].title}</h1></div><div className="mobile-brand"><span className="brand-mark"><WalletCards size={17} strokeWidth={2}/></span><strong>LEKKIPORTFEL</strong></div><label className="topbar-search"><span aria-hidden="true"><Search size={18} strokeWidth={1.8}/></span><input ref={portfolioSearchRef} value={portfolioQuery} onChange={e=>setPortfolioQuery(e.target.value)} placeholder="Szukaj aktywa, symbolu lub rachunku…" aria-label="Szukaj w portfelu"/><kbd>Ctrl K</kbd></label><div className="top-actions"><select className="theme-select" value={designTheme} onChange={e=>changeDesignTheme(e.target.value as DesignTheme)} aria-label="Wygląd aplikacji"><option value="lekka">Lekka</option><option value="dark">Dark</option></select><select className="currency-select" value={displayCurrency} onChange={e=>changeCurrency(e.target.value as CurrencyCode)} aria-label="Waluta prezentacji"><option value="PLN">PLN zł</option><option value="USD">USD $</option><option value="EUR">EUR €</option><option value="GBP">GBP £</option></select><button className="add-asset-button" onClick={openAssetModal}><span><Plus size={18} strokeWidth={2.4}/></span><b>Dodaj aktywo</b></button><span className="as-of">Stan na dziś</span><button className="import-button" onClick={()=>fileRef.current?.click()} disabled={importing}><span><Upload size={18} strokeWidth={1.9}/></span><b>{importing?"Wczytuję…":"Importuj XTB"}</b></button></div><input ref={fileRef} className="sr-only" type="file" accept=".zip,.xlsx,.xls,.csv" onChange={e=>importFile(e.target.files?.[0])}/></header>
     <div className="main-shell"><div className="main-content">{view!=="bezpieczenstwo"&&<section className={`dashboard-intro ${view==="pulpit"?"with-copy-actions":""}`}><p>{viewCopy[view].eyebrow}</p><h1>{viewCopy[view].title}</h1><span>{viewCopy[view].description}</span>{view==="pulpit"&&<div className="copy-actions"><button type="button" className="ai-portfolio-button" onClick={openAiModal}><Sparkles size={16} strokeWidth={2}/><b>Dodaj przez AI</b></button><button type="button" className="copy-portfolio-button" onClick={()=>void copyPortfolioData()}><Copy size={16} strokeWidth={2}/><b>Kopiuj dane</b></button><button type="button" className="copy-settings-button" onClick={()=>setCopySettingsOpen(true)} aria-label="Ustawienia aplikacji" title="Ustawienia"><Settings2 size={16} strokeWidth={2}/></button></div>}</section>}
@@ -705,18 +708,25 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
 
       <section className="security-wide-card">
         <div className="security-section-head"><ServerCog size={22}/><h2>Dostawcy usług technicznych</h2></div>
-        <p className="security-provider-copy">Firebase (Google) obsługuje konto, sesję i zapis portfela. Yahoo Finance dostarcza notowania akcji i ETF-ów, CoinGecko dane o kryptowalutach, NBP kursy walut, LoadLogo i Financial Modeling Prep ikony instrumentów, a xAI analizuje polecenia, nagrania i screenshoty przekazane w funkcji „Dodaj przez AI”. Dostawcy ikon otrzymują symbol instrumentu, bez liczby jednostek, wartości ani historii rachunku.</p>
+        <p className="security-provider-copy">Firebase (Google) obsługuje konto, sesję i zapis portfela. Yahoo Finance dostarcza notowania akcji i ETF-ów, CoinGecko dane o kryptowalutach, a NBP kursy walut. Logotypy używanych instrumentów przechowujemy w lokalnym katalogu aplikacji. Dopiero przy nowym symbolu, którego jeszcze w nim nie ma, serwer próbuje pobrać logo na podstawie samego symbolu — bez liczby jednostek, wartości ani historii rachunku. xAI analizuje wyłącznie materiały przekazane w funkcji „Dodaj przez AI”.</p>
         <p className="security-provider-copy">Do xAI nic nie trafia w tle. Materiał wysyłamy dopiero po kliknięciu „Analizuj”. Screenshot i nagranie nie są zapisywane w Firestore; zapisujemy dopiero pozycje zatwierdzone w podglądzie. xAI deklaruje, że nie trenuje na danych API bez wyraźnej zgody; standardowo przechowuje żądania do 30 dni, chyba że na koncie xAI włączono Zero Data Retention.</p>
         <div className="security-links"><button onClick={()=>selectView("faq")}>Jak działa import</button><button onClick={()=>selectView("pulpit")}>Wróć do portfela</button></div>
       </section>
 
       <div className="security-grid security-bottom-grid">
-        <section><span className="support-icon"><ShieldCheck size={21}/></span><h2>Ochrona Twojego konta</h2><p>Używaj unikalnego hasła i wyloguj się na współdzielonym urządzeniu. Jeśli nie pamiętasz hasła, na ekranie logowania możesz wysłać link do jego bezpiecznego ustawienia.</p><div className="security-links"><button onClick={()=>void logout()}>Wyloguj się</button><button onClick={()=>selectView("faq")}>Najczęstsze pytania</button></div></section>
+        <section><span className="support-icon"><ShieldCheck size={21}/></span><h2>Ochrona Twojego konta</h2><p>Używaj unikalnego hasła i wyloguj się na współdzielonym urządzeniu. Jeśli nie pamiętasz hasła, na ekranie logowania możesz wysłać link do jego bezpiecznego ustawienia.</p><div className="security-links"><button onClick={()=>setLogoutOpen(true)}>Wyloguj się</button><button onClick={()=>selectView("faq")}>Najczęstsze pytania</button></div></section>
         <section><span className="support-icon"><ShieldAlert size={21}/></span><h2>Zgłaszanie podatności</h2><p>Jeśli zauważysz błąd bezpieczeństwa, zgłoś go właścicielowi tej instancji. Opisz, jak odtworzyć problem, jakiego widoku dotyczy i czy mógł ujawnić albo zmienić dane portfela.</p></section>
       </div>
 
       <p className="security-note">Klucz xAI pozostaje na serwerze. Każde żądanie AI wymaga ważnej sesji Firebase i podlega limitowi użycia.</p>
     </article>}
+    {logoutOpen&&<div className="modal-backdrop" role="presentation" tabIndex={-1} onKeyDown={event=>{if(event.key==="Escape"&&!logoutBusy)setLogoutOpen(false)}} onMouseDown={event=>{if(event.currentTarget===event.target&&!logoutBusy)setLogoutOpen(false)}}>
+      <section className="asset-modal logout-modal" role="alertdialog" aria-modal="true" aria-labelledby="logout-modal-title" aria-describedby="logout-modal-description">
+        <header><div><p className="eyebrow">Konto i sesja</p><h2 id="logout-modal-title">Wylogować się?</h2></div><button className="modal-close" type="button" disabled={logoutBusy} onClick={()=>setLogoutOpen(false)} aria-label="Zamknij"><X size={18} strokeWidth={2}/></button></header>
+        <div className="logout-modal-body"><span><LogOut size={22}/></span><p id="logout-modal-description">Stracisz dostęp do portfela na tym urządzeniu do następnego logowania. Zapisane dane nie zostaną usunięte.</p></div>
+        <div className="modal-actions"><button type="button" className="secondary-action" disabled={logoutBusy} onClick={()=>setLogoutOpen(false)}>Zostań w aplikacji</button><button type="button" className="danger-action" disabled={logoutBusy} onClick={()=>void confirmLogout()}>{logoutBusy?"Wylogowuję…":"Wyloguj się"}</button></div>
+      </section>
+    </div>}
     {editingCost&&<div className="modal-backdrop" role="presentation" onMouseDown={event=>{if(event.currentTarget===event.target)setEditingCost(null)}}>
       <section className="asset-modal cost-modal" role="dialog" aria-modal="true" aria-labelledby="cost-modal-title">
         <header><div><p className="eyebrow">Koszt nabycia</p><h2 id="cost-modal-title">{editingCost.symbol}</h2></div><button className="modal-close" type="button" onClick={()=>setEditingCost(null)} aria-label="Zamknij"><X size={18} strokeWidth={2}/></button></header>

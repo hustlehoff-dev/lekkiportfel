@@ -1,3 +1,5 @@
+import logoCatalog from "../data/asset-logo-sources.json" with {type:"json"};
+
 const tickerSuffixes:Array<[string,string]>=[
   [".PL",".WA"],[".UK",".L"],[".DK",".CO"],[".NL",".AS"],
   [".FR",".PA"],[".ES",".MC"],[".IT",".MI"],[".CH",".SW"],
@@ -20,18 +22,25 @@ export function assetLogoSource(symbol:string,assetClass:string,image?:string){
   }
   if(/got|cash|inne/i.test(assetClass))return null;
   const normalized=symbol.trim().toUpperCase();
-  if(!normalized)return null;
-  const kind=/krypto|crypto/i.test(assetClass)?"crypto":"ticker";
-  const identifier=kind==="crypto"?normalized:logoTicker(normalized);
-  return`https://img.loadlogo.com/${kind}/${encodeURIComponent(identifier)}?size=96&format=webp&fit=contain&fallback=404`;
+  if(!normalized||/krypto|crypto/i.test(assetClass))return null;
+  return`https://financialmodelingprep.com/image-stock/${encodeURIComponent(logoTicker(normalized))}.png`;
 }
 
 export function assetLogoSources(symbol:string,assetClass:string,image?:string){
   const primary=assetLogoSource(symbol,assetClass,image);
   if(!primary)return[];
-  if(image&&primary!==assetLogoSource(symbol,assetClass))return[primary];
-  if(/krypto|crypto/i.test(assetClass))return[primary];
-  return[primary,`https://financialmodelingprep.com/image-stock/${encodeURIComponent(logoTicker(symbol))}.png`];
+  return primary?[primary]:[];
+}
+
+const localLogos=new Map<string,string>();
+for(const entry of logoCatalog){
+  localLogos.set(entry.symbol.toUpperCase(),entry.file);
+  for(const alias of entry.aliases||[])localLogos.set(alias.toUpperCase(),entry.file);
+}
+
+export function localAssetLogoPath(symbol:string){
+  const file=localLogos.get(symbol.trim().toUpperCase());
+  return file?`/asset-logos/${file}`:null;
 }
 
 function escapeXml(value:string){return value.replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&apos;"}[char]!))}

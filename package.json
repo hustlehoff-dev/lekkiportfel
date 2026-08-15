@@ -10,7 +10,9 @@
     "build": "vinext build",
     "start": "vinext start",
     "test": "npm run build && node --test tests/rendered-html.test.mjs",
-    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next"
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "logos:sync": "node scripts/sync-asset-logos.mjs",
+    "logos:check": "node scripts/sync-asset-logos.mjs --check"
   },
   "dependencies": {
     "fflate": "^0.8.3",
