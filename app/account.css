@@ -2696,8 +2696,12 @@ html[data-portfolio-theme="lekka"] .copy-settings-foot > p strong { color: #1018
 @media (max-width: 760px) {
   .dashboard-intro.with-copy-actions,
   html[data-portfolio-theme="lekka"] .dashboard-intro.with-copy-actions { grid-template-columns: minmax(0,1fr); }
-  .copy-actions { grid-column: 1; grid-row: auto; width: 100%; margin-top: 14px; }
-  .copy-portfolio-button { flex: 1; }
+  .dashboard-intro > p,
+  .dashboard-intro > span,
+  html[data-portfolio-theme="lekka"] .dashboard-intro > p,
+  html[data-portfolio-theme="lekka"] .dashboard-intro > span { display: none; }
+  .copy-actions { grid-column: 1; grid-row: auto; width: 100%; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; margin-top: 9px; }
+  .copy-actions button { width: 100%; height: 36px; padding: 0 8px; font-size: 10px; }
   .copy-settings-list { grid-template-columns: 1fr; }
   .copy-settings-toolbar { align-items: stretch; flex-direction: column; gap: 10px; }
   .copy-settings-toolbar > div { display: grid; grid-template-columns: 1fr 1fr; }
@@ -2831,8 +2835,6 @@ html[data-portfolio-theme="lekka"] .ai-privacy svg { color: #22a55d; }
   .portfolio-filter + .portfolio-filter { padding-left: 8px; border-left: 1px solid #e5e7eb; }
   .portfolio-filter > span { width: auto; flex: none; margin: 0 2px 0 0; font-size: 7px; }
   .portfolio-filter button { width: auto; min-height: 30px; flex: none; padding: 0 9px; font-size: 9px; white-space: nowrap; }
-  .copy-actions { flex-wrap: wrap; }
-  .ai-portfolio-button { flex: 1 0 100%; }
   .ai-portfolio-modal { width: 100%; }
   .ai-composer textarea { min-height: 104px; }
   .ai-preview-list article { grid-template-columns: 33px minmax(0,1fr) 28px; }

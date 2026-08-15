@@ -161,6 +161,13 @@ test("mobile portfolio filters stay in one compact horizontal strip", async () =
   assert.match(css, /\.portfolio-filter button\s*\{[^}]*width:\s*auto;[^}]*min-height:\s*30px;/);
 });
 
+test("mobile dashboard header keeps only the title and compact actions", async () => {
+  const css = await readFile(new URL("app/account.css", root), "utf8");
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]*?html\[data-portfolio-theme="lekka"\] \.dashboard-intro > span\s*\{\s*display:\s*none;/);
+  assert.match(css, /\.copy-actions\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*repeat\(2,minmax\(0,1fr\)\);[^}]*margin-top:\s*9px;/);
+  assert.match(css, /\.copy-actions button\s*\{[^}]*height:\s*36px;/);
+});
+
 test("dark mode reuses the modern shell without light color leaks", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
   const layout = await readFile(new URL("app/layout.tsx", root), "utf8");
