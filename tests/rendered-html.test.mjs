@@ -9,6 +9,7 @@ import { groupDividendForecast, groupDividendHistory } from "../lib/dividend-gro
 import { buildCsvZipBytes, buildXlsxBytes } from "../lib/spreadsheet-export.ts";
 import { marketFor, matchesMarket } from "../lib/portfolio-market.ts";
 import { assetInitials, assetLogoSource, assetLogoSources, fallbackAssetSvg, localAssetLogoPath, logoTicker } from "../lib/asset-icons.ts";
+import { classifyAssetClass, isCryptoAssetClass, isStablecoin } from "../lib/asset-class.ts";
 
 const root = new URL("../", import.meta.url);
 
@@ -56,16 +57,28 @@ test("market filter separates GPW and recalculates a focused portfolio", () => {
     {symbol:"DNP.WA",assetClass:"Akcje",value:40},
     {symbol:"EQIX.US",assetClass:"Akcje",value:50},
     {symbol:"USDT",assetClass:"Krypto",value:100},
+    {symbol:"BTC",assetClass:"Krypto",value:75},
     {symbol:"PLN",assetClass:"Gotówka",value:25},
   ];
   assert.equal(marketFor(positions[0]),"gpw");
   assert.equal(marketFor(positions[1]),"gpw");
   assert.equal(marketFor(positions[2]),"foreign");
-  assert.equal(marketFor(positions[3]),"crypto");
-  assert.equal(marketFor(positions[4]),"cash");
+  assert.equal(marketFor(positions[3]),"stable");
+  assert.equal(marketFor(positions[4]),"crypto");
+  assert.equal(marketFor(positions[5]),"cash");
   const gpw=positions.filter(item=>matchesMarket(item,"gpw"));
   assert.equal(gpw.reduce((sum,item)=>sum+item.value,0),100);
   assert.deepEqual(gpw.map(item=>item.value/100),[0.6,0.4]);
+});
+
+test("stablecoins form a separate exposure class but remain crypto for prices and tax", () => {
+  assert.equal(isStablecoin("USDT"),true);
+  assert.equal(isStablecoin("USDC"),true);
+  assert.equal(isStablecoin("BTC"),false);
+  assert.equal(classifyAssetClass("USDT","Krypto"),"Stable");
+  assert.equal(classifyAssetClass("USDC","Stable"),"Stable");
+  assert.equal(classifyAssetClass("BTC","Krypto"),"Krypto");
+  assert.equal(isCryptoAssetClass("Stable"),true);
 });
 
 test("allocation chart and table share selection and expose the full portfolio", async () => {
@@ -171,7 +184,8 @@ test("Firebase accounts isolate portfolios and initialize new accounts", async (
   assert.match(page, /Kontynuuj z Google/);
   assert.match(page, /loadUserPortfolio<PortfolioData>/);
   assert.match(page, /saveUserPortfolio\(firebaseUser\.uid/);
-  assert.match(page, /portfolio\|\|\{\.\.\.emptyData,positions:\[\],cash:\[\],trades:\[\],lots:\[\]\}/);
+  assert.match(page, /stored\|\|\{\.\.\.emptyData,positions:\[\],cash:\[\],trades:\[\],lots:\[\]\}/);
+  assert.match(page, /normalizePortfolioAssetClasses\(source\)/);
   assert.doesNotMatch(page, /MigrationScreen|needsMigration|LEGACY_MIGRATION_KEY|x-migration-key/);
   assert.match(rules, /request\.auth\.uid == userId/);
   assert.match(rules, /request\.auth\.token\.email_verified == true/);
@@ -328,6 +342,18 @@ test("liquidation tax separates ordinary profit from IKE and IKZE profit", () =>
   assert.equal(result.excluded.retirementValue, 58900);
   assert.equal(result.securities.tax, 303);
   assert.equal(result.taxChange, 303);
+});
+
+test("liquidation tax treats stablecoins as virtual currencies", () => {
+  const result=calculateLiquidationTax({
+    asOf:new Date("2026-08-10T12:00:00Z"),
+    positions:[{symbol:"USDC",name:"USD Coin",assetClass:"Stable",account:"Poza XTB",cost:100,value:200}],
+    trades:[],cash:[],cryptoTransactions:[],
+  });
+
+  assert.equal(result.crypto.positions,1);
+  assert.equal(result.crypto.tax,19);
+  assert.equal(result.excluded.otherValue,0);
 });
 
 test("retirement exit distinguishes asset sales, early return and qualified payout", () => {

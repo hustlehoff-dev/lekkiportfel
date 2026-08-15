@@ -1,8 +1,10 @@
+import { classifyAssetClass } from "../../../lib/asset-class";
+
 type InstrumentResult = {
   key: string;
   symbol: string;
   name: string;
-  assetClass: "Krypto" | "Akcje" | "ETF";
+  assetClass: "Krypto" | "Stable" | "Akcje" | "ETF";
   exchange: string;
   priceId?: string;
   image?: string;
@@ -35,7 +37,7 @@ export async function GET(request: Request) {
         const priceResponse = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(ids.join(","))}&vs_currencies=pln`, { headers: { "accept": "application/json", "user-agent": "LekkiPortfel/1.0" } });
         if (priceResponse.ok) prices = await priceResponse.json() as Record<string, { pln?: number }>;
       }
-      results = coins.map(coin => ({ key: `crypto:${coin.id}`, symbol: coin.symbol.toUpperCase(), name: coin.name, assetClass: "Krypto", exchange: "CoinGecko", priceId: coin.id, image: coin.thumb, rank: coin.market_cap_rank ?? null, pricePln: prices[coin.id]?.pln }));
+      results = coins.map(coin => ({ key: `crypto:${coin.id}`, symbol: coin.symbol.toUpperCase(), name: coin.name, assetClass: classifyAssetClass(coin.symbol,"Krypto") as "Krypto"|"Stable", exchange: "CoinGecko", priceId: coin.id, image: coin.thumb, rank: coin.market_cap_rank ?? null, pricePln: prices[coin.id]?.pln }));
     } else {
       const response = await fetch(`https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=12&newsCount=0&enableFuzzyQuery=true`, { headers: { "accept": "application/json", "user-agent": "LekkiPortfel/1.0" } });
       if (!response.ok) throw new Error(`wyszukiwarka rynku ${response.status}`);

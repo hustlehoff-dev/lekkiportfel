@@ -1,3 +1,5 @@
+import { isCryptoAssetClass } from "../../../lib/asset-class";
+
 type PriceRequestItem = {
   id: string;
   symbol: string;
@@ -93,8 +95,8 @@ export async function POST(request: Request) {
     const marketQuotes = new Map<string, ReturnType<typeof yahooMeta>>();
     const quotes: Quote[] = [];
     const missing: Array<{ id: string; symbol: string; reason: string }> = [];
-    const crypto = items.filter(item => item.assetClass === "Krypto");
-    const market = items.filter(item => item.assetClass !== "Krypto" && item.assetClass !== "Inne");
+    const crypto = items.filter(item => isCryptoAssetClass(item.assetClass));
+    const market = items.filter(item => !isCryptoAssetClass(item.assetClass) && item.assetClass !== "Inne");
 
     if (crypto.length) {
       const byId = new Map<string, string>();

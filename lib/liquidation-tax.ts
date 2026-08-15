@@ -1,5 +1,6 @@
 import { calculateCryptoTax, calculateLossCarryforward, calculateTaxSummary, isRetirementAccount, type CryptoTaxTransaction, type LossSetting, type TaxCashEvent, type TaxTrade } from "./tax-calculator.ts";
 import { hasKnownCost } from "./portfolio-metrics.ts";
+import { isCryptoAssetClass } from "./asset-class.ts";
 
 export type LiquidationPosition={symbol:string;name:string;assetClass:string;account?:string;cost:number;costKnown?:boolean;value:number};
 export type LiquidationCryptoTransaction=CryptoTaxTransaction&{symbol?:string;toSymbol?:string};
@@ -31,7 +32,7 @@ export function calculateLiquidationTax({
   const ikze=retirement.filter(position=>/^IKZE$/i.test(position.account?.trim()||""));
   const securities=ordinary.filter(position=>/^(Akcje|ETF|REIT)$/i.test(position.assetClass));
   const retirementSecurities=retirement.filter(position=>/^(Akcje|ETF|REIT)$/i.test(position.assetClass));
-  const crypto=ordinary.filter(position=>/^Krypto$/i.test(position.assetClass));
+  const crypto=ordinary.filter(position=>isCryptoAssetClass(position.assetClass));
   const other=ordinary.filter(position=>!securities.includes(position)&&!crypto.includes(position)&&position.assetClass!=="Gotówka");
   const cashPositions=ordinary.filter(position=>position.assetClass==="Gotówka");
   const knownSecurities=securities.filter(hasKnownCost),unknownSecurities=securities.filter(position=>!hasKnownCost(position));

@@ -22,7 +22,7 @@ export function assetLogoSource(symbol:string,assetClass:string,image?:string){
   }
   if(/got|cash|inne/i.test(assetClass))return null;
   const normalized=symbol.trim().toUpperCase();
-  if(!normalized||/krypto|crypto/i.test(assetClass))return null;
+  if(!normalized||/krypto|crypto|stable/i.test(assetClass))return null;
   return`https://financialmodelingprep.com/image-stock/${encodeURIComponent(logoTicker(normalized))}.png`;
 }
 
@@ -52,6 +52,6 @@ export function assetInitials(symbol:string){
 
 export function fallbackAssetSvg(symbol:string,assetClass:string){
   const initials=escapeXml(assetInitials(symbol));
-  const palette=/krypto|crypto/i.test(assetClass)?["#e7f6ef","#18794e"]:/got|cash/i.test(assetClass)?["#fff4cc","#765b00"]:["#eef2ff","#4338ca"];
+  const palette=/krypto|crypto|stable/i.test(assetClass)?["#e7f6ef","#18794e"]:/got|cash/i.test(assetClass)?["#fff4cc","#765b00"]:["#eef2ff","#4338ca"];
   return`<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><rect width="96" height="96" rx="24" fill="${palette[0]}"/><text x="48" y="56" text-anchor="middle" font-family="Arial,sans-serif" font-size="30" font-weight="800" fill="${palette[1]}">${initials}</text></svg>`;
 }
