@@ -20,6 +20,7 @@ import {
   History,
   Info,
   ImagePlus,
+  LineChart,
   LockKeyhole,
   LogOut,
   Mail,
@@ -592,6 +593,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
       <div className="brand"><span className="brand-mark"><WalletCards size={19} strokeWidth={2}/></span><span>LEKKIPORTFEL<small>cały majątek</small></span><button type="button" className="sidebar-collapse-button" onClick={toggleSidebar} aria-label={sidebarCollapsed?"Rozwiń sidebar":"Zwiń sidebar"} title={sidebarCollapsed?"Rozwiń sidebar":"Zwiń sidebar"}><ChevronDown size={17}/></button></div>
       <nav className="primary-nav" aria-label="Główna nawigacja">
         <button className={view==="pulpit"?"active":""} onClick={()=>selectView("pulpit")} title="Pulpit" aria-label="Pulpit"><span><CalendarDays size={18} strokeWidth={1.9}/></span>Pulpit</button>
+        <button className="desktop-history" onClick={()=>window.location.assign("/wykresy")} title="Wykresy" aria-label="Wykresy"><span><LineChart size={18} strokeWidth={1.9}/></span>Wykresy</button>
         <button className={view==="dywidendy"?"active":""} onClick={()=>selectView("dywidendy")} title="Dywidendy" aria-label="Dywidendy"><span><ArrowUpRight size={18} strokeWidth={1.9}/></span>Dywidendy</button>
         <button className={view==="podatki"?"active":""} onClick={()=>selectView("podatki")} title="Podatki" aria-label="Podatki"><span><ReceiptText size={18} strokeWidth={1.9}/></span>Podatki</button>
         <button className={`desktop-history ${view==="historia"?"active":""}`} onClick={()=>selectView("historia")} title="Historia konta" aria-label="Historia konta"><span><History size={18} strokeWidth={1.9}/></span>Historia konta</button>
@@ -611,6 +613,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
       <header><strong>Więcej</strong><button onClick={()=>setMobileMoreOpen(false)} aria-label="Zamknij"><X size={18}/></button></header>
       <button onClick={()=>{setMobileMoreOpen(false);openAiModal()}}><span><Sparkles size={18}/></span><div><strong>Dodaj przez AI</strong><small>Tekst, głos lub screenshot portfela</small></div></button>
       <button onClick={()=>{setMobileMoreOpen(false);openAssetModal()}}><span><Plus size={18}/></span><div><strong>Dodaj aktywo</strong><small>Akcje, ETF, krypto, gotówka lub inne</small></div></button>
+      <button onClick={()=>window.location.assign("/wykresy")}><span><LineChart size={18}/></span><div><strong>Wykresy</strong><small>BTC, ETH, GPW i indeksy światowe</small></div></button>
       <button onClick={()=>selectView("historia")}><span><History size={18}/></span><div><strong>Historia konta</strong><small>Wszystkie operacje i przepływy</small></div></button>
       <button onClick={()=>selectView("faq")}><span><CircleHelp size={18}/></span><div><strong>Najczęstsze pytania</strong><small>Import, ceny i działanie aplikacji</small></div></button>
       <button onClick={()=>selectView("bezpieczenstwo")}><span><ShieldCheck size={18}/></span><div><strong>Bezpieczeństwo</strong><small>Dane portfela i prywatność</small></div></button>
