@@ -108,6 +108,7 @@ test("asset icons support broker tickers, crypto images and safe fallbacks", asy
   assert.equal(localAssetLogoPath("XTB.PL"), "/asset-logos/xtb-pl.png");
   assert.equal(localAssetLogoPath("XTB.WA"), "/asset-logos/xtb-pl.png");
   assert.equal(localAssetLogoPath("S2B.PL"), "/asset-logos/s2b-pl.svg");
+  assert.equal(localAssetLogoPath("SNT.PL"), "/asset-logos/snt-pl.png");
   assert.equal(localAssetLogoPath("UNKNOWN.US"), null);
   assert.equal(assetLogoSource("USDT", "Krypto"), null);
   assert.equal(assetLogoSource("PLN", "Gotówka"), null);
@@ -120,6 +121,7 @@ test("asset icons support broker tickers, crypto images and safe fallbacks", asy
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
   const component = await readFile(new URL("app/components/asset-icon.tsx", root), "utf8");
   const route = await readFile(new URL("app/api/asset-icon/route.ts", root), "utf8");
+  const css = await readFile(new URL("app/account.css", root), "utf8");
   assert.match(page, /<AssetIcon symbol=\{p\.symbol\}/);
   assert.match(page, /className="dividend-logo"/);
   assert.match(component, /\/api\/asset-icon/);
@@ -127,6 +129,8 @@ test("asset icons support broker tickers, crypto images and safe fallbacks", asy
   assert.match(route, /fallbackAssetSvg/);
   assert.match(route, /missingCache/);
   assert.match(route, /max-age=604800/);
+  assert.match(css, /\.asset-icon\s*\{[\s\S]*?width:\s*42px;[\s\S]*?border:\s*0;[\s\S]*?background:\s*transparent;/);
+  assert.match(css, /\.asset-icon > img\s*\{[\s\S]*?padding:\s*0;[\s\S]*?background:\s*transparent;/);
 
   const logoCatalog = JSON.parse(await readFile(new URL("data/asset-logo-sources.json", root), "utf8"));
   assert.equal(logoCatalog.length, 23);

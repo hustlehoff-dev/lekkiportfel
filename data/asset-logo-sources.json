@@ -5,7 +5,7 @@
   { "symbol": "XTB.PL", "aliases": ["XTB.WA"], "name": "XTB", "file": "xtb-pl.png", "source": "https://financialmodelingprep.com/image-stock/XTB.WA.png", "provider": "Financial Modeling Prep" },
   { "symbol": "DIG.PL", "aliases": ["DIG.WA"], "name": "Digital Network", "file": "dig-pl.png", "source": "https://financialmodelingprep.com/image-stock/DIG.WA.png", "provider": "Financial Modeling Prep" },
   { "symbol": "KRU.PL", "aliases": ["KRU.WA"], "name": "Kruk", "file": "kru-pl.png", "source": "https://financialmodelingprep.com/image-stock/KRU.WA.png", "provider": "Financial Modeling Prep" },
-  { "symbol": "SNT.PL", "aliases": ["SNT.WA"], "name": "Synektik", "file": "snt-pl.svg", "source": "https://synektik.com.pl/wp-content/themes/synektik/img/headerLogoDark.svg", "provider": "Synektik" },
+  { "symbol": "SNT.PL", "aliases": ["SNT.WA"], "name": "Synektik", "file": "snt-pl.png", "source": "https://synektik.com.pl/wp-content/uploads/2023/04/Logo-5-1.png", "provider": "Synektik" },
   { "symbol": "EQIX.US", "aliases": ["EQIX"], "name": "Equinix", "file": "eqix-us.png", "source": "https://financialmodelingprep.com/image-stock/EQIX.png", "provider": "Financial Modeling Prep" },
   { "symbol": "CSPX.UK", "aliases": ["CSPX.L"], "name": "iShares Core S&P 500", "file": "cspx-uk.png", "source": "https://financialmodelingprep.com/image-stock/CSPX.L.png", "provider": "Financial Modeling Prep" },
   { "symbol": "ABE.PL", "aliases": ["ABE.WA"], "name": "AB", "file": "abe-pl.png", "source": "https://financialmodelingprep.com/image-stock/ABE.WA.png", "provider": "Financial Modeling Prep" },

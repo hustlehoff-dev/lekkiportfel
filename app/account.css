@@ -451,27 +451,27 @@ footer, .content footer > span { color: #68757e; }
 
 .asset-icon {
   position: relative;
-  width: 32px;
-  height: 32px;
-  flex: 0 0 32px;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
   display: grid;
   place-items: center;
   overflow: hidden;
-  border: 1px solid #30463b;
+  border: 0;
   border-radius: 8px;
-  background: #19251f;
+  background: transparent;
   color: #77b996;
 }
-.asset-icon > b { font-size: 9px; font-weight: 800; line-height: 1; letter-spacing: -.2px; }
-.asset-icon > img { position: absolute; inset: 0; width: 100%; height: 100%; padding: 4px; object-fit: contain; background: #fff; }
-.asset-icon[data-symbol="ASB.PL"] > img,.asset-icon[data-symbol="ASB.WA"] > img { background: #1d3151; }
-.asset .asset-icon { width: 32px; height: 32px; flex-basis: 32px; }
-.asset-icon.result-mark { width: 32px; height: 32px; flex-basis: 32px; }
-.forecast-asset { min-width: 0; display: grid; grid-template-columns: 28px minmax(0,1fr); align-items: center; gap: 8px; }
+.asset-icon > b { font-size: 11px; font-weight: 800; line-height: 1; letter-spacing: -.2px; }
+.asset-icon > img { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; object-fit: contain; background: transparent; }
+.asset-icon[data-symbol="ASB.PL"] > img,.asset-icon[data-symbol="ASB.WA"] > img { background: transparent; }
+.asset .asset-icon { width: 42px; height: 42px; flex-basis: 42px; }
+.asset-icon.result-mark { width: 42px; height: 42px; flex-basis: 42px; }
+.forecast-asset { min-width: 0; display: grid; grid-template-columns: 38px minmax(0,1fr); align-items: center; gap: 9px; }
 .forecast-asset > span { min-width: 0; }
-.forecast-asset .asset-icon { width: 28px; height: 28px; flex-basis: 28px; border-radius: 7px; }
-.forecast-asset .asset-icon > img { padding: 3px; }
-.dividend-logo { width: 30px; height: 30px; flex-basis: 30px; }
+.forecast-asset .asset-icon { width: 38px; height: 38px; flex-basis: 38px; border-radius: 7px; }
+.forecast-asset .asset-icon > img { padding: 0; }
+.dividend-logo { width: 42px; height: 42px; flex-basis: 42px; }
 .manual-assets > div { justify-content: initial; }
 .manual-assets > div > span:not(.asset-icon) { min-width: 0; flex: 1; }
 .manual-assets > div > button { margin-left: auto; }
@@ -780,7 +780,7 @@ html[data-portfolio-theme="lekka"] .manual-assets { border-color: #e2e8f0; }
 html[data-portfolio-theme="lekka"] .manual-assets > div { border-color: #eaecf0; }
 html[data-portfolio-theme="lekka"] .manual-assets small { color: #667085; }
 html[data-portfolio-theme="lekka"] .manual-assets button { background: #fff1f0; color: #b23d38; border-color: #f0d1ce; }
-html[data-portfolio-theme="lekka"] .asset-icon { border-color: #e2e8f0; background: #f8fafc; color: #475569; }
+html[data-portfolio-theme="lekka"] .asset-icon { border-color: transparent; background: transparent; color: #475569; }
 html[data-portfolio-theme="lekka"] * { scrollbar-color: auto; }
 html[data-portfolio-theme="lekka"],
 html[data-portfolio-theme="lekka"] body {
@@ -2506,7 +2506,7 @@ html[data-portfolio-theme="lekka"] .sidebar-collapse-button:hover { background: 
   .contribution-input { justify-items: start; }
   .dividend-list-intro { margin-right: 14px; margin-left: 14px; }
   .dividend-group > summary { grid-template-columns: 28px minmax(0,1fr) auto 15px; gap: 8px; padding-right: 14px; padding-left: 14px; }
-  .dividend-logo { width: 28px; height: 28px; flex-basis: 28px; }
+  .dividend-logo { width: 38px; height: 38px; flex-basis: 38px; }
   .dividend-group-copy small { max-width: 145px; }
   .dividend-group-events { padding-right: 14px; padding-left: 50px; }
   .liquidation-total { min-width: 0; justify-items: start; padding-left: 51px; }
@@ -3286,7 +3286,9 @@ html[data-color-theme="dark"] thead,
 html[data-color-theme="dark"] th { background: #10161a; color: #7f8b94; border-color: #2a343b; }
 html[data-color-theme="dark"] td { color: #cbd4d9; border-color: #232d33; }
 html[data-color-theme="dark"] tbody tr:hover { background: #161e22; }
-html[data-color-theme="dark"] .asset-icon { background: #19251f; color: #77b996; border-color: #30463b; }
+html[data-color-theme="dark"] .asset-icon { background: transparent; color: #77b996; border-color: transparent; }
+html[data-color-theme="dark"] .asset-icon[data-symbol="SNT.PL"] > img,
+html[data-color-theme="dark"] .asset-icon[data-symbol="SNT.WA"] > img { filter: brightness(0) invert(1); opacity: .9; }
 html[data-color-theme="dark"] .asset small { color: #77848d; }
 html[data-color-theme="dark"] td select { background: #161e22; color: #bdc7cd; border-color: #2b373e; }
 html[data-color-theme="dark"] .missing-cost-button { background: rgba(210,170,98,.13); color: #d8b975; }
