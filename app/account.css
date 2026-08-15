@@ -2578,6 +2578,17 @@ html[data-portfolio-theme="lekka"] .sidebar-collapse-button:hover { background: 
 .copy-portfolio-button:hover { background: #347d58; }
 .ai-portfolio-button:hover { background: #7565b3; }
 .copy-settings-modal { width: min(620px,calc(100vw - 32px)); }
+.theme-settings { margin: 18px 0 8px; padding: 13px; border: 1px solid #304238; border-radius: 9px; background: #152019; }
+.theme-settings > div:first-child { display: grid; gap: 3px; margin-bottom: 10px; }
+.theme-settings > div:first-child strong { color: #edf5ef; font-size: 10px; }
+.theme-settings > div:first-child small { color: #8f9f95; font-size: 8.5px; }
+.theme-settings > div:last-child { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }
+.theme-settings button { min-width: 0; display: grid; grid-template-columns: 32px minmax(0,1fr); align-items: center; gap: 9px; padding: 10px; border: 1px solid #33443a; border-radius: 8px; background: #111a15; color: #91a198; text-align: left; }
+.theme-settings button:hover,.theme-settings button.active { border-color: #4f8062; background: #18271e; color: #8ed2aa; }
+.theme-settings button > span:first-child { width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid #33443a; border-radius: 8px; background: #152019; }
+.theme-settings button > span:last-child { min-width: 0; display: grid; gap: 3px; }
+.theme-settings button strong { color: #e6efe9; font-size: 9.5px; }
+.theme-settings button small { color: #819087; font-size: 8px; line-height: 1.3; }
 .sidebar-style-settings { margin-bottom: 14px; padding: 13px; border: 1px solid #304238; border-radius: 9px; background: #152019; }
 .sidebar-style-settings > div:first-child { display: grid; gap: 3px; margin-bottom: 10px; }
 .sidebar-style-settings > div:first-child strong { color: #edf5ef; font-size: 10px; }
@@ -2649,6 +2660,15 @@ html[data-portfolio-theme="lekka"] .ai-portfolio-button { border-color: #e6b800;
 html[data-portfolio-theme="lekka"] .ai-portfolio-button:hover { background: #e9b900; }
 html[data-portfolio-theme="lekka"] .copy-portfolio-button { border-color: #d9dee7; background: #fff; color: #344054; }
 html[data-portfolio-theme="lekka"] .copy-portfolio-button:hover { border-color: #bfc6d1; background: #f8fafc; }
+html[data-portfolio-theme="lekka"] .theme-settings { border-color: #e5e7eb; background: #f8fafc; }
+html[data-portfolio-theme="lekka"] .theme-settings > div:first-child strong { color: #101828; }
+html[data-portfolio-theme="lekka"] .theme-settings > div:first-child small { color: #667085; }
+html[data-portfolio-theme="lekka"] .theme-settings button { border-color: #e5e7eb; background: #fff; color: #94a3b8; }
+html[data-portfolio-theme="lekka"] .theme-settings button:hover,
+html[data-portfolio-theme="lekka"] .theme-settings button.active { border-color: #d8c36b; background: #fffdf3; color: #806400; }
+html[data-portfolio-theme="lekka"] .theme-settings button > span:first-child { border-color: #e5e7eb; background: #f8fafc; }
+html[data-portfolio-theme="lekka"] .theme-settings button strong { color: #101828; }
+html[data-portfolio-theme="lekka"] .theme-settings button small { color: #667085; }
 html[data-portfolio-theme="lekka"] .sidebar-style-settings { border-color: #e5e7eb; background: #f8fafc; }
 html[data-portfolio-theme="lekka"] .sidebar-style-settings > div:first-child strong { color: #101828; }
 html[data-portfolio-theme="lekka"] .sidebar-style-settings > div:first-child small,

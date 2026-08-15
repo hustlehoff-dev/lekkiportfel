@@ -23,6 +23,7 @@ import {
   LogOut,
   Mail,
   Mic,
+  Moon,
   Plus,
   RefreshCw,
   ReceiptText,
@@ -33,6 +34,7 @@ import {
   ShieldCheck,
   Sigma,
   Sparkles,
+  Sun,
   Trash2,
   Upload,
   UserCheck,
@@ -761,6 +763,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
     {copySettingsOpen&&<div className="modal-backdrop" role="presentation" tabIndex={-1} onKeyDown={event=>{if(event.key==="Escape")setCopySettingsOpen(false)}} onMouseDown={event=>{if(event.currentTarget===event.target)setCopySettingsOpen(false)}}>
       <section className="asset-modal copy-settings-modal" role="dialog" aria-modal="true" aria-labelledby="copy-settings-title">
         <header><div><p className="eyebrow">Preferencje</p><h2 id="copy-settings-title">Ustawienia</h2></div><button className="modal-close" type="button" onClick={()=>setCopySettingsOpen(false)} aria-label="Zamknij"><X size={18} strokeWidth={2}/></button></header>
+        <section className="theme-settings"><div><strong>Motyw aplikacji</strong><small>Wybierz jasny lub kontrastowy ciemny wygląd.</small></div><div role="group" aria-label="Motyw aplikacji">{(["lekka","dark"] as DesignTheme[]).map(theme=><button type="button" key={theme} className={designTheme===theme?"active":""} aria-pressed={designTheme===theme} onClick={()=>changeDesignTheme(theme)}><span>{theme==="lekka"?<Sun size={17}/>:<Moon size={17}/>}</span><span><strong>{theme==="lekka"?"Lekka":"Dark"}</strong><small>{theme==="lekka"?"Jasny i spokojny":"Ciemny i wysoki kontrast"}</small></span></button>)}</div></section>
         <section className="sidebar-style-settings"><div><strong>Zwinięty sidebar</strong><small>Wybierz wygląd paska widocznego po zwinięciu menu.</small></div><div role="group" aria-label="Wygląd zwiniętego sidebara">{(["rail","island"] as SidebarStyle[]).map(style=><button type="button" key={style} className={sidebarStyle===style?"active":""} aria-pressed={sidebarStyle===style} onClick={()=>changeSidebarStyle(style)}><i className={`sidebar-mode-preview ${style}`}/><span><strong>{style==="rail"?"Zwykły pasek":"Wysepka"}</strong><small>{style==="rail"?"Przyklejony do lewej krawędzi":"Zaokrąglona i odsunięta od krawędzi"}</small></span></button>)}</div></section>
         <p className="copy-settings-section-title">Zakres kopiowanych danych</p>
         <div className="copy-settings-toolbar"><p>Ustawienia zapisują się na tym urządzeniu. Główny przycisk kopiuje raport od razu.</p><div><button type="button" onClick={()=>saveCopySettings({...defaultPortfolioCopySettings})}>Włącz wszystko</button><button type="button" onClick={()=>saveCopySettings(Object.fromEntries(portfolioCopyOptions.map(option=>[option.key,false])) as PortfolioCopySettings)}>Wyłącz wszystko</button></div></div>

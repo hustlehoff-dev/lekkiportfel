@@ -36,6 +36,8 @@ test("dashboard exposes real monthly performance and benchmark controls", async 
   assert.match(page, /className="sidebar-collapse-button"/);
   assert.match(page, /className="sidebar-style-settings"/);
   assert.match(page, /aria-label="Wygląd aplikacji"/);
+  assert.match(page, /className="theme-settings"/);
+  assert.match(page, /aria-label="Motyw aplikacji"/);
   assert.match(page, /className="topbar-search"/);
   assert.match(page, /className="topbar-settings-button"/);
   assert.doesNotMatch(page, /className="copy-settings-button"/);
