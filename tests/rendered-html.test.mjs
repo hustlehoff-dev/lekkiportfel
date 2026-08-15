@@ -16,8 +16,11 @@ const root = new URL("../", import.meta.url);
 test("dashboard exposes real monthly performance and benchmark controls", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
   const css = await readFile(new URL("app/account.css", root), "utf8");
-  assert.match(page, /Miesięczny wynik na wzroście aktywów/);
+  assert.match(page, /Wynik miesiąc po miesiącu/);
   assert.match(page, /Portfel vs \$\{performance\.benchmark\.name\}/);
+  assert.match(page, /Przewaga nad rynkiem/);
+  assert.match(page, /performance-inspector/);
+  assert.match(page, /onPointerEnter=\{\(\)=>setActiveIndex\(index\)\}/);
   assert.match(page, /\["6M","1R","3L","MAX"\]/);
   assert.match(page, /\/api\/performance/);
   assert.match(page, /type OpenLot/);
@@ -195,7 +198,7 @@ test("dashboard greets the account owner and keeps only primary metrics at the t
   assert.match(page, /className="hero-grid primary-metrics"/);
   assert.doesNotMatch(page, /<p>Prognoza krocząca<\/p>/);
   assert.doesNotMatch(page, /<p>Wynik zrealizowany<\/p>/);
-  assert.match(page, /<span>Wynik zrealizowany<\/span>/);
+  assert.match(page, /<span>Przewaga nad rynkiem<\/span>/);
   assert.match(css, /\.hero-grid\.primary-metrics\s*\{\s*grid-template-columns:\s*repeat\(2,/);
 });
 
