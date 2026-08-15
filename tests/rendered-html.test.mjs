@@ -8,6 +8,7 @@ import { buildDividendForecast, inferMonthlyContribution } from "../lib/dividend
 import { groupDividendForecast, groupDividendHistory } from "../lib/dividend-groups.ts";
 import { buildCsvZipBytes, buildXlsxBytes } from "../lib/spreadsheet-export.ts";
 import { marketFor, matchesMarket } from "../lib/portfolio-market.ts";
+import { assetInitials, assetLogoSource, assetLogoSources, fallbackAssetSvg, logoTicker } from "../lib/asset-icons.ts";
 
 const root = new URL("../", import.meta.url);
 
@@ -57,6 +58,27 @@ test("market filter separates GPW and recalculates a focused portfolio", () => {
   const gpw=positions.filter(item=>matchesMarket(item,"gpw"));
   assert.equal(gpw.reduce((sum,item)=>sum+item.value,0),100);
   assert.deepEqual(gpw.map(item=>item.value/100),[0.6,0.4]);
+});
+
+test("asset icons support broker tickers, crypto images and safe fallbacks", async () => {
+  assert.equal(logoTicker("XTB.PL"), "XTB.WA");
+  assert.equal(logoTicker("EQIX.US"), "EQIX");
+  assert.match(assetLogoSource("USDT", "Krypto"), /\/crypto\/USDT/);
+  assert.equal(assetLogoSource("PLN", "Gotówka"), null);
+  assert.equal(assetLogoSource("BTC", "Krypto", "https://example.com/logo.png"), "https://img.loadlogo.com/crypto/BTC?size=96&format=webp&fit=contain&fallback=404");
+  assert.equal(assetLogoSource("BTC", "Krypto", "https://coin-images.coingecko.com/coins/images/1/small/bitcoin.png"), "https://coin-images.coingecko.com/coins/images/1/small/bitcoin.png");
+  assert.match(assetLogoSources("XTB.PL", "Akcje")[1], /financialmodelingprep\.com\/image-stock\/XTB.WA\.png/);
+  assert.equal(assetInitials("XTB.PL"), "XT");
+  assert.match(fallbackAssetSvg("XTB.PL", "Akcje"), />XT<\/text>/);
+
+  const page = await readFile(new URL("app/page.tsx", root), "utf8");
+  const component = await readFile(new URL("app/components/asset-icon.tsx", root), "utf8");
+  const route = await readFile(new URL("app/api/asset-icon/route.ts", root), "utf8");
+  assert.match(page, /<AssetIcon symbol=\{p\.symbol\}/);
+  assert.match(page, /className="dividend-logo"/);
+  assert.match(component, /\/api\/asset-icon/);
+  assert.match(route, /fallbackAssetSvg/);
+  assert.match(route, /max-age=604800/);
 });
 
 test("metric cards stay dense at desktop and mobile widths", async () => {
