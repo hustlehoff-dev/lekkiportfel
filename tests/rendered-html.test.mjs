@@ -15,6 +15,7 @@ const root = new URL("../", import.meta.url);
 
 test("dashboard exposes real monthly performance and benchmark controls", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
+  const css = await readFile(new URL("app/account.css", root), "utf8");
   assert.match(page, /Miesięczny wynik na wzroście aktywów/);
   assert.match(page, /Portfel vs \$\{performance\.benchmark\.name\}/);
   assert.match(page, /\["6M","1R","3L","MAX"\]/);
@@ -36,6 +37,7 @@ test("dashboard exposes real monthly performance and benchmark controls", async 
   assert.match(page, /className="sidebar-style-settings"/);
   assert.match(page, /aria-label="Wygląd aplikacji"/);
   assert.match(page, /className="topbar-search"/);
+  assert.match(css, /\.topbar\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?top:\s*0;/);
   assert.match(page, /dashboard-intro/);
   assert.match(page, /aria-label="Dostawca danych"/);
   assert.match(page, /aria-label="Rynek aktywów"/);
