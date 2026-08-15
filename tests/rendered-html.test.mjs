@@ -37,6 +37,8 @@ test("dashboard exposes real monthly performance and benchmark controls", async 
   assert.match(page, /className="sidebar-style-settings"/);
   assert.match(page, /aria-label="Wygląd aplikacji"/);
   assert.match(page, /className="topbar-search"/);
+  assert.match(page, /className="topbar-settings-button"/);
+  assert.doesNotMatch(page, /className="copy-settings-button"/);
   assert.match(css, /\.topbar\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?top:\s*0;/);
   assert.match(page, /dashboard-intro/);
   assert.match(page, /aria-label="Dostawca danych"/);
