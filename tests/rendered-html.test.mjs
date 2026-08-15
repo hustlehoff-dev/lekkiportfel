@@ -25,6 +25,14 @@ test("dashboard exposes real monthly performance and benchmark controls", async 
   assert.match(page, /lekkiportfel-currency/);
   assert.match(page, /aria-label="Waluta prezentacji"/);
   assert.match(page, /lekkiportfel-theme/);
+  assert.match(page, /lekkiportfel-sidebar-style/);
+  assert.match(page, /lekkiportfel-sidebar-collapsed/);
+  assert.match(page, /sidebar-\$\{sidebarMode\}/);
+  assert.match(page, /Zwykły pasek/);
+  assert.match(page, /Zaokrąglona i odsunięta od krawędzi/);
+  assert.doesNotMatch(page, /sidebar-display-controls/);
+  assert.match(page, /className="sidebar-collapse-button"/);
+  assert.match(page, /className="sidebar-style-settings"/);
   assert.match(page, /aria-label="Wygląd aplikacji"/);
   assert.match(page, /className="topbar-search"/);
   assert.match(page, /dashboard-intro/);
@@ -106,6 +114,9 @@ test("metric cards stay dense at desktop and mobile widths", async () => {
   assert.match(css, /height:\s*72px/);
   assert.match(css, /max-width:\s*1180px/);
   assert.match(css, /grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(css, /\.app-shell\.sidebar-rail \.sidebar/);
+  assert.match(css, /\.app-shell\.sidebar-island \.sidebar/);
+  assert.match(css, /border-radius:\s*22px/);
 });
 
 test("security page keeps ServiceBooker section names 1:1", async () => {

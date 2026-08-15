@@ -2432,7 +2432,54 @@ html[data-portfolio-theme="lekka"] .signed-user button:hover { background: #f8fa
 html[data-portfolio-theme="lekka"] .sidebar-footer-links button { color: #9aa3b2; }
 html[data-portfolio-theme="lekka"] .sidebar-footer-links button:hover { color: #475569; }
 
+.sidebar-collapse-button { width: 30px; height: 30px; flex: 0 0 30px; display: grid; place-items: center; margin-left: auto; border: 1px solid #2a353b; border-radius: 7px; background: #151d21; color: #87939b; }
+.sidebar-collapse-button:hover { border-color: #45555e; color: #edf3f6; }
+.sidebar-collapse-button svg { transform: rotate(90deg); }
+.sidebar-mode-preview { position: relative; width: 15px; height: 13px; display: block; border: 1px solid currentColor; border-radius: 3px; opacity: .86; }
+.sidebar-mode-preview::before { content: ""; position: absolute; background: currentColor; }
+.sidebar-mode-preview.rail::before { inset: 1px auto 1px 1px; width: 2px; border-radius: 1px; }
+.sidebar-mode-preview.island { border: 0; }
+.sidebar-mode-preview.island::before { inset: 1px 4px; border-radius: 4px; }
+
+html[data-portfolio-theme="lekka"] .sidebar-collapse-button { border-color: #e2e8f0; background: #f8fafc; color: #94a3b8; }
+html[data-portfolio-theme="lekka"] .sidebar-collapse-button:hover { background: #fff9da; color: #806400; border-color: #ead675; }
+
+@media (min-width: 961px) {
+  .app-shell.sidebar-rail,.app-shell.sidebar-island { display: block; }
+  .app-shell.sidebar-rail .sidebar,.app-shell.sidebar-island .sidebar { position: fixed; z-index: 100; width: 72px; max-width: none; padding: 14px 10px; gap: 13px; overflow: visible; transition: inset .18s ease, border-radius .18s ease, box-shadow .18s ease; }
+  .app-shell.sidebar-rail .sidebar { inset: 0 auto 0 0; height: 100vh; border-radius: 0; }
+  .app-shell.sidebar-island .sidebar { inset: 14px auto 14px 12px; height: calc(100vh - 28px); border: 1px solid #2a353b; border-radius: 22px; box-shadow: 0 18px 55px rgba(0,0,0,.28); }
+  .app-shell.sidebar-rail .content { width: auto; max-width: none; margin-left: 72px; }
+  .app-shell.sidebar-island .content { width: auto; max-width: none; margin-left: 92px; }
+  .app-shell.sidebar-rail .brand,.app-shell.sidebar-island .brand { min-height: 38px; justify-content: center; padding: 0; }
+  .app-shell.sidebar-rail .brand > span,.app-shell.sidebar-island .brand > span { display: none; }
+  .app-shell.sidebar-rail .sidebar-collapse-button,.app-shell.sidebar-island .sidebar-collapse-button { width: 40px; height: 40px; margin: 0; border-radius: 10px; background: #1b2429; color: #c7d1d6; }
+  .app-shell.sidebar-rail .sidebar-collapse-button svg,.app-shell.sidebar-island .sidebar-collapse-button svg { transform: rotate(-90deg); }
+  html[data-portfolio-theme="lekka"] .app-shell.sidebar-rail .sidebar-collapse-button,
+  html[data-portfolio-theme="lekka"] .app-shell.sidebar-island .sidebar-collapse-button { background: #fff9da; color: #806400; border-color: #ead675; }
+  .app-shell.sidebar-rail .sidebar nav,.app-shell.sidebar-island .sidebar nav { gap: 5px; }
+  .app-shell.sidebar-rail .sidebar nav button,.app-shell.sidebar-island .sidebar nav button,
+  .app-shell.sidebar-rail .sidebar nav button:not(.active),.app-shell.sidebar-island .sidebar nav button:not(.active) { min-height: 42px; grid-template-columns: 1fr; justify-items: center; gap: 0; padding: 9px; font-size: 0; }
+  .app-shell.sidebar-rail .sidebar nav button span,.app-shell.sidebar-island .sidebar nav button span { width: auto; justify-self: center; }
+  .app-shell.sidebar-rail .sidebar nav button,.app-shell.sidebar-island .sidebar nav button { position: relative; overflow: visible; }
+  .app-shell.sidebar-rail .sidebar nav button::after,.app-shell.sidebar-island .sidebar nav button::after { content: attr(aria-label); position: absolute; left: calc(100% + 12px); top: 50%; z-index: 140; width: max-content; max-width: 220px; padding: 7px 9px; border: 1px solid #344149; border-radius: 7px; background: #10161a; color: #edf3f6; box-shadow: 0 8px 24px rgba(0,0,0,.24); font-size: 10px; font-weight: 700; line-height: 1; opacity: 0; pointer-events: none; transform: translate(4px,-50%); transition: opacity .13s ease, transform .13s ease; }
+  .app-shell.sidebar-rail .sidebar nav button:hover::after,.app-shell.sidebar-island .sidebar nav button:hover::after,
+  .app-shell.sidebar-rail .sidebar nav button:focus-visible::after,.app-shell.sidebar-island .sidebar nav button:focus-visible::after { opacity: 1; transform: translate(0,-50%); }
+  html[data-portfolio-theme="lekka"] .app-shell.sidebar-rail .sidebar nav button::after,
+  html[data-portfolio-theme="lekka"] .app-shell.sidebar-island .sidebar nav button::after { border-color: #e2e8f0; background: #fff; color: #344054; box-shadow: 0 8px 24px rgba(76,29,149,.14); }
+  .app-shell.sidebar-rail .sidebar .help-nav,.app-shell.sidebar-island .sidebar .help-nav { padding-top: 10px; }
+  .app-shell.sidebar-rail .sidebar-footer,.app-shell.sidebar-island .sidebar-footer { gap: 7px; padding-top: 0; }
+  .app-shell.sidebar-rail .sidebar-footer-links,.app-shell.sidebar-island .sidebar-footer-links,
+  .app-shell.sidebar-rail .sidebar-footer-note,.app-shell.sidebar-island .sidebar-footer-note,
+  .app-shell.sidebar-rail .signed-user > div,.app-shell.sidebar-island .signed-user > div { display: none; }
+  .app-shell.sidebar-rail .signed-user,.app-shell.sidebar-island .signed-user { grid-template-columns: 1fr; justify-items: center; gap: 5px; padding: 8px 0 0; }
+  .app-shell.sidebar-rail .signed-user > span,.app-shell.sidebar-island .signed-user > span { width: 32px; height: 32px; }
+  .app-shell.sidebar-rail .signed-user button,.app-shell.sidebar-island .signed-user button { width: 32px; height: 32px; }
+  html[data-portfolio-theme="lekka"] .app-shell.sidebar-island .sidebar { background: rgba(255,255,255,.96); border-color: rgba(255,255,255,.9); box-shadow: 0 18px 55px rgba(76,29,149,.16); backdrop-filter: blur(16px); }
+}
+
 @media (max-width: 960px) {
+  .sidebar-collapse-button { display: none; }
   .sidebar .primary-nav .desktop-history { display: none; }
 }
 
@@ -2533,6 +2580,20 @@ html[data-portfolio-theme="lekka"] .sidebar-footer-links button:hover { color: #
 .ai-portfolio-button:hover { background: #7565b3; }
 .copy-settings-button:hover { border-color: #5d8d70; color: #fff; }
 .copy-settings-modal { width: min(620px,calc(100vw - 32px)); }
+.sidebar-style-settings { margin-bottom: 14px; padding: 13px; border: 1px solid #304238; border-radius: 9px; background: #152019; }
+.sidebar-style-settings > div:first-child { display: grid; gap: 3px; margin-bottom: 10px; }
+.sidebar-style-settings > div:first-child strong { color: #edf5ef; font-size: 10px; }
+.sidebar-style-settings > div:first-child small { color: #8f9f95; font-size: 8.5px; }
+.sidebar-style-settings > div:last-child { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }
+.sidebar-style-settings button { min-width: 0; display: grid; grid-template-columns: 28px minmax(0,1fr); align-items: center; gap: 9px; padding: 10px; border: 1px solid #33443a; border-radius: 8px; background: #111a15; color: #91a198; text-align: left; }
+.sidebar-style-settings button:hover,.sidebar-style-settings button.active { border-color: #4f8062; background: #18271e; color: #8ed2aa; }
+.sidebar-style-settings button > i { width: 24px; height: 20px; justify-self: center; }
+.sidebar-style-settings button > i.rail::before { width: 4px; }
+.sidebar-style-settings button > i.island::before { inset: 1px 7px; }
+.sidebar-style-settings button > span { min-width: 0; display: grid; gap: 3px; }
+.sidebar-style-settings button strong { color: #e6efe9; font-size: 9.5px; }
+.sidebar-style-settings button small { overflow: hidden; color: #819087; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.copy-settings-section-title { margin: 0 0 7px; color: #91a198; font-size: 8px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .copy-settings-toolbar {
   display: flex;
   align-items: center;
@@ -2592,6 +2653,15 @@ html[data-portfolio-theme="lekka"] .copy-portfolio-button { border-color: #d9dee
 html[data-portfolio-theme="lekka"] .copy-portfolio-button:hover { border-color: #bfc6d1; background: #f8fafc; }
 html[data-portfolio-theme="lekka"] .copy-settings-button { border-color: #d9dee7; background: #fff; color: #667085; }
 html[data-portfolio-theme="lekka"] .copy-settings-button:hover { border-color: #bfc6d1; color: #101828; }
+html[data-portfolio-theme="lekka"] .sidebar-style-settings { border-color: #e5e7eb; background: #f8fafc; }
+html[data-portfolio-theme="lekka"] .sidebar-style-settings > div:first-child strong { color: #101828; }
+html[data-portfolio-theme="lekka"] .sidebar-style-settings > div:first-child small,
+html[data-portfolio-theme="lekka"] .copy-settings-section-title { color: #667085; }
+html[data-portfolio-theme="lekka"] .sidebar-style-settings button { border-color: #e5e7eb; background: #fff; color: #94a3b8; }
+html[data-portfolio-theme="lekka"] .sidebar-style-settings button:hover,
+html[data-portfolio-theme="lekka"] .sidebar-style-settings button.active { border-color: #d8c36b; background: #fffdf3; color: #806400; }
+html[data-portfolio-theme="lekka"] .sidebar-style-settings button strong { color: #101828; }
+html[data-portfolio-theme="lekka"] .sidebar-style-settings button small { color: #667085; }
 html[data-portfolio-theme="lekka"] .copy-settings-toolbar { border-color: #e5e7eb; background: #f8fafc; }
 html[data-portfolio-theme="lekka"] .copy-settings-toolbar p { color: #667085; }
 html[data-portfolio-theme="lekka"] .copy-settings-toolbar button { border-color: #d9dee7; color: #475569; }
