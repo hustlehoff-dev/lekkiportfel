@@ -150,6 +150,20 @@ test("metric cards stay dense at desktop and mobile widths", async () => {
   assert.match(css, /border-radius:\s*22px/);
 });
 
+test("dark mode reuses the modern shell without light color leaks", async () => {
+  const page = await readFile(new URL("app/page.tsx", root), "utf8");
+  const layout = await readFile(new URL("app/layout.tsx", root), "utf8");
+  const css = await readFile(new URL("app/account.css", root), "utf8");
+
+  assert.match(layout, /data-portfolio-theme="lekka" data-color-theme="lekka"/);
+  assert.match(page, /dataset\.portfolioTheme="lekka";document\.documentElement\.dataset\.colorTheme=designTheme/);
+  assert.match(css, /data-color-theme="dark"\] \.app-shell::before/);
+  assert.match(css, /data-color-theme="dark"\] \.topbar-search/);
+  assert.match(css, /data-color-theme="dark"\] \.liquidation-card/);
+  assert.match(css, /data-color-theme="dark"\] \.security-grid section/);
+  assert.match(css, /data-color-theme="dark"\] \.faq-list details/);
+});
+
 test("security page keeps ServiceBooker section names 1:1", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
   const headings = [

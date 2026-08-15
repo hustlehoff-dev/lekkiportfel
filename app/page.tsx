@@ -314,7 +314,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
     return observeUser(user=>{setFirebaseUser(user);setAuthReady(true);setPortfolioLoaded(false)});
   },[]);
   useEffect(()=>{portfolioRef.current=data},[data]);
-  useEffect(()=>{document.documentElement.dataset.portfolioTheme=designTheme},[designTheme]);
+  useEffect(()=>{document.documentElement.dataset.portfolioTheme="lekka";document.documentElement.dataset.colorTheme=designTheme},[designTheme]);
   useEffect(()=>{const timer=window.setTimeout(()=>{try{const saved=window.localStorage.getItem("lekkiportfel-theme");if(saved==="lekka"||saved==="dark")setDesignTheme(saved)}catch{}},0);return()=>window.clearTimeout(timer)},[]);
   useEffect(()=>{const timer=window.setTimeout(()=>{try{const savedStyle=window.localStorage.getItem("lekkiportfel-sidebar-style"),savedCollapsed=window.localStorage.getItem("lekkiportfel-sidebar-collapsed"),legacy=window.localStorage.getItem("lekkiportfel-sidebar-mode");if(savedStyle==="rail"||savedStyle==="island")setSidebarStyle(savedStyle);else if(legacy==="rail"||legacy==="island")setSidebarStyle(legacy);if(savedCollapsed==="true"||legacy==="rail"||legacy==="island")setSidebarCollapsed(true)}catch{}},0);return()=>window.clearTimeout(timer)},[]);
   const changeSidebarStyle=(style:SidebarStyle)=>{setSidebarStyle(style);try{window.localStorage.setItem("lekkiportfel-sidebar-style",style)}catch{}};
