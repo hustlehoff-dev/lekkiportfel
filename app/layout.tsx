@@ -7,7 +7,7 @@ import "./account.css";
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
-export const viewport: Viewport = { themeColor: "#f3f6fb", colorScheme: "light dark" };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", themeColor: "#f3f6fb", colorScheme: "light dark" };
 
 export async function generateMetadata(): Promise<Metadata> {
   const incoming = await headers();

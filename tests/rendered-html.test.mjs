@@ -163,9 +163,18 @@ test("mobile portfolio filters stay in one compact horizontal strip", async () =
 
 test("mobile dashboard header keeps only the title and compact actions", async () => {
   const css = await readFile(new URL("app/account.css", root), "utf8");
-  assert.match(css, /@media \(max-width: 760px\)[\s\S]*?html\[data-portfolio-theme="lekka"\] \.dashboard-intro > span\s*\{\s*display:\s*none;/);
+  assert.match(css, /@media \(max-width: 960px\)[\s\S]*?html\[data-portfolio-theme="lekka"\] \.dashboard-intro > span\s*\{\s*display:\s*none;/);
   assert.match(css, /\.copy-actions\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*repeat\(2,minmax\(0,1fr\)\);[^}]*margin-top:\s*9px;/);
   assert.match(css, /\.copy-actions button\s*\{[^}]*height:\s*36px;/);
+});
+
+test("mobile viewport and metric cards stay compact across the full mobile breakpoint", async () => {
+  const layout = await readFile(new URL("app/layout.tsx", root), "utf8");
+  const css = await readFile(new URL("app/account.css", root), "utf8");
+  assert.match(layout, /width:\s*"device-width"/);
+  assert.match(layout, /initialScale:\s*1/);
+  assert.match(css, /@media \(max-width: 960px\)[\s\S]*?\.metric-card\s*\{[\s\S]*?height:\s*92px;[\s\S]*?grid-template-columns:\s*34px minmax\(0,1fr\);/);
+  assert.match(css, /\.dividend-metric-card > \.dividend-year-progress\s*\{[^}]*overflow:\s*hidden;[^}]*font-size:\s*14px;/);
 });
 
 test("dividend dashboard card compares the current year with the projection to year end", async () => {
