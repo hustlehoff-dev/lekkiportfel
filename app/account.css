@@ -2819,10 +2819,11 @@ html[data-portfolio-theme="lekka"] .ai-privacy svg { color: #22a55d; }
   position: sticky;
   top: 0;
   z-index: 40;
-  background: rgba(7, 10, 8, .92);
-  border-bottom: 1px solid rgba(49, 72, 58, .72);
-  backdrop-filter: saturate(140%) blur(16px);
-  -webkit-backdrop-filter: saturate(140%) blur(16px);
+  background: transparent;
+  border-bottom: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .topbar-settings-button {
@@ -2868,9 +2869,9 @@ html[data-portfolio-theme="lekka"] .topbar {
   position: sticky;
   top: 0;
   z-index: 40;
-  background: rgba(246, 248, 251, .92);
-  border-bottom-color: rgba(226, 232, 240, .9);
-  box-shadow: 0 8px 24px rgba(76, 29, 149, .05);
-  backdrop-filter: saturate(140%) blur(16px);
-  -webkit-backdrop-filter: saturate(140%) blur(16px);
+  background: transparent;
+  border-bottom: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }

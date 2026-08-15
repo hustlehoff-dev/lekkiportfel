@@ -40,6 +40,7 @@ test("dashboard exposes real monthly performance and benchmark controls", async 
   assert.match(page, /className="topbar-settings-button"/);
   assert.doesNotMatch(page, /className="copy-settings-button"/);
   assert.match(css, /\.topbar\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?top:\s*0;/);
+  assert.match(css, /\.topbar\s*\{[\s\S]*?background:\s*transparent;/);
   assert.match(page, /dashboard-intro/);
   assert.match(page, /aria-label="Dostawca danych"/);
   assert.match(page, /aria-label="Rynek aktywów"/);
