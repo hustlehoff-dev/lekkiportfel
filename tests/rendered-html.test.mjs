@@ -60,6 +60,19 @@ test("market filter separates GPW and recalculates a focused portfolio", () => {
   assert.deepEqual(gpw.map(item=>item.value/100),[0.6,0.4]);
 });
 
+test("allocation chart and table share selection and expose the full portfolio", async () => {
+  const page = await readFile(new URL("app/page.tsx", root), "utf8");
+  const css = await readFile(new URL("app/account.css", root), "utf8");
+  assert.match(page, /displayedAllocationItems/);
+  assert.match(page, /activeLabel=\{activeAllocation\}/);
+  assert.match(page, /setAllocationHover/);
+  assert.match(page, /Pokaż wszystkie \(\$\{allocationItems\.length\}\)/);
+  assert.match(page, /Pozostałe \(\$\{hidden\.length\}\)/);
+  assert.match(css, /\.donut\.has-active \.donut-segment:not\(\.active\)/);
+  assert.match(css, /\.allocation-table > button\.active/);
+  assert.match(css, /\.allocation-table\.expanded/);
+});
+
 test("asset icons support broker tickers, crypto images and safe fallbacks", async () => {
   assert.equal(logoTicker("XTB.PL"), "XTB.WA");
   assert.equal(logoTicker("EQIX.US"), "EQIX");

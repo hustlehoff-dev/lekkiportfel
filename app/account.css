@@ -344,21 +344,42 @@ h2, h3, h4, strong, b { color: #e8edf1; }
 .metric-icon { display: none; }
 .metric-card h3 { margin-top: 19px; font-size: 21px; font-weight: 620; }
 .micro { margin-top: 19px; padding-top: 10px; color: #84919a; border-color: #252f36; }
-.dashboard-grid { gap: 12px; margin-top: 12px; }
+.dashboard-grid { align-items: start; gap: 12px; margin-top: 12px; }
 .panel { padding: 20px 21px; }
 .panel-head { margin-bottom: 19px; }
 .panel-head h3 { font-size: 15px; font-weight: 620; }
 .segmented { padding: 2px; background: #0d1215; border-color: #263138; border-radius: 7px; }
 .segmented button { padding: 6px 9px; color: #84919a; }
 .segmented button.active { background: #1b2429; color: #dbe3e7; box-shadow: none; }
-.allocation-body { min-height: 218px; }
-.donut { width: 164px; }
-.donut-hole { width: 104px; background: #12171b; box-shadow: 0 0 0 1px #202a30; }
-.donut-hole span, .legend > div > span:last-child { color: #87939b; }
-.donut-hole strong { font-size: 14px; font-weight: 600; }
-.legend { gap: 12px; }
-.legend > div { font-size: 10px; }
-.legend > div > strong { font-weight: 520; }
+.allocation-body { min-height: 218px; display: grid; grid-template-columns: 176px minmax(0,1fr); align-items: center; gap: 24px; }
+.donut { position: relative; width: 176px; aspect-ratio: 1; display: grid; place-items: center; background: none !important; }
+.donut svg { width: 100%; height: 100%; overflow: visible; transform: rotate(-90deg); }
+.donut-track { fill: none; stroke: #202a30; stroke-width: 18; }
+.donut-segment { fill: none; stroke-width: 18; cursor: pointer; transition: opacity .16s ease, stroke-width .16s ease, filter .16s ease; }
+.donut-segment:hover,.donut-segment:focus-visible,.donut-segment.active { stroke-width: 23; filter: brightness(1.14); outline: none; }
+.donut.has-active .donut-segment:not(.active) { opacity: .24; }
+.donut-hole { position: absolute; width: 104px; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 12px; border-radius: 50%; background: #12171b; box-shadow: 0 0 0 1px #202a30; text-align: center; pointer-events: none; }
+.donut-hole span { max-width: 88px; overflow: hidden; color: #87939b; font-size: 8px; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
+.donut-hole strong { max-width: 92px; margin-top: 4px; overflow: hidden; font-size: 13px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.donut-hole small { margin-top: 3px; color: #697780; font-size: 7.5px; }
+.allocation-table-wrap { min-width: 0; }
+.allocation-table-head,.allocation-table > button { display: grid; grid-template-columns: minmax(90px,1fr) minmax(78px,auto) 48px; align-items: center; gap: 10px; }
+.allocation-table-head { padding: 0 8px 7px; color: #66737b; font-size: 7px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+.allocation-table-head span:nth-child(n+2) { text-align: right; }
+.allocation-table { display: grid; }
+.allocation-table.expanded { max-height: 342px; padding-right: 3px; overflow-y: auto; scrollbar-width: thin; }
+.allocation-table > button { min-height: 30px; padding: 5px 8px; border: 0; border-top: 1px solid #222d33; border-radius: 5px; background: transparent; color: #87939b; text-align: right; transition: background .14s ease, color .14s ease, opacity .14s ease; }
+.allocation-table > button:hover,.allocation-table > button:focus-visible,.allocation-table > button.active { background: #1a2429; color: #dce5e9; outline: none; }
+.allocation-table:has(> button.active) > button:not(.active) { opacity: .42; }
+.allocation-name { min-width: 0; display: flex; align-items: center; gap: 8px; text-align: left; }
+.allocation-name i { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 2px; }
+.allocation-name strong { overflow: hidden; color: #cbd5da; font-size: 9px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.allocation-table > button > b { color: #d8e1e5; font-size: 9px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.allocation-table > button > span:last-child { font-size: 9px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.allocation-expand { width: 100%; min-height: 31px; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 7px; border: 1px solid #2a363d; border-radius: 6px; background: #151d21; color: #aab5bc; font-size: 8px; font-weight: 700; }
+.allocation-expand:hover { border-color: #45555e; color: #edf3f6; }
+.allocation-expand svg { transition: transform .16s ease; }
+.allocation-expand.open svg { transform: rotate(180deg); }
 .arrow-button { width: 30px; height: 30px; background: #161d21; border-color: #2b373e; border-radius: 7px; color: #98a5ad; }
 .arrow-button:hover { border-color: #4b5b64; color: #e0e7eb; }
 .forecast-list > div { padding: 10px 2px; border-color: #252f35; }
@@ -540,6 +561,11 @@ footer, .content footer > span { color: #68757e; }
   .performance-chart { grid-template-columns: 52px minmax(0, 1fr); padding-right: 10px; }
   .performance-foot { align-items: flex-start; flex-wrap: wrap; padding-inline: 15px; }
   .performance-foot p { flex-basis: 100%; text-align: left; line-height: 1.45; }
+  .allocation-panel .panel-head { align-items: flex-start; flex-direction: column; }
+  .allocation-panel .segmented { width: 100%; display: grid; grid-template-columns: repeat(3,1fr); }
+  .allocation-body { grid-template-columns: 1fr; justify-items: center; gap: 18px; }
+  .allocation-table-wrap { width: 100%; }
+  .allocation-table.expanded { max-height: 320px; }
 }
 
 /* LekkaFaktura-inspired light interface. The dark theme above remains intact. */
@@ -659,9 +685,20 @@ html[data-portfolio-theme="lekka"] .legend-swatch.benchmark { background: #7c3ae
 html[data-portfolio-theme="lekka"] .loading-ring { border-color: #e2e8f0; border-top-color: #f7c400; }
 
 html[data-portfolio-theme="lekka"] .donut-hole { background: #fff; box-shadow: 0 0 0 1px #e2e8f0; }
+html[data-portfolio-theme="lekka"] .donut-track { stroke: #edf0f3; }
 html[data-portfolio-theme="lekka"] .donut-hole span,
+html[data-portfolio-theme="lekka"] .donut-hole small,
 html[data-portfolio-theme="lekka"] .legend > div > span:last-child { color: #667085; }
 html[data-portfolio-theme="lekka"] .legend > div > strong { color: #344054; }
+html[data-portfolio-theme="lekka"] .allocation-table-head { color: #98a2b3; }
+html[data-portfolio-theme="lekka"] .allocation-table > button { color: #667085; border-color: #edf0f3; }
+html[data-portfolio-theme="lekka"] .allocation-table > button:hover,
+html[data-portfolio-theme="lekka"] .allocation-table > button:focus-visible,
+html[data-portfolio-theme="lekka"] .allocation-table > button.active { background: #fff9da; color: #344054; }
+html[data-portfolio-theme="lekka"] .allocation-name strong,
+html[data-portfolio-theme="lekka"] .allocation-table > button > b { color: #344054; }
+html[data-portfolio-theme="lekka"] .allocation-expand { background: #fff; color: #475569; border-color: #e2e8f0; }
+html[data-portfolio-theme="lekka"] .allocation-expand:hover { background: #fff9da; color: #101828; border-color: #ead675; }
 html[data-portfolio-theme="lekka"] .arrow-button { background: #fff; border-color: #e2e8f0; color: #475569; }
 html[data-portfolio-theme="lekka"] .arrow-button:hover { border-color: #f7c400; color: #0f1722; }
 html[data-portfolio-theme="lekka"] .forecast-list > div,
