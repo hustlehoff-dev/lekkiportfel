@@ -510,13 +510,14 @@ footer, .content footer > span { color: #68757e; }
 .performance-head small { display: block; margin-top: 4px; color: #78868f; font-size: 9px; }
 .performance-controls { display: flex; align-items: center; gap: 8px; }
 .mode-switch button { min-width: 74px; }
-.performance-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid #252f36; border-bottom: 1px solid #252f36; background: #10161a; }
-.performance-summary > div { min-width: 0; padding: 12px 16px; border-right: 1px solid #252f36; }
-.performance-summary > div:last-child { border-right: 0; }
+.performance-body { display: grid; grid-template-columns: 205px minmax(0, 1fr); border-top: 1px solid #252f36; }
+.performance-summary { display: grid; grid-template-columns: 1fr; grid-template-rows: repeat(4, minmax(0, 1fr)); border-right: 1px solid #252f36; background: #10161a; }
+.performance-summary > div { min-width: 0; min-height: 68px; display: flex; flex-direction: column; justify-content: center; padding: 12px 16px; border-bottom: 1px solid #252f36; }
+.performance-summary > div:last-child { border-bottom: 0; }
 .performance-summary span, .performance-summary strong { display: block; }
 .performance-summary span { margin-bottom: 5px; color: #74818a; font-size: 8px; text-transform: uppercase; letter-spacing: .08em; }
 .performance-summary strong { overflow: hidden; color: #dce4e8; font-size: 12px; font-weight: 630; text-overflow: ellipsis; white-space: nowrap; }
-.performance-chart-shell { min-width: 0; }
+.performance-visual, .performance-chart-shell { min-width: 0; }
 .performance-inspector { min-height: 49px; display: flex; align-items: center; gap: 24px; padding: 9px 21px 8px 72px; border-bottom: 1px solid #252f36; background: #0f1518; }
 .performance-inspector > span { min-width: 58px; color: #9aa6ad; font-size: 9px; font-weight: 780; }
 .performance-inspector > div { display: flex; align-items: baseline; gap: 7px; }
@@ -567,8 +568,10 @@ footer, .content footer > span { color: #68757e; }
   .performance-controls .segmented { display: flex; flex: 0 0 auto; }
   .performance-controls .mode-switch { display: flex; }
   .performance-controls .mode-switch button { min-width: 68px; }
-  .performance-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .performance-summary > div:nth-child(2) { border-right: 0; }
+  .performance-body { display: block; }
+  .performance-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; border-right: 0; border-bottom: 1px solid #252f36; }
+  .performance-summary > div { min-height: 0; border-right: 1px solid #252f36; border-bottom: 0; }
+  .performance-summary > div:nth-child(2n) { border-right: 0; }
   .performance-summary > div:nth-child(-n+2) { border-bottom: 1px solid #252f36; }
   .performance-inspector { gap: 14px; min-height: 45px; padding: 8px 15px; }
   .performance-inspector > span { min-width: 48px; }

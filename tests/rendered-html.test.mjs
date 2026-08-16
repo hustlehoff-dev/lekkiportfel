@@ -145,6 +145,9 @@ test("metric cards stay dense at desktop and mobile widths", async () => {
   assert.match(css, /\.hero-grid\s*\{\s*grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.hero-grid\s*\{\s*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(css, /\.performance-summary\s*\{\s*display:\s*grid/);
+  assert.match(css, /\.performance-body\s*\{\s*display:\s*grid;\s*grid-template-columns:\s*205px minmax\(0,\s*1fr\)/);
+  assert.match(css, /\.performance-summary\s*\{[\s\S]*?grid-template-columns:\s*1fr/);
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.performance-summary\s*\{\s*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(css, /\.performance-chart\.market/);
   assert.match(css, /data-portfolio-theme="lekka"/);
   assert.match(css, /#f7c400/);
