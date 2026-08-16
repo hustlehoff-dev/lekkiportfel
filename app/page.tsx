@@ -43,7 +43,7 @@ import {
   WalletCards,
   X,
 } from "lucide-react";
-import { auditTradesWithNbp, calculateCryptoTax, calculateLossCarryforward, calculateTaxSummary, inferInstrumentCurrency, isRetirementAccount, rateKey, taxYears, type CryptoTaxTransaction, type LossSetting, type NbpRate } from "../lib/tax-calculator";
+import { auditTradesWithNbp, calculateCryptoTax, calculateLossCarryforward, calculateTaxSummary, inferInstrumentCurrency, isRetirementAccount, rateKey, taxYears, type LossSetting, type NbpRate } from "../lib/tax-calculator";
 import { buildCsvZipBytes, buildXlsxBytes, downloadBytes, type SpreadsheetSheet } from "../lib/spreadsheet-export";
 import { firebaseConfigured, loadUserPortfolio, loginWithGoogle, loginWithPassword, logout, observeUser, registerWithPassword, resetPassword, saveUserPortfolio, type FirebaseUser } from "../lib/firebase-client";
 import { buildPortfolioCopy, defaultPortfolioCopySettings, portfolioCopyOptions, type CopySection, type PortfolioCopySettings } from "../lib/portfolio-copy";
@@ -56,97 +56,14 @@ import { groupPositionsByTicker, type GroupedPosition } from "../lib/portfolio-g
 import { ALL_MARKETS, marketFilterLabels, marketFilterOrder, marketFor, matchesMarket, type MarketFilter } from "../lib/portfolio-market";
 import { classifyAssetClass, isCryptoAssetClass, isStablecoin } from "../lib/asset-class";
 import { AssetIcon } from "./components/asset-icon";
+import { ALL_PROVIDERS, DEFAULT_CHART_COLOR, emptyData, sectors, viewFromPath, viewPaths, type AppView, type CryptoTransaction, type CurrencyCode, type DesignTheme, type InstrumentResult, type ManualKind, type PerformancePoint, type PerformanceResponse, type PortfolioData, type Position, type PriceStatus, type PrivacyMode, type Sector, type SidebarStyle } from "./portfolio-types";
+import { clientId, copyText, dateLabel, matchesProvider, norm, normalizePortfolioAssetClasses, num, number, plural, providerName, sectorFromSearch } from "./portfolio-helpers";
+import { csvRows, parseRows } from "./xtb-import";
 import ChartsView from "./wykresy/charts-view";
 
-type Sector = "Technologia" | "Finanse" | "Zdrowie" | "Konsumpcja" | "Przemysł" | "Energia" | "Nieruchomości" | "ETF" | "Inne";
-type Position = { id:string; symbol:string; name:string; sector:Sector; assetClass:string; quantity:number; cost:number; costKnown?:boolean; value:number; currency:string; account?:string; provider?:string; manual?:boolean; priceId?:string; image?:string; marketPrice?:number; priceUpdatedAt?:string; priceProvider?:string; priceChangePct?:number|null };
-type PriceStatus = { loading:boolean; updatedAt:string|null; updated:number; missing:string[] };
-type CurrencyCode = "PLN"|"USD"|"EUR"|"GBP";
-type DesignTheme = "lekka"|"dark";
-type PrivacyMode = "visible"|"money"|"all";
-type SidebarStyle = "rail"|"island";
-type AppView = "pulpit"|"wykresy"|"dywidendy"|"podatki"|"historia"|"faq"|"bezpieczenstwo";
-type ManualKind = "Aktywa" | "Gotówka" | "Inne";
-type InstrumentResult = { key:string; symbol:string; name:string; assetClass:"Krypto"|"Stable"|"Akcje"|"ETF"; exchange:string; priceId?:string; image?:string; rank?:number|null; sector?:string; pricePln?:number };
-
-const viewPaths:Record<AppView,string>={pulpit:"/",wykresy:"/wykresy",dywidendy:"/dywidendy",podatki:"/podatki",historia:"/historia",faq:"/faq",bezpieczenstwo:"/bezpieczenstwo"};
-function viewFromPath(pathname:string):AppView{return (Object.entries(viewPaths).find(([,path])=>path===pathname)?.[0] as AppView|undefined)||"pulpit"}
-type CashEvent = { id:string; sourceId?:string; positionId?:string; date:string; type:string; instrument?:string; symbol:string; category?:string; product?:string; comment:string; amount:number; account?:string; provider?:string };
-type OpenLot = { id:string; positionId?:string; product?:string; category?:string; symbol:string; side:string; quantity:number; openDate:string; openPrice:number; cost:number; value:number; account?:string; provider?:string; openCommission?:number; swap?:number; rollover?:number; grossProfit?:number; netProfit?:number };
-type ClosedTrade = { id:string; positionId?:string; instrument?:string; product?:string; date:string; symbol:string; side:string; volume:number; result:number; account?:string; provider?:string; category?:string; openDate?:string; openPrice?:number; closePrice?:number; purchaseValue?:number; saleValue?:number; grossProfit?:number; commission?:number; swap?:number; rollover?:number; openConversionRate?:number; closeConversionRate?:number; closeOrigin?:string; comment?:string };
-type CryptoTransaction = CryptoTaxTransaction & { id:string; symbol:string; name:string; quantity:number; toSymbol?:string; toName?:string; toQuantity?:number; amount:number; currency:string; nbpRate:number; nbpDate?:string; fee:number; account:string; provider?:string; note?:string };
-type PortfolioData = { positions:Position[]; cash:CashEvent[]; trades:ClosedTrade[]; lots?:OpenLot[]; taxLosses?:Record<string,LossSetting>; cryptoTransactions?:CryptoTransaction[]; cryptoCostOverrides?:Record<string,number>; source:string };
-type PerformancePoint = { month:string; label:string; capitalGain:number; portfolioPct:number; benchmarkPct:number; investedCapital:number };
-type PerformanceResponse = { points:PerformancePoint[]; benchmark:{symbol:string;name:string}; missing:string[]; methodology:string };
-
-const sectors: Sector[] = ["Technologia","Finanse","Zdrowie","Konsumpcja","Przemysł","Energia","Nieruchomości","ETF","Inne"];
 const today = new Date();
 const iso = (date:Date) => date.toISOString().slice(0,10);
 const rollingDividendEnd = new Date(Date.UTC(today.getFullYear()+1,today.getMonth(),today.getDate(),12));
-
-const emptyData: PortfolioData = { positions:[], cash:[], trades:[], lots:[], source:"Nowy portfel" };
-const ALL_PROVIDERS="all";
-const DEFAULT_CHART_COLOR="#67b58f";
-
-function normalizePortfolioAssetClasses(portfolio:PortfolioData){
-  let changed=false;
-  const positions=portfolio.positions.map(position=>{
-    const assetClass=classifyAssetClass(position.symbol,position.assetClass);
-    if(assetClass===position.assetClass)return position;
-    changed=true;
-    return{...position,assetClass};
-  });
-  return{portfolio:changed?{...portfolio,positions}:portfolio,changed};
-}
-
-const number = (value:number,digits=2) => new Intl.NumberFormat("pl-PL",{maximumFractionDigits:digits,minimumFractionDigits:digits}).format(value);
-const plural = (value:number,one:string,few:string,many:string) => value===1?one:([2,3,4].includes(value%10)&&![12,13,14].includes(value%100)?few:many);
-const dateLabel = (value:string) => new Intl.DateTimeFormat("pl-PL",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(value));
-const norm = (value:unknown) => String(value??"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-const reportText = (value:unknown) => { const text=String(value??"").trim(); return text==="3"?"":text };
-const num = (value:unknown) => { if(typeof value==="number") return value; const clean=String(value??"").replace(/\s/g,"").replace(/[^0-9,.-]/g,""); const normalized=clean.includes(",")&&!clean.includes(".")?clean.replace(",","."):clean.replace(/,/g,""); return Number(normalized)||0 };
-function clientId(prefix:string){
-  const webCrypto=globalThis.crypto;
-  if(typeof webCrypto?.randomUUID==="function")return`${prefix}-${webCrypto.randomUUID()}`;
-  if(typeof webCrypto?.getRandomValues==="function"){
-    const bytes=new Uint8Array(16);webCrypto.getRandomValues(bytes);
-    return`${prefix}-${Array.from(bytes,byte=>byte.toString(16).padStart(2,"0")).join("")}`;
-  }
-  return`${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-}
-async function copyText(text:string){
-  if(window.isSecureContext&&navigator.clipboard?.writeText){
-    try{await navigator.clipboard.writeText(text);return}catch{}
-  }
-  const area=document.createElement("textarea");
-  area.value=text;area.setAttribute("readonly","");area.style.position="fixed";area.style.left="-9999px";area.style.opacity="0";
-  document.body.appendChild(area);area.select();area.setSelectionRange(0,text.length);
-  const copied=document.execCommand("copy");area.remove();
-  if(!copied)throw new Error("Przeglądarka zablokowała dostęp do schowka");
-}
-const asDate = (value:unknown) => { if(value instanceof Date)return iso(value); if(typeof value==="number")return iso(new Date(Date.UTC(1899,11,30+value))); const s=String(value??"").trim(); const dm=s.match(/(\d{1,2})[./-](\d{1,2})[./-](\d{4})/); if(dm)return `${dm[3]}-${dm[2].padStart(2,"0")}-${dm[1].padStart(2,"0")}`; const parsed=new Date(s); return Number.isNaN(parsed.getTime())?iso(today):iso(parsed) };
-const sectorFor = (symbol:string):Sector => { const s=symbol.toUpperCase(); const known:Record<string,Sector>={"ABE.PL":"Technologia","ASB.PL":"Technologia","CBF.PL":"Technologia","DIG.PL":"Konsumpcja","EQIX.US":"Nieruchomości","PAS.PL":"Technologia","PLTR.US":"Technologia","S2B.PL":"Technologia","SNT.PL":"Zdrowie","XTB.PL":"Finanse","ADC.US":"Nieruchomości","DNP.PL":"Konsumpcja","KRU.PL":"Finanse","LPP.PL":"Konsumpcja","NNN.US":"Nieruchomości","CVX.US":"Energia","DTLA.UK":"ETF","MBR.PL":"Przemysł","TSLA.US":"Konsumpcja"}; if(known[s])return known[s]; if(/CSPX|VWCE|IWDA|ETF|SPY|QQQ|IUIT/.test(s))return"ETF"; if(/MSFT|AAPL|NVDA|GOOG|META|AMD|ASML|CDR/.test(s))return"Technologia"; if(/PKO|PEO|ING|JPM|BAC|V|MA/.test(s))return"Finanse"; if(/NOVO|JNJ|PFE|MRK|ABBV/.test(s))return"Zdrowie"; if(/XOM|CVX|SHEL|ORLEN|PKN/.test(s))return"Energia"; if(/O\.US|PLD|AMT|REIT/.test(s))return"Nieruchomości"; return"Inne" };
-const sectorFromSearch = (value?:string):Sector => {const sector=norm(value);if(/tech|communication/.test(sector))return"Technologia";if(/financial/.test(sector))return"Finanse";if(/health/.test(sector))return"Zdrowie";if(/consumer/.test(sector))return"Konsumpcja";if(/industrial|materials/.test(sector))return"Przemysł";if(/energy|utilities/.test(sector))return"Energia";if(/real estate/.test(sector))return"Nieruchomości";return"Inne"};
-const providerName=(item:{account?:string;provider?:string;manual?:boolean})=>{const provider=String(item.provider||"").trim();if(provider)return provider;const account=String(item.account||"").trim();if(/^(PLN|IKE|IKZE)$/i.test(account))return"XTB";if(account&&!/^Poza XTB$/i.test(account))return account;return item.manual?"Własne":"XTB"};
-const matchesProvider=(item:{account?:string;provider?:string;manual?:boolean},provider:string)=>provider===ALL_PROVIDERS||providerName(item)===provider;
-const pick = (map:Record<string,number>,names:string[]) => { for(const name of names)if(map[name]!==undefined)return map[name]; return -1 };
-const optionalReportText = (row:unknown[],index:number) => index>=0?(reportText(row[index])||undefined):undefined;
-const optionalReportNumber = (row:unknown[],index:number) => {const value=optionalReportText(row,index);return value===undefined?undefined:num(value)};
-
-function parseRows(rows:unknown[][],sheetName:string,target:PortfolioData,account="PLN"){
-  const normalized=rows.map(row=>row.map(norm));
-  const headerIndex=normalized.findIndex(row=>(row.includes("symbol")||row.includes("ticker"))&&(row.includes("amount")||row.includes("kwota")||row.includes("gross p/l")||row.includes("gross profit")||row.includes("profit/loss")||row.includes("purchase value")||row.includes("value")));
-  if(headerIndex<0)return;
-  const headers:Record<string,number>={}; normalized[headerIndex].forEach((header,index)=>{if(header)headers[header]=index});
-  const idx={symbol:pick(headers,["symbol","ticker"]),name:pick(headers,["instrument","instrument/position","instrument finansowy"]),category:pick(headers,["category","kategoria"]),product:pick(headers,["product"]),type:pick(headers,["type","typ"]),time:pick(headers,["time","czas","open time","open time (utc)","czas otwarcia"]),closeTime:pick(headers,["close time","close time (utc)","czas zamkniecia"]),comment:pick(headers,["comment","komentarz"]),amount:pick(headers,["amount","kwota"]),sourceId:pick(headers,["id"]),positionId:pick(headers,["position id","id pozycji"]),volume:pick(headers,["volume","wolumen"]),purchase:pick(headers,["purchase value","wartosc zakupu"]),sale:pick(headers,["sale value","wartosc sprzedazy"]),value:pick(headers,["value","market value","wartosc rynkowa"]),marketPrice:pick(headers,["current price","market price","cena rynkowa"]),openPrice:pick(headers,["open price","cena otwarcia"]),closePrice:pick(headers,["close price","cena zamkniecia"]),netProfit:pick(headers,["net profit","profit/loss","zysk/strata"]),gross:pick(headers,["gross p/l","gross profit","wynik brutto"]),commission:pick(headers,["commission","open commission","prowizja"]),swap:pick(headers,["swap"]),rollover:pick(headers,["rollover"]),openConversionRate:pick(headers,["open conversion rate"]),closeConversionRate:pick(headers,["close conversion rate"]),closeOrigin:pick(headers,["close origin"])};
-  const dataRows=rows.slice(headerIndex+1).filter(row=>row.some(cell=>String(cell??"").trim()));
-  const isCash=idx.amount>=0; const isClosed=/closed|zamkniet/.test(norm(sheetName))||idx.closeTime>=0;
-  if(isCash)dataRows.forEach((row,i)=>{const type=String(row[idx.type]??"").trim();const amount=num(row[idx.amount]);if(norm(type)==="total"||(!type&&!amount))return;target.cash.push({id:`cash-${account}-${sheetName}-${i}`,sourceId:optionalReportText(row,idx.sourceId),positionId:optionalReportText(row,idx.positionId),date:asDate(row[idx.time]),type,instrument:optionalReportText(row,idx.name),symbol:reportText(row[idx.symbol]),category:optionalReportText(row,idx.category),product:optionalReportText(row,idx.product),comment:reportText(row[idx.comment]),amount,account,provider:"XTB"})});
-  else if(isClosed)dataRows.forEach((row,i)=>{const symbol=reportText(row[idx.symbol]);if(!symbol)return;const result=idx.netProfit>=0?num(row[idx.netProfit]):num(row[idx.gross])+num(row[idx.commission])+num(row[idx.swap]);target.trades.push({id:`trade-${account}-${sheetName}-${i}`,positionId:optionalReportText(row,idx.positionId),instrument:optionalReportText(row,idx.name),product:optionalReportText(row,idx.product),date:asDate(row[idx.closeTime>=0?idx.closeTime:idx.time]),symbol,side:String(row[idx.type]??"").trim(),volume:num(row[idx.volume]),result,account,provider:"XTB",category:optionalReportText(row,idx.category),openDate:idx.time>=0?asDate(row[idx.time]):undefined,openPrice:optionalReportNumber(row,idx.openPrice),closePrice:optionalReportNumber(row,idx.closePrice),purchaseValue:idx.purchase>=0?Math.abs(num(row[idx.purchase])):undefined,saleValue:idx.sale>=0?Math.abs(num(row[idx.sale])):undefined,grossProfit:optionalReportNumber(row,idx.gross),commission:optionalReportNumber(row,idx.commission),swap:optionalReportNumber(row,idx.swap),rollover:optionalReportNumber(row,idx.rollover),openConversionRate:optionalReportNumber(row,idx.openConversionRate),closeConversionRate:optionalReportNumber(row,idx.closeConversionRate),closeOrigin:optionalReportText(row,idx.closeOrigin),comment:optionalReportText(row,idx.comment)})});
-  else {const lotRows=dataRows.filter(row=>{const side=norm(row[idx.type]);return side==="buy"||side==="sell"});target.lots??=[];lotRows.forEach((row,i)=>{const symbol=reportText(row[idx.symbol]);if(!symbol)return;const profit=idx.netProfit>=0?num(row[idx.netProfit]):num(row[idx.gross]);const quantity=Math.abs(num(row[idx.volume]));const value=Math.abs(num(row[idx.value]))||Math.abs(num(row[idx.marketPrice])*quantity);const cost=Math.max(0,value-profit);const rawPositionId=optionalReportText(row,idx.name);target.lots!.push({id:`lot-${account}-${sheetName}-${i}`,positionId:rawPositionId&&/^\d+$/.test(rawPositionId)?rawPositionId:undefined,product:optionalReportText(row,idx.product),category:optionalReportText(row,idx.category),symbol,side:String(row[idx.type]??"").trim(),quantity,openDate:asDate(row[idx.time]),openPrice:num(row[idx.openPrice]),cost,value,account,provider:"XTB",openCommission:optionalReportNumber(row,idx.commission),swap:optionalReportNumber(row,idx.swap),rollover:optionalReportNumber(row,idx.rollover),grossProfit:optionalReportNumber(row,idx.gross),netProfit:optionalReportNumber(row,idx.netProfit)})});const hasSummaryRows=dataRows.some(row=>{const symbol=reportText(row[idx.symbol]);const side=norm(row[idx.type]);return symbol&&side!=="buy"&&side!=="sell"});const positionRows=hasSummaryRows?dataRows.filter(row=>{const side=norm(row[idx.type]);return side!=="buy"&&side!=="sell"}):dataRows;positionRows.forEach((row,i)=>{const symbol=reportText(row[idx.symbol]);if(!symbol)return;const profit=idx.netProfit>=0?num(row[idx.netProfit]):num(row[idx.gross]);let value=Math.abs(num(row[idx.value]));let cost=Math.abs(num(row[idx.purchase]));if(!value&&idx.marketPrice>=0&&idx.volume>=0)value=Math.abs(num(row[idx.marketPrice])*num(row[idx.volume]));if(!cost)cost=value-profit;const category=reportText(row[idx.category]);const rawName=reportText(row[idx.name])||symbol;const detectedSector=sectorFor(symbol);target.positions.push({id:`position-${account}-${sheetName}-${i}`,symbol,name:/^\d+$/.test(rawName)?symbol:rawName,sector:detectedSector,assetClass:/etf/i.test(category)||detectedSector==="ETF"?"ETF":"Akcje",quantity:num(row[idx.volume]),cost,value:value||cost,currency:"PLN",account,provider:"XTB"})})};
-}
-
-function csvRows(text:string):string[][]{const lines=text.replace(/^\uFEFF/,"").split(/\r?\n/).filter(Boolean);const delimiter=(lines[0]?.match(/;/g)?.length??0)>(lines[0]?.match(/,/g)?.length??0)?";":",";return lines.map(line=>{const result:string[]=[];let cell="",quoted=false;for(let i=0;i<line.length;i++){const char=line[i];if(char==='"'&&line[i+1]==='"'){cell+='"';i++}else if(char==='"')quoted=!quoted;else if(char===delimiter&&!quoted){result.push(cell);cell=""}else cell+=char}result.push(cell);return result})}
 
 type AllocationItem = {label:string;value:number;color:string};
 

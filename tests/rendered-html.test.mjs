@@ -14,7 +14,13 @@ import { classifyAssetClass, isCryptoAssetClass, isStablecoin } from "../lib/ass
 const root = new URL("../", import.meta.url);
 
 test("dashboard exposes real monthly performance and benchmark controls", async () => {
-  const page = await readFile(new URL("app/page.tsx", root), "utf8");
+  const [pageSource, portfolioTypes, portfolioHelpers, xtbImport] = await Promise.all([
+    readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/portfolio-types.ts", root), "utf8"),
+    readFile(new URL("app/portfolio-helpers.ts", root), "utf8"),
+    readFile(new URL("app/xtb-import.ts", root), "utf8"),
+  ]);
+  const page = [pageSource, portfolioTypes, portfolioHelpers, xtbImport].join("\n");
   const css = await readFile(new URL("app/account.css", root), "utf8");
   assert.match(page, /Wynik miesiąc po miesiącu/);
   assert.match(page, /Portfel vs \$\{performance\.benchmark\.name\}/);
@@ -206,7 +212,11 @@ test("dashboard greets the account owner and keeps only primary metrics at the t
 });
 
 test("privacy eye cycles through money, percentages and the full view", async () => {
-  const page = await readFile(new URL("app/page.tsx", root), "utf8");
+  const [pageSource, portfolioTypes] = await Promise.all([
+    readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/portfolio-types.ts", root), "utf8"),
+  ]);
+  const page = [pageSource, portfolioTypes].join("\n");
   const css = await readFile(new URL("app/account.css", root), "utf8");
   assert.match(page, /type PrivacyMode = "visible"\|"money"\|"all"/);
   assert.match(page, /current==="visible"\?"money":current==="money"\?"all":"visible"/);
@@ -352,7 +362,11 @@ test("performance API reconciles XTB sales and converts the benchmark to PLN", a
 });
 
 test("XTB import preserves source fields required for a tax audit trail", async () => {
-  const page = await readFile(new URL("app/page.tsx", root), "utf8");
+  const [pageSource, xtbImport] = await Promise.all([
+    readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/xtb-import.ts", root), "utf8"),
+  ]);
+  const page = [pageSource, xtbImport].join("\n");
 
   for (const field of [
     "sourceId",
@@ -662,11 +676,13 @@ test("tax report exports a valid multi-sheet XLSX and CSV bundle", () => {
 });
 
 test("tax view has a local PIT-38 route and data-quality warnings", async () => {
-  const [page, route, nbpRoute] = await Promise.all([
+  const [pageSource, portfolioTypes, route, nbpRoute] = await Promise.all([
     readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/portfolio-types.ts", root), "utf8"),
     readFile(new URL("app/podatki/page.tsx", root), "utf8"),
     readFile(new URL("app/api/tax/nbp/route.ts", root), "utf8"),
   ]);
+  const page = [pageSource, portfolioTypes].join("\n");
 
   assert.match(page, /podatki:"\/podatki"/);
   assert.match(page, /Szacowany podatek do zapłaty/);

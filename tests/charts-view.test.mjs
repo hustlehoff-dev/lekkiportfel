@@ -49,11 +49,13 @@ test("chart prices convert through official PLN reference rates", () => {
 });
 
 test("charts view exposes search, periods, source and responsive dark mode", async () => {
-  const [page, dashboard, chartPage] = await Promise.all([
+  const [page, dashboardSource, portfolioTypes, chartPage] = await Promise.all([
     readFile(new URL("app/wykresy/charts-view.tsx", root), "utf8"),
     readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/portfolio-types.ts", root), "utf8"),
     readFile(new URL("app/wykresy/page.tsx", root), "utf8"),
   ]);
+  const dashboard = [dashboardSource, portfolioTypes].join("\n");
   const route = await readFile(new URL("app/api/charts/route.ts", root), "utf8");
   const css = await readFile(new URL("app/wykresy/charts.css", root), "utf8");
   assert.match(page, /Szukaj BTC, spółki, ETF-u lub indeksu/);

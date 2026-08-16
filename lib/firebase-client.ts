@@ -1,6 +1,7 @@
 import { getApp, getApps, initializeApp, type FirebaseApp } from "firebase/app";
 import { browserLocalPersistence, browserSessionPersistence, createUserWithEmailAndPassword, getAuth, GoogleAuthProvider, onAuthStateChanged, sendEmailVerification, sendPasswordResetEmail, setPersistence, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, signOut, type User } from "firebase/auth";
 import { doc, getDoc, getFirestore, serverTimestamp, setDoc } from "firebase/firestore";
+import { CURRENT_PORTFOLIO_SCHEMA_VERSION, getPortfolioSchemaVersion, migratePortfolioData } from "./portfolio-schema";
 
 const config = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "",
@@ -60,13 +61,22 @@ export async function logout() {
 }
 
 export async function loadUserPortfolio<T>(uid:string) {
-  const snapshot=await getDoc(doc(getFirestore(firebaseApp()),"users",uid,"portfolio","main"));
-  return snapshot.exists()?(snapshot.data().portfolio as T):null;
+  const reference=doc(getFirestore(firebaseApp()),"users",uid,"portfolio","main");
+  const snapshot=await getDoc(reference);
+  if(!snapshot.exists())return null;
+  const stored=snapshot.data().portfolio;
+  const storedVersion=getPortfolioSchemaVersion(stored);
+  const portfolio=migratePortfolioData(stored);
+  if(storedVersion!==CURRENT_PORTFOLIO_SCHEMA_VERSION){
+    try{await setDoc(reference,{portfolio,schemaVersion:CURRENT_PORTFOLIO_SCHEMA_VERSION,updatedAt:serverTimestamp()},{merge:true})}catch{}
+  }
+  return portfolio as T;
 }
 
 export async function saveUserPortfolio(uid:string,portfolio:unknown) {
   const sanitized=JSON.parse(JSON.stringify(portfolio));
-  await setDoc(doc(getFirestore(firebaseApp()),"users",uid,"portfolio","main"),{portfolio:sanitized,schemaVersion:1,updatedAt:serverTimestamp()});
+  const migrated=migratePortfolioData(sanitized);
+  await setDoc(doc(getFirestore(firebaseApp()),"users",uid,"portfolio","main"),{portfolio:migrated,schemaVersion:CURRENT_PORTFOLIO_SCHEMA_VERSION,updatedAt:serverTimestamp()});
   return true;
 }
 

@@ -1,64 +1,113 @@
 # LekkiPortfel
 
-Prywatna aplikacja do śledzenia całego majątku: akcji, ETF-ów,
-kryptowalut, gotówki i pozostałych aktywów. Łączy bieżące wyceny,
-historię rachunków, dywidendy, alokację oraz robocze wyliczenie PIT-38.
+LekkiPortfel to aplikacja do śledzenia majątku inwestora w jednym miejscu. Łączy akcje, ETF-y, kryptowaluty, stablecoiny, gotówkę i inne aktywa z historią rachunków, dywidendami, analizą portfela oraz roboczym rozliczeniem PIT-38.
 
-## Stos technologiczny
+## Stack
 
-- React 19 i vinext
-- TypeScript
-- Firebase Authentication: e-mail i Google
-- Cloud Firestore: osobny portfel dla każdego konta
-- API NBP, CoinGecko i Yahoo Finance do kursów i notowań
-- xAI do opcjonalnego dodawania aktywów z tekstu, głosu i obrazu
+- React 19 i TypeScript
+- Vinext 0.0.50 (zgodność z API i strukturą Next.js na Vite)
+- Firebase Authentication: e-mail/hasło i Google
+- Cloud Firestore: oddzielny portfel każdego użytkownika
+- API NBP, CoinGecko i Yahoo Finance: kursy walut, notowania i historia rynku
+- xAI: opcjonalna analiza tekstu, obrazu i głosu
+- Cloudflare Vite Plugin: lokalne środowisko tras serwerowych
 
-Projekt nie korzysta z Cloud Functions ani z dodatkowej lokalnej bazy danych.
+Projekt nie wymaga Firebase Cloud Functions ani lokalnej bazy danych.
 
-## Uruchomienie lokalne
+## Wymagania
 
-Wymagany jest Node.js `>=22.13.0`.
+- Git
+- Node.js `>=22.13.0`
+- npm
+- projekt Firebase z aplikacją typu Web
 
-```bash
-npm install
-copy .env.example .env.local
-npm run dev -- --hostname 0.0.0.0 --port 4173
+## Uruchomienie od czystego klona
+
+```powershell
+git clone https://github.com/hustlehoff-dev/lekkiportfel.git
+cd lekkiportfel
+npm ci
+Copy-Item .env.example .env.local
 ```
 
-Na tym samym komputerze aplikacja będzie dostępna pod adresem
-`http://localhost:4173`. Inne urządzenia w tej samej sieci Wi-Fi mogą wejść
-przez adres IPv4 komputera, na przykład `http://192.168.1.14:4173`.
+Uzupełnij `.env.local` zgodnie z sekcją Firebase, a następnie uruchom aplikację:
 
-## Firebase
+```powershell
+npm run dev -- -p 4173
+```
 
-1. W Firebase Console włącz logowanie przez **Email/Password** i **Google**.
-2. Utwórz bazę **Cloud Firestore**.
-3. Dodaj aplikację typu **Web**.
-4. Uzupełnij zmienne `NEXT_PUBLIC_FIREBASE_*` w `.env.local` według
-   `.env.example`.
-5. Opublikuj zawartość `firestore.rules` w **Firestore Database → Rules**.
+Adres na tym komputerze: [http://localhost:4173](http://localhost:4173).
 
-Portfel jest zapisywany w dokumencie `users/{uid}/portfolio/main`. Nowe konto
-otrzymuje pusty dokument automatycznie przy pierwszym uruchomieniu.
+### Dostęp przez Wi-Fi
 
-## Dodawanie aktywów z tekstu, głosu i obrazu
+Serwer deweloperski nasłuchuje na `0.0.0.0`, ponieważ jest to ustawione w `vite.config.ts`. Sprawdź lokalny adres IPv4:
 
-W ignorowanym przez Git pliku `.env.local` ustaw serwerowy klucz:
+```powershell
+ipconfig
+```
 
-```bash
-XAI_API_KEY=tu_wpisz_klucz
+Na telefonie lub innym urządzeniu w tej samej sieci otwórz `http://ADRES_IPV4:4173`, na przykład `http://192.168.1.14:4173`. Jeżeli strona się nie otwiera, zezwól Node.js na połączenia prywatne w Zaporze Windows.
+
+## Konfiguracja Firebase
+
+1. W [Firebase Console](https://console.firebase.google.com/) otwórz projekt i dodaj aplikację typu **Web**.
+2. W **Authentication → Sign-in method** włącz **Email/Password** oraz **Google**.
+3. Utwórz bazę **Cloud Firestore**.
+4. W **Firestore Database → Rules** wklej zawartość `firestore.rules` i opublikuj reguły.
+5. W **Authentication → Settings → Authorized domains** dodaj domeny używane lokalnie, w tym adres IPv4 komputera, jeśli logowanie Google ma działać przez Wi-Fi.
+6. Z obiektu `firebaseConfig` przepisz wartości do `.env.local`:
+
+```dotenv
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+```
+
+Po zmianie konfiguracji uruchom serwer ponownie. Portfel jest zapisywany w dokumencie `users/{uid}/portfolio/main`. Obecne reguły dopuszczają dostęp wyłącznie zalogowanemu właścicielowi z potwierdzonym adresem e-mail.
+
+Pełny opis zmiennych i zasad bezpieczeństwa znajduje się w [docs/environment.md](docs/environment.md). Plik `.env.local` jest ignorowany przez Git i nie może trafić do repozytorium.
+
+## Opcjonalna integracja xAI
+
+Pozostałe funkcje aplikacji działają bez xAI. Aby włączyć analizę tekstu, obrazu i głosu, ustaw w `.env.local`:
+
+```dotenv
+XAI_API_KEY=
 XAI_MODEL=grok-4.3
 ```
 
-Klucz nie trafia do przeglądarki. Rozpoznane pozycje są zapisywane dopiero po
-zatwierdzeniu podglądu przez użytkownika.
+`XAI_API_KEY` jest sekretem serwerowym. Nie dodawaj do niego prefiksu `NEXT_PUBLIC_` i nie zapisuj go w repozytorium.
 
-## Kontrola jakości
+## Komendy
 
-```bash
-npm run lint
-npm test
+| Komenda | Działanie |
+| --- | --- |
+| `npm run dev -- -p 4173` | uruchamia środowisko deweloperskie na porcie 4173 |
+| `npm run lint` | sprawdza kod przez ESLint |
+| `npm run build` | tworzy build produkcyjny Vinext |
+| `npm test` | wykonuje build i wszystkie testy Node |
+| `npm run start` | uruchamia wcześniej zbudowaną wersję |
+| `npm run logos:check` | sprawdza lokalną bazę logotypów |
+| `npm run logos:sync` | synchronizuje logotypy według pliku źródeł |
+
+## Struktura repozytorium
+
+```text
+app/                 widoki, style, komponenty i trasy API
+app/wykresy/         widok wykresów rynkowych
+lib/                 kalkulatory, Firebase i logika domenowa
+worker/              punkt wejścia środowiska Cloudflare/Vinext
+public/               fonty, favicon i lokalne logotypy aktywów
+data/                 źródła i mapowanie logotypów
+scripts/              skrypty utrzymaniowe
+tests/                testy Node
+docs/                 dokumentacja techniczna
+firestore.rules       reguły dostępu do Firestore
+vite.config.ts        konfiguracja Vinext, Vite i serwera lokalnego
+.env.example          wzór konfiguracji środowiska
 ```
 
-`npm test` wykonuje produkcyjny build i testy kalkulatorów, importu, eksportu
-oraz kluczowych elementów interfejsu.
+Kod aplikacji znajduje się przede wszystkim w `app/` i `lib/`. Katalogi generowane podczas instalacji i budowania nie są częścią kodu źródłowego.
