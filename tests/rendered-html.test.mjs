@@ -224,8 +224,13 @@ test("dividend dashboard card compares the current year with the projection to y
   const css = await readFile(new URL("app/account.css", root), "utf8");
   assert.match(page, /currentYearForecastNet=forecast\.filter\(item=>Number\(item\.date\.slice\(0,4\)\)===today\.getFullYear\(\)\)/);
   assert.match(page, /currentYearDividendProjection=currentYearDividendNet\+currentYearForecastNet/);
+  assert.match(page, /dividendPayerSymbols=useMemo/);
+  assert.match(page, /currentYearDividendNet\/dividendAssetsValue\*100/);
+  assert.match(page, /currentYearDividendProjection\/dividendAssetsValue\*100/);
+  assert.match(page, /Stopa: \{currentYearDividendYield===null\?"—":percent\(currentYearDividendYield,2\)\} YTD/);
   assert.match(page, /Otrzymane \/ prognoza do 31\.12/);
-  assert.match(page, /Cała historia \{money\(divNet,2\)\}/);
+  assert.match(page, /cała historia \{money\(divNet,2\)\}/);
+  assert.match(css, /\.dividend-yield-line \{[^}]*font-variant-numeric:\s*tabular-nums/);
   assert.match(css, /\.dividend-metric-card > \.dividend-year-progress,[\s\S]*?grid-column:\s*1 \/ -1;/);
 });
 
