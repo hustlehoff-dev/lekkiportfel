@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import {
+  chartInstrumentForPosition,
   chartPeriods,
   coinGeckoDays,
   featuredChartInstruments,
@@ -40,6 +41,13 @@ test("chart provider identifiers reject URL and query injection", () => {
   assert.equal(safeCoinId("ethereum?x=1"), null);
 });
 
+test("portfolio positions map to chart provider identifiers", () => {
+  assert.equal(chartInstrumentForPosition({ symbol: "XTB.PL", name: "XTB", assetClass: "Akcje" })?.providerId, "XTB.WA");
+  assert.equal(chartInstrumentForPosition({ symbol: "MSFT.US", name: "Microsoft", assetClass: "Akcje" })?.providerId, "MSFT");
+  assert.equal(chartInstrumentForPosition({ symbol: "USDT", name: "Tether", assetClass: "Stable" })?.providerId, "tether");
+  assert.equal(chartInstrumentForPosition({ symbol: "PLN", name: "Gotówka", assetClass: "Gotówka" }), null);
+});
+
 test("chart prices convert through official PLN reference rates", () => {
   const rates = { PLN: 1, USD: 4, EUR: 5, GBP: 6 };
   assert.equal(chartCurrencyFactor("USD", "PLN", rates), 4);
@@ -48,7 +56,7 @@ test("chart prices convert through official PLN reference rates", () => {
   assert.equal(chartCurrencyFactor("CHF", "PLN", rates), null);
 });
 
-test("charts view exposes search, periods, source and responsive dark mode", async () => {
+test("charts view exposes portfolio positions, shared search, periods and responsive dark mode", async () => {
   const [page, dashboardSource, portfolioTypes, chartPage] = await Promise.all([
     readFile(new URL("app/wykresy/charts-view.tsx", root), "utf8"),
     readFile(new URL("app/page.tsx", root), "utf8"),
@@ -58,7 +66,11 @@ test("charts view exposes search, periods, source and responsive dark mode", asy
   const dashboard = [dashboardSource, portfolioTypes].join("\n");
   const route = await readFile(new URL("app/api/charts/route.ts", root), "utf8");
   const css = await readFile(new URL("app/wykresy/charts.css", root), "utf8");
-  assert.match(page, /Szukaj BTC, spółki, ETF-u lub indeksu/);
+  assert.match(dashboard, /Szukaj aktywa, spółki, ETF-u lub indeksu/);
+  assert.match(dashboard, /topbar-search-results/);
+  assert.match(page, /Twoje pozycje/);
+  assert.match(page, /chart-position-label/);
+  assert.match(page, /onTogglePrivacy/);
   assert.match(page, /chartPeriods\.map/);
   assert.match(page, /Źródło/);
   assert.match(page, /<PriceChart data=\{presentedData\} period=\{period\}/);
@@ -66,7 +78,7 @@ test("charts view exposes search, periods, source and responsive dark mode", asy
   assert.doesNotMatch(dashboard, /window\.location\.assign\("\/wykresy"\)/);
   assert.doesNotMatch(dashboard, /router\.push\("\/wykresy"\)/);
   assert.match(dashboard, /type AppView = "pulpit"\|"wykresy"/);
-  assert.match(dashboard, /view==="wykresy"&&<ChartsView chartColor=\{chartColor\} displayCurrency=\{displayCurrency\} fxRates=\{fxRates\}\/>/);
+  assert.match(dashboard, /view==="wykresy"&&<ChartsView[^>]*holdings=\{chartHoldings\}/);
   assert.match(chartPage, /<PortfolioApp initialView="wykresy"/);
   assert.match(page, /<AssetIcon/);
   assert.match(page, /--user-chart-color/);

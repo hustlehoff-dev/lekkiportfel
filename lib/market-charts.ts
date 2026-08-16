@@ -11,6 +11,63 @@ export type ChartInstrument = {
   exchange: string;
 };
 
+export type ChartablePosition = {
+  symbol: string;
+  name: string;
+  assetClass: string;
+  priceId?: string;
+};
+
+const cryptoProviderIds: Record<string, string> = {
+  BTC: "bitcoin",
+  ETH: "ethereum",
+  SOL: "solana",
+  XRP: "ripple",
+  BNB: "binancecoin",
+  ADA: "cardano",
+  DOGE: "dogecoin",
+  AVAX: "avalanche-2",
+  DOT: "polkadot",
+  LINK: "chainlink",
+  LTC: "litecoin",
+  BCH: "bitcoin-cash",
+  XLM: "stellar",
+  TRX: "tron",
+  TON: "the-open-network",
+  SHIB: "shiba-inu",
+  UNI: "uniswap",
+  AAVE: "aave",
+  NEAR: "near",
+  ATOM: "cosmos",
+  USDT: "tether",
+  USDC: "usd-coin",
+};
+
+const marketSuffixes: Array<[string, string]> = [
+  [".PL", ".WA"], [".UK", ".L"], [".DK", ".CO"], [".NL", ".AS"],
+  [".FR", ".PA"], [".ES", ".MC"], [".IT", ".MI"], [".CH", ".SW"],
+  [".SE", ".ST"], [".NO", ".OL"], [".DE", ".DE"],
+];
+
+export function chartInstrumentForPosition(position: ChartablePosition): ChartInstrument | null {
+  const symbol = position.symbol.trim().toUpperCase();
+  if (!symbol || /got|cash|inne/i.test(position.assetClass)) return null;
+  if (/krypto|crypto|stable/i.test(position.assetClass)) {
+    const providerId = position.priceId?.trim().toLowerCase() || cryptoProviderIds[symbol];
+    if (!providerId) return null;
+    return { key: `crypto:${providerId}`, symbol, name: position.name || symbol, kind: "crypto", providerId, exchange: "Krypto" };
+  }
+  let providerId = symbol.endsWith(".US") ? symbol.slice(0, -3).replace(".", "-") : symbol;
+  for (const [source, target] of marketSuffixes) {
+    if (providerId.endsWith(source)) {
+      providerId = `${providerId.slice(0, -source.length)}${target}`;
+      break;
+    }
+  }
+  if (!safeMarketSymbol(providerId)) return null;
+  return { key: `market:${providerId}`, symbol, name: position.name || symbol, kind: "market", providerId, exchange: symbol.endsWith(".PL") ? "GPW" : "Rynek" };
+}
+
 export const chartPeriods: ChartPeriod[] = ["1D", "1T", "1M", "3M", "1R", "5L", "MAX"];
 
 export const featuredChartInstruments: ChartInstrument[] = [

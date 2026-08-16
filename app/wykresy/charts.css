@@ -144,6 +144,8 @@
 .charts-heading p { margin: 0 0 8px; color: var(--charts-accent-ink); font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .charts-heading h2 { margin: 0; font-size: clamp(24px, 3vw, 34px); letter-spacing: -.045em; }
 .charts-heading > div > span { display: block; margin-top: 8px; color: #667085; font-size: 12px; }
+.charts-heading-actions { display: flex; align-items: center; gap: 8px; }
+.charts-heading-actions .privacy-toggle-button { width: 32px; height: 32px; min-width: 32px; }
 .quote-live { min-height: 32px; display: flex; align-items: center; gap: 8px; padding: 7px 11px; border: 1px solid var(--charts-accent-border); border-radius: 999px; background: var(--charts-accent-soft); color: var(--charts-accent-ink); font-size: 9px; font-weight: 780; white-space: nowrap; }
 .quote-live i { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--user-chart-color); box-shadow: 0 0 0 4px var(--charts-accent-soft); }
 .quote-live.loading i { animation: quote-pulse 1.2s ease-in-out infinite; }
@@ -162,6 +164,16 @@
 .featured-instruments button > span { min-width: 0; display: grid; gap: 2px; }
 .featured-instruments strong { font-size: 10px; }
 .featured-instruments small { max-width: 100px; overflow: hidden; color: #98a2b3; font-size: 8px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
+.owned-chart-instruments,
+.market-chart-presets { display: grid; gap: 6px; }
+.owned-chart-instruments { margin-bottom: 7px; }
+.owned-chart-instruments > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #667085; }
+.owned-chart-instruments > header span,
+.market-chart-presets > span { color: #667085; font-size: 8px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.owned-chart-instruments > header small { color: #98a2b3; font-size: 8px; }
+.featured-instruments.owned button { min-width: 118px; }
+.featured-instruments.owned small { color: var(--charts-accent-ink); font-variant-numeric: tabular-nums; }
+.market-chart-presets { margin-bottom: 3px; }
 
 .charts-shell .asset-icon { position: relative; width: 34px; height: 34px; display: grid; flex: 0 0 34px; place-items: center; overflow: hidden; border: 0; border-radius: 9px; background: #f2f5f3; color: #318965; }
 .charts-shell .asset-icon > b { font-size: 9px; font-weight: 800; line-height: 1; }
@@ -207,6 +219,12 @@
 .chart-tooltip { position: absolute; z-index: 3; top: 2px; display: grid; min-width: 110px; gap: 2px; padding: 7px 9px; border: 1px solid #e4e7ec; border-radius: 8px; background: rgba(255,255,255,.96); color: #101828; box-shadow: 0 8px 24px rgba(16,24,40,.12); font-size: 9px; pointer-events: none; transform: translateX(-50%); }
 .chart-tooltip strong { color: #101828; font-size: 10px; }
 .chart-tooltip span { color: #667085; }
+.chart-position-label { position: absolute; z-index: 4; top: 9px; left: 9px; min-width: 132px; display: grid; gap: 2px; padding: 8px 10px; border: 1px solid var(--charts-accent-border); border-radius: 9px; background: color-mix(in srgb, #fff 94%, var(--user-chart-color)); color: #101828; box-shadow: 0 8px 24px rgba(16,24,40,.1); pointer-events: none; }
+.chart-position-label > span { color: #667085; font-size: 7px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.chart-position-label > strong { color: #101828; font-size: 13px; font-variant-numeric: tabular-nums; }
+.chart-position-label > small { display: flex; align-items: center; gap: 7px; color: #667085; font-size: 8px; }
+.chart-position-label b { font-size: 8px; }
+.market-chart.has-holding .chart-tooltip { top: 78px; }
 .chart-dates { position: absolute; right: 0; bottom: 6px; left: 0; display: flex; justify-content: space-between; color: #98a2b3; font-size: 8px; }
 .quote-footer { display: flex; align-items: center; gap: 28px; padding: 12px 24px; border-top: 1px solid #edf0f3; background: #fbfcfd; color: #98a2b3; font-size: 9px; }
 .quote-footer strong { margin-left: 4px; color: #475467; font-weight: 750; }
@@ -263,6 +281,13 @@ html[data-color-theme="dark"] .chart-cursor circle { fill: #12171b; }
 html[data-color-theme="dark"] .chart-tooltip { background: rgba(18,23,27,.96); color: #e8edf1; border-color: #303b42; box-shadow: 0 8px 24px rgba(0,0,0,.3); }
 html[data-color-theme="dark"] .chart-tooltip strong { color: #e8edf1; }
 html[data-color-theme="dark"] .chart-tooltip span, html[data-color-theme="dark"] .chart-axis, html[data-color-theme="dark"] .chart-dates { color: #7f8b94; }
+html[data-color-theme="dark"] .chart-position-label { background: color-mix(in srgb, #12171b 94%, var(--user-chart-color)); color: #e8edf1; border-color: var(--charts-accent-border); box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+html[data-color-theme="dark"] .chart-position-label > strong { color: #e8edf1; }
+html[data-color-theme="dark"] .chart-position-label > span,
+html[data-color-theme="dark"] .chart-position-label > small { color: #8e9aa5; }
+html[data-color-theme="dark"] .owned-chart-instruments > header,
+html[data-color-theme="dark"] .owned-chart-instruments > header span,
+html[data-color-theme="dark"] .market-chart-presets > span { color: #8e9aa5; }
 html[data-color-theme="dark"] .quote-footer { background: #10161a; border-color: #252f36; color: #7f8b94; }
 html[data-color-theme="dark"] .quote-footer strong { color: #cbd4d9; }
 html[data-color-theme="dark"] .chart-cache-warning { border-color: #5c4825; background: #251f14; color: #e7bd70; }
@@ -286,12 +311,14 @@ html[data-color-theme="dark"] .chart-cache-warning { border-color: #5c4825; back
 @media (max-width: 640px) {
   .charts-content { padding-inline: 14px; }
   .charts-heading { align-items: flex-start; margin-bottom: 17px; }
+  .charts-heading-actions { flex-direction: column-reverse; align-items: flex-end; }
   .charts-heading h2 { font-size: 25px; }
   .charts-heading > div > span { display: none; }
   .quote-live { padding: 7px 9px; }
   .quote-live { max-width: 132px; padding-inline: 9px; }
   .featured-instruments { margin-inline: -14px; padding-inline: 14px; }
   .featured-instruments button { min-width: 98px; padding: 8px 10px; }
+  .featured-instruments.owned button { min-width: 104px; }
   .quote-header { align-items: flex-start; padding: 16px 15px 12px; }
   .quote-identity { gap: 9px; }
   .quote-identity > span { width: 38px; height: 38px; flex-basis: 38px; }
@@ -304,6 +331,8 @@ html[data-color-theme="dark"] .chart-cache-warning { border-color: #5c4825; back
   .market-chart svg { height: 286px; }
   .chart-axis { width: 43px; inset-right: calc(100% + 8px); }
   .chart-tooltip { top: 5px; min-width: 92px; }
+  .chart-position-label { top: 7px; left: 6px; min-width: 116px; padding: 7px 8px; }
+  .market-chart.has-holding .chart-tooltip { top: 72px; }
   .chart-state { min-height: 300px; }
   .quote-footer { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; padding: 11px 15px; }
   .quote-footer span:last-child { display: none; }
