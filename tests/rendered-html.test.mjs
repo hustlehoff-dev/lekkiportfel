@@ -38,7 +38,7 @@ test("dashboard exposes real monthly performance and benchmark controls", async 
   assert.doesNotMatch(page, /sidebar-display-controls/);
   assert.match(page, /className="sidebar-collapse-button"/);
   assert.match(page, /className="sidebar-style-settings"/);
-  assert.match(page, /aria-label="Wygląd aplikacji"/);
+  assert.match(page, /aria-label=\{designTheme==="dark"\?"Włącz jasny motyw":"Włącz ciemny motyw"\}/);
   assert.match(page, /className="theme-settings"/);
   assert.match(page, /aria-label="Motyw aplikacji"/);
   assert.match(page, /className="topbar-search"/);
@@ -250,6 +250,15 @@ test("dark mode reuses the modern shell without light color leaks", async () => 
   assert.match(css, /data-color-theme="dark"\] \.security-grid section/);
   assert.match(css, /data-color-theme="dark"\] \.faq-list details/);
   assert.match(css, /data-color-theme="dark"\]\[data-portfolio-theme="lekka"\] \.sidebar:has\(\.mobile-more\)[\s\S]*?background:\s*#0c1114/);
+});
+
+test("topbar theme switch is a compact icon button", async () => {
+  const page = await readFile(new URL("app/page.tsx", root), "utf8");
+  const css = await readFile(new URL("app/account.css", root), "utf8");
+  assert.match(page, /className="theme-toggle"/);
+  assert.match(page, /designTheme==="dark"\?<Sun size=\{18\}\/\>:<Moon size=\{18\}\/>/);
+  assert.doesNotMatch(page, /className="theme-select"/);
+  assert.match(css, /\.theme-toggle\s*\{[\s\S]*?width:\s*38px;[\s\S]*?place-items:\s*center/);
 });
 
 test("security page keeps ServiceBooker section names 1:1", async () => {

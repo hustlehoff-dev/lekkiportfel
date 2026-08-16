@@ -496,8 +496,8 @@ footer, .content footer > span { color: #68757e; }
 /* Dense dashboard metrics and auditable monthly performance */
 .currency-select { min-height: 38px; padding: 9px 28px 9px 11px; background: #17211f; border: 1px solid #456451; border-radius: 7px; color: #a9d8bd; font-size: 11px; font-weight: 700; box-shadow: none; }
 .currency-select:hover { background: #1b2924; border-color: #67b58f; color: #dff3e8; }
-.theme-select { min-height: 38px; padding: 9px 28px 9px 11px; background: #12191d; border: 1px solid #2c3840; border-radius: 7px; color: #c1cbd1; font-size: 11px; font-weight: 700; box-shadow: none; }
-.theme-select:hover { background: #18211f; border-color: #4e6c5d; color: #f1f5f3; }
+.theme-toggle { width: 38px; height: 38px; min-height: 38px; padding: 0; display: grid; place-items: center; background: #12191d; border: 1px solid #2c3840; border-radius: 10px; color: #c1cbd1; box-shadow: none; cursor: pointer; }
+.theme-toggle:hover { background: #18211f; border-color: #4e6c5d; color: #f1f5f3; }
 .hero-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .value-card, .metric-card { min-height: 126px; padding: 17px 18px; }
 .value-card h2 { margin-bottom: 9px; font-size: clamp(21px, 2vw, 27px); }
@@ -555,7 +555,7 @@ footer, .content footer > span { color: #68757e; }
 }
 
 @media (max-width: 760px) {
-  .theme-select { max-width: 78px; padding: 8px 21px 8px 8px; }
+  .theme-toggle { width: 38px; }
   .currency-select { max-width: 88px; padding: 8px 22px 8px 8px; }
   .hero-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .value-card, .metric-card { min-height: 120px; padding: 15px; }
@@ -635,13 +635,13 @@ html[data-portfolio-theme="lekka"] h4,
 html[data-portfolio-theme="lekka"] strong,
 html[data-portfolio-theme="lekka"] b { color: #101828; }
 html[data-portfolio-theme="lekka"] .as-of { color: #667085; }
-html[data-portfolio-theme="lekka"] .theme-select,
+html[data-portfolio-theme="lekka"] .theme-toggle,
 html[data-portfolio-theme="lekka"] .currency-select,
 html[data-portfolio-theme="lekka"] .account-select,
 html[data-portfolio-theme="lekka"] .add-asset-button { min-height: 40px; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; color: #475569; box-shadow: 0 8px 24px rgba(15, 23, 34, .04); }
-html[data-portfolio-theme="lekka"] .theme-select,
+html[data-portfolio-theme="lekka"] .theme-toggle,
 html[data-portfolio-theme="lekka"] .currency-select { color: #344054; font-weight: 750; }
-html[data-portfolio-theme="lekka"] .theme-select:hover,
+html[data-portfolio-theme="lekka"] .theme-toggle:hover,
 html[data-portfolio-theme="lekka"] .currency-select:hover,
 html[data-portfolio-theme="lekka"] .account-select:hover,
 html[data-portfolio-theme="lekka"] .add-asset-button:hover { background: #f8fafc; border-color: #cbd5e1; color: #101828; }
@@ -825,7 +825,7 @@ html[data-portfolio-theme="lekka"] body {
   html[data-portfolio-theme="lekka"] .content { padding: 18px 13px 88px; }
   html[data-portfolio-theme="lekka"] .topbar { gap: 12px; }
   html[data-portfolio-theme="lekka"] h1 { font-size: 21px; }
-  html[data-portfolio-theme="lekka"] .theme-select,
+  html[data-portfolio-theme="lekka"] .theme-toggle,
   html[data-portfolio-theme="lekka"] .currency-select,
   html[data-portfolio-theme="lekka"] .account-select { min-height: 36px; box-shadow: none; }
   html[data-portfolio-theme="lekka"] .performance-summary > div:nth-child(-n+2) { border-bottom-color: #e2e8f0; }
@@ -896,7 +896,7 @@ html[data-portfolio-theme="lekka"] .topbar-search input::placeholder { color: #6
 html[data-portfolio-theme="lekka"] .topbar-search kbd { flex: 0 0 auto; padding: 5px 8px; border: 1px solid #e2e8f0; border-radius: 6px; background: #f8fafc; color: #64748b; font: 600 11px/1 var(--font-jakarta), sans-serif; }
 html[data-portfolio-theme="lekka"] .top-actions { flex: 0 0 auto; gap: 8px; margin-left: auto; }
 html[data-portfolio-theme="lekka"] .as-of { display: none; }
-html[data-portfolio-theme="lekka"] .theme-select,
+html[data-portfolio-theme="lekka"] .theme-toggle,
 html[data-portfolio-theme="lekka"] .currency-select,
 html[data-portfolio-theme="lekka"] .account-select { height: 44px; min-height: 44px; border-radius: 12px; }
 html[data-portfolio-theme="lekka"] .add-asset-button { height: 44px; min-height: 44px; padding: 0 18px; border: 0; border-radius: 999px; background: #f7c400; color: #0f1722; font-size: 14px; font-weight: 800; box-shadow: none; }
@@ -976,7 +976,7 @@ html[data-portfolio-theme="lekka"] .history-panel { margin-top: 18px; }
 
 @media (max-width: 1220px) and (min-width: 961px) {
   html[data-portfolio-theme="lekka"] .topbar-search { flex-basis: 280px; min-width: 220px; }
-  html[data-portfolio-theme="lekka"] .theme-select { width: 76px; }
+  html[data-portfolio-theme="lekka"] .theme-toggle { width: 44px; }
   html[data-portfolio-theme="lekka"] .currency-select { width: 82px; }
   html[data-portfolio-theme="lekka"] .account-select { max-width: 105px; }
   html[data-portfolio-theme="lekka"] .add-asset-button { width: 44px; padding: 0; display: grid; place-items: center; }
@@ -1036,7 +1036,7 @@ html[data-portfolio-theme="lekka"] .history-panel { margin-top: 18px; }
   html[data-portfolio-theme="lekka"] .top-actions { gap: 5px; }
   html[data-portfolio-theme="lekka"] .account-select,
   html[data-portfolio-theme="lekka"] .import-button { display: none; }
-  html[data-portfolio-theme="lekka"] .theme-select { width: 72px; min-height: 40px; height: 40px; padding: 0 22px 0 8px; border-radius: 999px; }
+  html[data-portfolio-theme="lekka"] .theme-toggle { width: 40px; min-height: 40px; height: 40px; padding: 0; border-radius: 999px; }
   html[data-portfolio-theme="lekka"] .currency-select { width: 78px; min-height: 40px; height: 40px; padding: 0 22px 0 8px; border-radius: 999px; }
   html[data-portfolio-theme="lekka"] .add-asset-button { width: 40px; height: 40px; min-height: 40px; padding: 0; display: grid; place-items: center; }
   html[data-portfolio-theme="lekka"] .add-asset-button span { margin: 0; font-size: 20px; }
@@ -1058,7 +1058,7 @@ html[data-portfolio-theme="lekka"] .history-panel { margin-top: 18px; }
 
 @media (max-width: 560px) {
   html[data-portfolio-theme="lekka"] .mobile-brand strong { display: none; }
-  html[data-portfolio-theme="lekka"] .theme-select { width: 68px; }
+  html[data-portfolio-theme="lekka"] .theme-toggle { width: 40px; }
   html[data-portfolio-theme="lekka"] .currency-select { width: 74px; }
   html[data-portfolio-theme="lekka"] .value-card,
   html[data-portfolio-theme="lekka"] .metric-card { grid-template-columns: 1fr; grid-template-rows: auto; align-content: start; }
@@ -1255,7 +1255,7 @@ html[data-portfolio-theme="lekka"] .top-actions {
   flex-wrap: nowrap;
 }
 
-html[data-portfolio-theme="lekka"] .theme-select,
+html[data-portfolio-theme="lekka"] .theme-toggle,
 html[data-portfolio-theme="lekka"] .currency-select,
 html[data-portfolio-theme="lekka"] .account-select {
   height: 44px;
@@ -1271,7 +1271,7 @@ html[data-portfolio-theme="lekka"] .account-select {
   font-weight: 700;
 }
 
-html[data-portfolio-theme="lekka"] .theme-select { width: 82px; }
+html[data-portfolio-theme="lekka"] .theme-toggle { width: 44px; padding: 0; }
 html[data-portfolio-theme="lekka"] .currency-select { width: 88px; }
 html[data-portfolio-theme="lekka"] .account-select { max-width: 106px; }
 
@@ -3408,10 +3408,10 @@ html[data-color-theme="dark"] .topbar-search > span { color: #71808a; }
 html[data-color-theme="dark"] .topbar-search input { color: #e8edf1; }
 html[data-color-theme="dark"] .topbar-search input::placeholder { color: #7d8a92; }
 html[data-color-theme="dark"] .topbar-search kbd { background: #0c1114; color: #84919a; border-color: #2c3840; }
-html[data-color-theme="dark"] .theme-select,
+html[data-color-theme="dark"] .theme-toggle,
 html[data-color-theme="dark"] .currency-select,
 html[data-color-theme="dark"] .account-select { background: #12191d; color: #c1cbd1; border-color: #2c3840; }
-html[data-color-theme="dark"] .theme-select:hover,
+html[data-color-theme="dark"] .theme-toggle:hover,
 html[data-color-theme="dark"] .currency-select:hover,
 html[data-color-theme="dark"] .account-select:hover { background: #18211f; color: #f1f5f3; border-color: #4e6c5d; }
 html[data-color-theme="dark"] .add-asset-button { background: #17211f; color: #9cd0b5; border: 1px solid #34433c; }
