@@ -5,7 +5,10 @@
   --charts-text: #101828;
   --charts-muted: #667085;
   --charts-line: #e4e7ec;
-  --charts-accent: #725cad;
+  --charts-accent: var(--user-chart-color);
+  --charts-accent-ink: color-mix(in srgb, var(--user-chart-color) 68%, #101828);
+  --charts-accent-soft: color-mix(in srgb, var(--user-chart-color) 12%, transparent);
+  --charts-accent-border: color-mix(in srgb, var(--user-chart-color) 48%, #e4e7ec);
   --charts-green: #318965;
   --charts-red: #c44c52;
   --user-chart-color: #67b58f;
@@ -96,7 +99,7 @@
   color: #98a2b3;
   box-shadow: 0 7px 24px rgba(76, 29, 149, .05);
 }
-.charts-search:focus-within { border-color: #9b8ac8; box-shadow: 0 0 0 4px rgba(114, 92, 173, .1); }
+.charts-search:focus-within { border-color: var(--charts-accent-border); box-shadow: 0 0 0 4px var(--charts-accent-soft); }
 .charts-search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: #101828; font: inherit; font-size: 12px; }
 .charts-search input::placeholder { color: #98a2b3; }
 .charts-search button { display: grid; place-items: center; padding: 2px; border: 0; background: transparent; color: #98a2b3; }
@@ -138,17 +141,24 @@
 .charts-settings-links a:hover { color: #101828; }
 
 .charts-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin: 30px 0 22px; }
-.charts-heading p { margin: 0 0 8px; color: #725cad; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.charts-heading p { margin: 0 0 8px; color: var(--charts-accent-ink); font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .charts-heading h2 { margin: 0; font-size: clamp(24px, 3vw, 34px); letter-spacing: -.045em; }
 .charts-heading > div > span { display: block; margin-top: 8px; color: #667085; font-size: 12px; }
-.quote-live { display: flex; align-items: center; gap: 8px; padding: 8px 11px; border: 1px solid #d9e8df; border-radius: 999px; background: #f3faf6; color: #3d765b; font-size: 9px; font-weight: 750; white-space: nowrap; }
-.quote-live i { width: 7px; height: 7px; border-radius: 50%; background: #43a476; box-shadow: 0 0 0 4px rgba(67, 164, 118, .12); }
+.quote-live { min-height: 32px; display: flex; align-items: center; gap: 8px; padding: 7px 11px; border: 1px solid var(--charts-accent-border); border-radius: 999px; background: var(--charts-accent-soft); color: var(--charts-accent-ink); font-size: 9px; font-weight: 780; white-space: nowrap; }
+.quote-live i { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--user-chart-color); box-shadow: 0 0 0 4px var(--charts-accent-soft); }
+.quote-live.loading i { animation: quote-pulse 1.2s ease-in-out infinite; }
+.quote-live.stale { border-color: #7b6030; background: rgba(193,145,63,.1); color: #b88739; }
+.quote-live.stale i { background: #c5913f; box-shadow: 0 0 0 4px rgba(197,145,63,.12); }
+.quote-live.error { border-color: #8f4b4b; background: rgba(196,76,82,.1); color: #c44c52; }
+.quote-live.error i { background: #c44c52; box-shadow: 0 0 0 4px rgba(196,76,82,.12); }
+@keyframes quote-pulse { 50% { opacity: .35; transform: scale(.8); } }
 
 .featured-instruments { display: flex; gap: 7px; overflow-x: auto; padding: 2px 1px 11px; scrollbar-width: none; }
 .featured-instruments::-webkit-scrollbar { display: none; }
 .featured-instruments button { min-width: 132px; flex: 0 0 auto; display: grid; grid-template-columns: 28px minmax(0,1fr); align-items: center; gap: 8px; padding: 9px 10px; border: 1px solid #e4e7ec; border-radius: 10px; background: #fff; color: #344054; text-align: left; }
-.featured-instruments button:hover { border-color: #c8bfdf; }
-.featured-instruments button.active { border-color: #9b8ac8; background: #f5f2fc; box-shadow: inset 0 0 0 1px rgba(114, 92, 173, .1); }
+.featured-instruments button:hover { border-color: var(--charts-accent-border); }
+.featured-instruments button.active { border-color: var(--charts-accent-border); background: var(--charts-accent-soft); box-shadow: inset 0 0 0 1px var(--charts-accent-soft); }
+.featured-instruments button.active .asset-icon { box-shadow: 0 0 0 2px var(--charts-accent-border); }
 .featured-instruments button > span { min-width: 0; display: grid; gap: 2px; }
 .featured-instruments strong { font-size: 10px; }
 .featured-instruments small { max-width: 100px; overflow: hidden; color: #98a2b3; font-size: 8px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
@@ -175,7 +185,7 @@
 .period-picker { display: flex; gap: 4px; margin: 0 24px 7px; padding: 4px; border: 1px solid #edf0f3; border-radius: 9px; background: #f8fafc; }
 .period-picker button { min-width: 42px; height: 29px; flex: 0 0 auto; padding: 0 9px; border: 0; border-radius: 6px; background: transparent; color: #667085; font-size: 9px; font-weight: 700; }
 .period-picker button:hover { color: #344054; }
-.period-picker button.active { background: #fff; color: #725cad; box-shadow: 0 1px 5px rgba(16, 24, 40, .1); }
+.period-picker button.active { background: #fff; color: var(--charts-accent-ink); box-shadow: inset 0 0 0 1px var(--charts-accent-border), 0 1px 5px rgba(16, 24, 40, .1); }
 .chart-stage { position: relative; min-height: 410px; padding: 5px 24px 0; }
 .chart-state { min-height: 390px; display: grid; align-content: center; justify-items: center; gap: 10px; color: #98a2b3; font-size: 11px; }
 .chart-state strong { color: #667085; }
@@ -209,7 +219,10 @@ html[data-color-theme="dark"] .charts-shell {
   --charts-text: #e8edf1;
   --charts-muted: #8e9aa5;
   --charts-line: #273139;
-  --charts-accent: #9b8ac8;
+  --charts-accent: var(--user-chart-color);
+  --charts-accent-ink: color-mix(in srgb, var(--user-chart-color) 74%, #fff);
+  --charts-accent-soft: color-mix(in srgb, var(--user-chart-color) 16%, transparent);
+  --charts-accent-border: color-mix(in srgb, var(--user-chart-color) 52%, #273139);
   --charts-green: #67b58f;
   --charts-red: #df7c76;
   background: #0b0f12;
@@ -237,13 +250,14 @@ html[data-color-theme="dark"] .charts-settings-links { border-color: #273139; }
 html[data-color-theme="dark"] .charts-settings-links a { color: #9ba7af; }
 html[data-color-theme="dark"] .charts-heading h2, html[data-color-theme="dark"] .quote-identity h2, html[data-color-theme="dark"] .quote-price > strong { color: #e8edf1; }
 html[data-color-theme="dark"] .charts-heading > div > span { color: #8e9aa5; }
-html[data-color-theme="dark"] .quote-live { background: #17231e; color: #9ed0b5; border-color: #31483d; }
+html[data-color-theme="dark"] .quote-live.live,
+html[data-color-theme="dark"] .quote-live.loading { background: var(--charts-accent-soft); color: var(--charts-accent-ink); border-color: var(--charts-accent-border); }
 html[data-color-theme="dark"] .featured-instruments button { background: #11171a; color: #cbd5da; border-color: #273139; }
-html[data-color-theme="dark"] .featured-instruments button.active { background: #1b1826; border-color: #66588d; }
+html[data-color-theme="dark"] .featured-instruments button.active { background: var(--charts-accent-soft); border-color: var(--charts-accent-border); }
 html[data-color-theme="dark"] .chart-card { background: #12171b; border-color: #273139; box-shadow: 0 12px 35px rgba(0,0,0,.2); }
 html[data-color-theme="dark"] .period-picker { background: #0d1215; border-color: #263138; }
 html[data-color-theme="dark"] .period-picker button { color: #84919a; }
-html[data-color-theme="dark"] .period-picker button.active { background: #1b2429; color: #b3a6d6; box-shadow: none; }
+html[data-color-theme="dark"] .period-picker button.active { background: var(--charts-accent-soft); color: var(--charts-accent-ink); box-shadow: inset 0 0 0 1px var(--charts-accent-border); }
 html[data-color-theme="dark"] .chart-grid line { stroke: #252f36; }
 html[data-color-theme="dark"] .chart-cursor circle { fill: #12171b; }
 html[data-color-theme="dark"] .chart-tooltip { background: rgba(18,23,27,.96); color: #e8edf1; border-color: #303b42; box-shadow: 0 8px 24px rgba(0,0,0,.3); }
@@ -275,7 +289,7 @@ html[data-color-theme="dark"] .chart-cache-warning { border-color: #5c4825; back
   .charts-heading h2 { font-size: 25px; }
   .charts-heading > div > span { display: none; }
   .quote-live { padding: 7px 9px; }
-  .quote-live span { display: none; }
+  .quote-live { max-width: 132px; padding-inline: 9px; }
   .featured-instruments { margin-inline: -14px; padding-inline: 14px; }
   .featured-instruments button { min-width: 98px; padding: 8px 10px; }
   .quote-header { align-items: flex-start; padding: 16px 15px 12px; }

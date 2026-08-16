@@ -10,6 +10,7 @@ import {
   safeMarketSymbol,
   yahooPeriodConfig,
 } from "../lib/market-charts.ts";
+import { chartCurrencyFactor } from "../lib/chart-currency.ts";
 
 const root = new URL("../", import.meta.url);
 
@@ -39,6 +40,14 @@ test("chart provider identifiers reject URL and query injection", () => {
   assert.equal(safeCoinId("ethereum?x=1"), null);
 });
 
+test("chart prices convert through official PLN reference rates", () => {
+  const rates = { PLN: 1, USD: 4, EUR: 5, GBP: 6 };
+  assert.equal(chartCurrencyFactor("USD", "PLN", rates), 4);
+  assert.equal(chartCurrencyFactor("PLN", "EUR", rates), .2);
+  assert.equal(chartCurrencyFactor("GBp", "PLN", rates), .06);
+  assert.equal(chartCurrencyFactor("CHF", "PLN", rates), null);
+});
+
 test("charts view exposes search, periods, source and responsive dark mode", async () => {
   const [page, dashboard, chartPage] = await Promise.all([
     readFile(new URL("app/wykresy/charts-view.tsx", root), "utf8"),
@@ -50,15 +59,17 @@ test("charts view exposes search, periods, source and responsive dark mode", asy
   assert.match(page, /Szukaj BTC, spółki, ETF-u lub indeksu/);
   assert.match(page, /chartPeriods\.map/);
   assert.match(page, /Źródło/);
-  assert.match(page, /<PriceChart data=\{data\} period=\{period\}/);
+  assert.match(page, /<PriceChart data=\{presentedData\} period=\{period\}/);
   assert.match(dashboard, /selectView\("wykresy"\)/);
   assert.doesNotMatch(dashboard, /window\.location\.assign\("\/wykresy"\)/);
   assert.doesNotMatch(dashboard, /router\.push\("\/wykresy"\)/);
   assert.match(dashboard, /type AppView = "pulpit"\|"wykresy"/);
-  assert.match(dashboard, /view==="wykresy"&&<ChartsView chartColor=\{chartColor\}\/>/);
+  assert.match(dashboard, /view==="wykresy"&&<ChartsView chartColor=\{chartColor\} displayCurrency=\{displayCurrency\} fxRates=\{fxRates\}\/>/);
   assert.match(chartPage, /<PortfolioApp initialView="wykresy"/);
   assert.match(page, /<AssetIcon/);
   assert.match(page, /--user-chart-color/);
+  assert.match(page, /chartCurrencyFactor\(data\.currency, displayCurrency, fxRates\)/);
+  assert.match(page, /quote-live \$\{quoteStatus\.tone\}/);
   assert.match(dashboard, /type="color" value=\{chartColor\}/);
   assert.match(dashboard, /lekkiportfel-chart-color/);
   assert.match(route, /api\.coingecko\.com\/api\/v3\/coins/);
@@ -78,4 +89,6 @@ test("charts view exposes search, periods, source and responsive dark mode", asy
   assert.match(css, /@media \(max-width: 960px\)/);
   assert.match(css, /grid-template-columns: repeat\(5, minmax\(0,1fr\)\)/);
   assert.match(css, /\.market-chart\.negative \{ color: var\(--user-chart-color\); \}/);
+  assert.match(css, /\.featured-instruments button\.active \{[^}]*var\(--charts-accent-border\)/);
+  assert.match(css, /\.quote-live \{[^}]*var\(--charts-accent-soft\)/);
 });

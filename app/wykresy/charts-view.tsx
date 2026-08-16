@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { chartPeriods, featuredChartInstruments, type ChartInstrument, type ChartPeriod } from "../../lib/market-charts";
+import { chartCurrencyFactor, type ChartDisplayCurrency, type ChartFxRates } from "../../lib/chart-currency";
 import { AssetIcon } from "../components/asset-icon";
 
 type ChartPoint = { time: number; value: number };
@@ -111,7 +112,7 @@ function PriceChart({ data, period }: { data: ChartPayload; period: ChartPeriod 
   </div>;
 }
 
-export default function ChartsView({ chartColor = "#67b58f" }: { chartColor?: string }) {
+export default function ChartsView({ chartColor = "#67b58f", displayCurrency = "PLN", fxRates }: { chartColor?: string; displayCurrency?: ChartDisplayCurrency; fxRates: ChartFxRates }) {
   const [instrument, setInstrument] = useState<ChartInstrument>(featuredChartInstruments[0]);
   const [period, setPeriod] = useState<ChartPeriod>("1M");
   const [data, setData] = useState<ChartPayload | null>(null);
@@ -175,6 +176,19 @@ export default function ChartsView({ chartColor = "#67b58f" }: { chartColor?: st
 
   const movement = data?.periodChange ?? null;
   const positive = (movement ?? 0) >= 0;
+  const quoteStatus = loading ? { tone: "loading", label: "Aktualizuję notowania" } : error ? (data ? { tone: "stale", label: "Ostatnie zapisane" } : { tone: "error", label: "Brak notowań" }) : data?.stale ? { tone: "stale", label: "Ostatnie zapisane" } : { tone: "live", label: "Notowania aktualne" };
+  const presentedData = useMemo(() => {
+    if (!data) return null;
+    const factor = chartCurrencyFactor(data.currency, displayCurrency, fxRates);
+    if (factor === null) return data;
+    return {
+      ...data,
+      currency: displayCurrency,
+      price: data.price * factor,
+      previousClose: data.previousClose === null ? null : data.previousClose * factor,
+      points: data.points.map(point => ({ ...point, value: point.value * factor })),
+    };
+  }, [data, displayCurrency, fxRates]);
 
   return <div className="charts-shell charts-embedded" style={{ "--user-chart-color": chartColor } as CSSProperties}>
     <section className="charts-content">
@@ -187,21 +201,21 @@ export default function ChartsView({ chartColor = "#67b58f" }: { chartColor?: st
         </div>
       </header>
 
-      <section className="charts-heading"><div><p>Notowania i indeksy</p><h2>Sprawdź, co dzieje się na rynku</h2><span>Aktualna cena i historia bez przeładowywania pulpitu.</span></div><div className="quote-live"><i/><span>{loading ? "Aktualizuję" : "Notowania aktualne"}</span></div></section>
+      <section className="charts-heading"><div><p>Notowania i indeksy</p><h2>Sprawdź, co dzieje się na rynku</h2><span>Aktualna cena i historia bez przeładowywania pulpitu.</span></div><div className={`quote-live ${quoteStatus.tone}`}><i/><span>{quoteStatus.label}</span></div></section>
 
       <div className="featured-instruments" role="group" aria-label="Popularne instrumenty">{featuredChartInstruments.map(item => <button key={item.key} className={item.key === instrument.key ? "active" : ""} onClick={() => chooseInstrument(item)}><AssetIcon symbol={item.symbol} name={item.name} assetClass={item.kind === "crypto" ? "Krypto" : "Akcje"} className="featured-chart-icon"/><span><strong>{item.symbol}</strong><small>{item.name}</small></span></button>)}</div>
 
       <section className="chart-card">
         <header className="quote-header">
           <div className="quote-identity"><AssetIcon symbol={instrument.symbol} name={instrument.name} assetClass={instrument.kind === "crypto" ? "Krypto" : "Akcje"} className="quote-chart-icon"/><div><h2>{instrument.name}</h2><p>{instrument.symbol} · {instrument.exchange}</p></div></div>
-          {data && <div className="quote-price"><strong>{formatPrice(data.price, data.currency)}</strong><span className={positive ? "up" : "down"}>{positive ? <ArrowUpRight size={16}/> : <ArrowDownRight size={16}/>} {formatPercent(movement)} <small>{periodNames[period]}</small></span></div>}
+          {presentedData && <div className="quote-price"><strong>{formatPrice(presentedData.price, presentedData.currency)}</strong><span className={positive ? "up" : "down"}>{positive ? <ArrowUpRight size={16}/> : <ArrowDownRight size={16}/>} {formatPercent(movement)} <small>{periodNames[period]}</small></span></div>}
         </header>
         <div className="period-picker" role="group" aria-label="Okres wykresu">{chartPeriods.map(item => <button key={item} className={item === period ? "active" : ""} aria-pressed={item === period} onClick={() => setPeriod(item)}>{item}</button>)}</div>
         <div className="chart-stage" aria-live="polite">
           {loading && <div className="chart-state"><LoaderCircle className="spin" size={26}/><strong>Pobieram notowania…</strong></div>}
           {!loading && error && !data && <div className="chart-state error"><strong>{error}</strong><button onClick={() => void loadChart(instrument, period)}><RefreshCw size={15}/> Spróbuj ponownie</button></div>}
           {!loading && error && data && <div className="chart-cache-warning"><strong>{error}</strong><button onClick={() => void loadChart(instrument, period)}><RefreshCw size={15}/> Odśwież</button></div>}
-          {!loading && data && <PriceChart data={data} period={period}/>}
+          {!loading && presentedData && <PriceChart data={presentedData} period={period}/>}
         </div>
         {data && !loading && <footer className="quote-footer"><span>Zmiana 24h <strong className={(data.change24h ?? 0) >= 0 ? "up" : "down"}>{formatPercent(data.change24h)}</strong></span><span>Ostatnia aktualizacja <strong>{new Intl.DateTimeFormat("pl-PL", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(data.updatedAt))}</strong></span><span>Źródło <strong>{data.provider}{data.stale ? " · zapisane" : ""}</strong></span></footer>}
       </section>
