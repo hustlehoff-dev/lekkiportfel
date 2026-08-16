@@ -56,6 +56,7 @@ import { groupPositionsByTicker, type GroupedPosition } from "../lib/portfolio-g
 import { ALL_MARKETS, marketFilterLabels, marketFilterOrder, marketFor, matchesMarket, type MarketFilter } from "../lib/portfolio-market";
 import { classifyAssetClass, isCryptoAssetClass, isStablecoin } from "../lib/asset-class";
 import { AssetIcon } from "./components/asset-icon";
+import ChartsView from "./wykresy/charts-view";
 
 type Sector = "Technologia" | "Finanse" | "Zdrowie" | "Konsumpcja" | "Przemysł" | "Energia" | "Nieruchomości" | "ETF" | "Inne";
 type Position = { id:string; symbol:string; name:string; sector:Sector; assetClass:string; quantity:number; cost:number; costKnown?:boolean; value:number; currency:string; account?:string; provider?:string; manual?:boolean; priceId?:string; image?:string; marketPrice?:number; priceUpdatedAt?:string; priceProvider?:string; priceChangePct?:number|null };
@@ -64,11 +65,11 @@ type CurrencyCode = "PLN"|"USD"|"EUR"|"GBP";
 type DesignTheme = "lekka"|"dark";
 type PrivacyMode = "visible"|"money"|"all";
 type SidebarStyle = "rail"|"island";
-type AppView = "pulpit"|"dywidendy"|"podatki"|"historia"|"faq"|"bezpieczenstwo";
+type AppView = "pulpit"|"wykresy"|"dywidendy"|"podatki"|"historia"|"faq"|"bezpieczenstwo";
 type ManualKind = "Aktywa" | "Gotówka" | "Inne";
 type InstrumentResult = { key:string; symbol:string; name:string; assetClass:"Krypto"|"Stable"|"Akcje"|"ETF"; exchange:string; priceId?:string; image?:string; rank?:number|null; sector?:string; pricePln?:number };
 
-const viewPaths:Record<AppView,string>={pulpit:"/",dywidendy:"/dywidendy",podatki:"/podatki",historia:"/historia",faq:"/faq",bezpieczenstwo:"/bezpieczenstwo"};
+const viewPaths:Record<AppView,string>={pulpit:"/",wykresy:"/wykresy",dywidendy:"/dywidendy",podatki:"/podatki",historia:"/historia",faq:"/faq",bezpieczenstwo:"/bezpieczenstwo"};
 function viewFromPath(pathname:string):AppView{return (Object.entries(viewPaths).find(([,path])=>path===pathname)?.[0] as AppView|undefined)||"pulpit"}
 type CashEvent = { id:string; sourceId?:string; positionId?:string; date:string; type:string; instrument?:string; symbol:string; category?:string; product?:string; comment:string; amount:number; account?:string; provider?:string };
 type OpenLot = { id:string; positionId?:string; product?:string; category?:string; symbol:string; side:string; quantity:number; openDate:string; openPrice:number; cost:number; value:number; account?:string; provider?:string; openCommission?:number; swap?:number; rollover?:number; grossProfit?:number; netProfit?:number };
@@ -85,6 +86,7 @@ const rollingDividendEnd = new Date(Date.UTC(today.getFullYear()+1,today.getMont
 
 const emptyData: PortfolioData = { positions:[], cash:[], trades:[], lots:[], source:"Nowy portfel" };
 const ALL_PROVIDERS="all";
+const DEFAULT_CHART_COLOR="#67b58f";
 
 function normalizePortfolioAssetClasses(portfolio:PortfolioData){
   let changed=false;
@@ -290,6 +292,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
   const [privacyMode,setPrivacyMode]=useState<PrivacyMode>("visible");
   const [sidebarCollapsed,setSidebarCollapsed]=useState(false);
   const [sidebarStyle,setSidebarStyle]=useState<SidebarStyle>("island");
+  const [chartColor,setChartColor]=useState(DEFAULT_CHART_COLOR);
   const [copySettingsOpen,setCopySettingsOpen]=useState(false);
   const [logoutOpen,setLogoutOpen]=useState(false);
   const [logoutBusy,setLogoutBusy]=useState(false);
@@ -319,6 +322,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
   const percent=useCallback((value:number,digits=2,showSign=false)=>privacyMode==="all"?"••••":`${showSign&&value>=0?"+":""}${number(value,digits)}%`,[privacyMode]);
   const changeCurrency=(currency:CurrencyCode)=>{setDisplayCurrency(currency);try{window.localStorage.setItem("lekkiportfel-currency",currency)}catch{}};
   const changeDesignTheme=(theme:DesignTheme)=>{setDesignTheme(theme);try{window.localStorage.setItem("lekkiportfel-theme",theme)}catch{}};
+  const changeChartColor=(color:string)=>{if(!/^#[0-9a-f]{6}$/i.test(color))return;setChartColor(color);try{window.localStorage.setItem("lekkiportfel-chart-color",color)}catch{}};
   const cyclePrivacyMode=()=>setPrivacyMode(current=>{const next:PrivacyMode=current==="visible"?"money":current==="money"?"all":"visible";try{window.localStorage.setItem("lekkiportfel-privacy",next)}catch{}return next});
   const saveCopySettings=(next:PortfolioCopySettings)=>{setCopySettings(next);try{window.localStorage.setItem("lekkiportfel-copy-settings",JSON.stringify(next))}catch{}};
   const changeCopySetting=(key:CopySection,enabled:boolean)=>saveCopySettings({...copySettings,[key]:enabled});
@@ -330,6 +334,8 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
   useEffect(()=>{portfolioRef.current=data},[data]);
   useEffect(()=>{document.documentElement.dataset.portfolioTheme="lekka";document.documentElement.dataset.colorTheme=designTheme;document.documentElement.dataset.privacyMode=privacyMode},[designTheme,privacyMode]);
   useEffect(()=>{const timer=window.setTimeout(()=>{try{const saved=window.localStorage.getItem("lekkiportfel-theme");if(saved==="lekka"||saved==="dark")setDesignTheme(saved)}catch{}},0);return()=>window.clearTimeout(timer)},[]);
+  useEffect(()=>{const timer=window.setTimeout(()=>{try{const saved=window.localStorage.getItem("lekkiportfel-chart-color");if(saved&&/^#[0-9a-f]{6}$/i.test(saved))setChartColor(saved)}catch{}},0);return()=>window.clearTimeout(timer)},[]);
+  useEffect(()=>{if(new URLSearchParams(window.location.search).get("settings")!=="1")return;const timer=window.setTimeout(()=>{setCopySettingsOpen(true);window.history.replaceState({},"",window.location.pathname)},0);return()=>window.clearTimeout(timer)},[]);
   useEffect(()=>{const timer=window.setTimeout(()=>{try{const saved=window.localStorage.getItem("lekkiportfel-privacy");if(saved==="visible"||saved==="money"||saved==="all")setPrivacyMode(saved)}catch{}},0);return()=>window.clearTimeout(timer)},[]);
   useEffect(()=>{const timer=window.setTimeout(()=>{try{const savedStyle=window.localStorage.getItem("lekkiportfel-sidebar-style"),savedCollapsed=window.localStorage.getItem("lekkiportfel-sidebar-collapsed"),legacy=window.localStorage.getItem("lekkiportfel-sidebar-mode");if(savedStyle==="rail"||savedStyle==="island")setSidebarStyle(savedStyle);else if(legacy==="rail"||legacy==="island")setSidebarStyle(legacy);if(savedCollapsed==="true"||legacy==="rail"||legacy==="island")setSidebarCollapsed(true)}catch{}},0);return()=>window.clearTimeout(timer)},[]);
   const changeSidebarStyle=(style:SidebarStyle)=>{setSidebarStyle(style);try{window.localStorage.setItem("lekkiportfel-sidebar-style",style)}catch{}};
@@ -582,6 +588,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
   }
   const viewCopy:Record<AppView,{eyebrow:string;title:string;description:string}>={
     pulpit:{eyebrow:data.source,title:greetingName?`Cześć, ${greetingName}`:"Cześć",description:"Najważniejsze liczby Twojego portfela."},
+    wykresy:{eyebrow:"Rynek",title:"Wykresy",description:"Ceny i historia kryptowalut, indeksów, akcji oraz ETF-ów."},
     dywidendy:{eyebrow:data.source,title:"Dywidendy",description:"Zebrane wpływy i prognoza kolejnych wypłat."},
     podatki:{eyebrow:"Rozliczenie roczne",title:"Podatki",description:"Szacunek PIT-38 na podstawie zapisanej historii transakcji i dywidend."},
     historia:{eyebrow:data.source,title:"Historia konta",description:"Pełna historia operacji ze wszystkich rachunków."},
@@ -595,12 +602,12 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
   if(!firebaseUser)return <AuthScreen configured/>;
   if(!portfolioLoaded)return <AuthLoading/>;
   const sidebarMode=sidebarCollapsed?sidebarStyle:"full";
-  return <main className={`app-shell sidebar-${sidebarMode}`}>
+  return <main className={`app-shell sidebar-${sidebarMode} view-${view}`}>
     <aside className="sidebar">
       <div className="brand"><span className="brand-mark"><WalletCards size={19} strokeWidth={2}/></span><span>LEKKIPORTFEL<small>cały majątek</small></span><button type="button" className="sidebar-collapse-button" onClick={toggleSidebar} aria-label={sidebarCollapsed?"Rozwiń sidebar":"Zwiń sidebar"} title={sidebarCollapsed?"Rozwiń sidebar":"Zwiń sidebar"}><ChevronDown size={17}/></button></div>
       <nav className="primary-nav" aria-label="Główna nawigacja">
         <button className={view==="pulpit"?"active":""} onClick={()=>selectView("pulpit")} title="Pulpit" aria-label="Pulpit"><span><CalendarDays size={18} strokeWidth={1.9}/></span>Pulpit</button>
-        <button className="desktop-history" onClick={()=>window.location.assign("/wykresy")} title="Wykresy" aria-label="Wykresy"><span><LineChart size={18} strokeWidth={1.9}/></span>Wykresy</button>
+        <button className={`desktop-history ${view==="wykresy"?"active":""}`} onClick={()=>selectView("wykresy")} title="Wykresy" aria-label="Wykresy"><span><LineChart size={18} strokeWidth={1.9}/></span>Wykresy</button>
         <button className={view==="dywidendy"?"active":""} onClick={()=>selectView("dywidendy")} title="Dywidendy" aria-label="Dywidendy"><span><ArrowUpRight size={18} strokeWidth={1.9}/></span>Dywidendy</button>
         <button className={view==="podatki"?"active":""} onClick={()=>selectView("podatki")} title="Podatki" aria-label="Podatki"><span><ReceiptText size={18} strokeWidth={1.9}/></span>Podatki</button>
         <button className={`desktop-history ${view==="historia"?"active":""}`} onClick={()=>selectView("historia")} title="Historia konta" aria-label="Historia konta"><span><History size={18} strokeWidth={1.9}/></span>Historia konta</button>
@@ -620,7 +627,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
       <header><strong>Więcej</strong><button onClick={()=>setMobileMoreOpen(false)} aria-label="Zamknij"><X size={18}/></button></header>
       <button onClick={()=>{setMobileMoreOpen(false);openAiModal()}}><span><Sparkles size={18}/></span><div><strong>Dodaj przez AI</strong><small>Tekst, głos lub screenshot portfela</small></div></button>
       <button onClick={()=>{setMobileMoreOpen(false);openAssetModal()}}><span><Plus size={18}/></span><div><strong>Dodaj aktywo</strong><small>Akcje, ETF, krypto, gotówka lub inne</small></div></button>
-      <button onClick={()=>window.location.assign("/wykresy")}><span><LineChart size={18}/></span><div><strong>Wykresy</strong><small>BTC, ETH, GPW i indeksy światowe</small></div></button>
+      <button onClick={()=>selectView("wykresy")}><span><LineChart size={18}/></span><div><strong>Wykresy</strong><small>BTC, ETH, GPW i indeksy światowe</small></div></button>
       <button onClick={()=>selectView("historia")}><span><History size={18}/></span><div><strong>Historia konta</strong><small>Wszystkie operacje i przepływy</small></div></button>
       <button onClick={()=>selectView("faq")}><span><CircleHelp size={18}/></span><div><strong>Najczęstsze pytania</strong><small>Import, ceny i działanie aplikacji</small></div></button>
       <button onClick={()=>selectView("bezpieczenstwo")}><span><ShieldCheck size={18}/></span><div><strong>Bezpieczeństwo</strong><small>Dane portfela i prywatność</small></div></button>
@@ -632,6 +639,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
     {(view==="pulpit"||view==="historia")&&<div className="portfolio-filters" aria-label="Filtry portfela">{providerOptions.length>1&&<div className="portfolio-filter" role="group" aria-label="Dostawca danych"><span>Dostawca</span>{providerOptions.map(item=><button type="button" key={item} className={activeProvider===item?"active":""} aria-pressed={activeProvider===item} onClick={()=>setProviderFilter(item)}>{item===ALL_PROVIDERS?"Cały portfel":item}</button>)}</div>}{marketOptions.length>1&&<div className="portfolio-filter" role="group" aria-label="Rynek aktywów"><span>Rynek</span>{marketOptions.map(item=><button type="button" key={item} className={activeMarket===item?"active":""} aria-pressed={activeMarket===item} onClick={()=>setMarketFilter(item)}>{marketFilterLabels[item]}</button>)}</div>}</div>}
     {view!=="bezpieczenstwo"&&<div className={`price-status ${priceStatus.loading?"loading":priceStatus.missing.length?"partial":"live"}`} role="status"><span className="live-dot"/><div><strong>{priceStatus.loading?"Pobieram aktualne ceny…":priceStatus.updatedAt?"Notowania są aktualne":"Oczekiwanie na notowania"}</strong><small>{priceStatus.updatedAt?`${priceStatus.updated} instrumentów · aktualizacja ${new Intl.DateTimeFormat("pl-PL",{hour:"2-digit",minute:"2-digit"}).format(new Date(priceStatus.updatedAt))}${priceStatus.missing.length?` · ${new Set(priceStatus.missing).size} bez ceny`:""}`:"Ceny odświeżą się automatycznie"}</small></div><button type="button" onClick={()=>void refreshPrices(undefined,true)} disabled={priceStatus.loading}><RefreshCw size={13} strokeWidth={1.9}/> Odśwież</button></div>}
     {notice&&<div className="notice" role="status"><span><Info size={14} strokeWidth={2}/></span>{notice}<button onClick={()=>setNotice("")} aria-label="Zamknij"><X size={15} strokeWidth={2}/></button></div>}
+    {view==="wykresy"&&<ChartsView chartColor={chartColor}/>}
     {view==="pulpit"&&<><section className="hero-grid primary-metrics"><article className="value-card"><div className="metric-icon yellow"><WalletCards size={18} strokeWidth={1.9}/></div><p>Wartość portfela</p><h2>{money(totalValue)}</h2>{openResult.included.length?<div className={`profit-pill ${openProfit<0?"negative":""}`}>{openProfit>=0?"↑":"↓"} {money(Math.abs(openProfit),2)} <span>({totalCost?percent(openProfit/totalCost*100,2):"—"})</span></div>:<div className="profit-pill incomplete">Brak kosztów nabycia</div>}<small>{openResult.excluded.length?`Wynik pomija ${openResult.excluded.map(item=>item.symbol).join(", ")} — uzupełnij koszt.`:"Niezrealizowany wynik na aktywach"}</small></article><article className="metric-card dividend-metric-card"><div className="metric-icon green"><ArrowUpRight size={18} strokeWidth={1.9}/></div><p>Dywidendy netto {today.getFullYear()}</p><h3 className="dividend-year-progress"><span>{money(currentYearDividendNet,2)}</span><i>/</i><span>{money(currentYearDividendProjection,0)}</span></h3><small>Otrzymane / prognoza do 31.12</small><span className="micro">Cała historia {money(divNet,2)}</span></article></section>
     <section className="panel performance-panel"><div className="performance-head"><div><p className="eyebrow">Historia portfela</p><h3>{performanceMode==="value"?"Wynik miesiąc po miesiącu":`Portfel vs ${performance.benchmark.name}`}</h3><small>{performanceMode==="value"?"Zmiana wartości aktywów i zamknięte transakcje":"Miesięczna stopa zwrotu liczona w PLN"}</small></div><div className="performance-controls"><div className="segmented mode-switch"><button className={performanceMode==="value"?"active":""} onClick={()=>setPerformanceMode("value")}>Wynik PLN</button><button className={performanceMode==="market"?"active":""} onClick={()=>setPerformanceMode("market")}>vs rynek</button></div><div className="segmented period-switch">{(["6M","1R","3L","MAX"] as const).map(period=><button key={period} className={performancePeriod===period?"active":""} onClick={()=>setPerformancePeriod(period)}>{period}</button>)}</div></div></div>
       <div className="performance-summary"><div><span>Wynik okresu</span><strong className={periodGain>=0?"positive":"negative-text"}>{periodGain>=0?"+":""}{money(periodGain,2)}</strong></div><div><span>Stopa portfela</span><strong className={portfolioPeriodReturn>=0?"positive":"negative-text"}>{percent(portfolioPeriodReturn,2,true)}</strong></div><div><span>Rynek w PLN</span><strong className={benchmarkPeriodReturn>=0?"positive":"negative-text"}>{percent(benchmarkPeriodReturn,2,true)}</strong></div><div><span>Przewaga nad rynkiem</span><strong className={marketAdvantage>=0?"positive":"negative-text"}>{percent(marketAdvantage,2,true)}</strong></div></div>
@@ -783,6 +791,7 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
       <section className="asset-modal copy-settings-modal" role="dialog" aria-modal="true" aria-labelledby="copy-settings-title">
         <header><div><p className="eyebrow">Preferencje</p><h2 id="copy-settings-title">Ustawienia</h2></div><button className="modal-close" type="button" onClick={()=>setCopySettingsOpen(false)} aria-label="Zamknij"><X size={18} strokeWidth={2}/></button></header>
         <section className="theme-settings"><div><strong>Motyw aplikacji</strong><small>Wybierz jasny lub kontrastowy ciemny wygląd.</small></div><div role="group" aria-label="Motyw aplikacji">{(["lekka","dark"] as DesignTheme[]).map(theme=><button type="button" key={theme} className={designTheme===theme?"active":""} aria-pressed={designTheme===theme} onClick={()=>changeDesignTheme(theme)}><span>{theme==="lekka"?<Sun size={17}/>:<Moon size={17}/>}</span><span><strong>{theme==="lekka"?"Lekka":"Dark"}</strong><small>{theme==="lekka"?"Jasny i spokojny":"Ciemny i wysoki kontrast"}</small></span></button>)}</div></section>
+        <section className="chart-color-settings"><div><strong>Kolor wykresu</strong><small>Ustaw kolor linii i wypełnienia wykresów rynkowych.</small></div><label><input type="color" value={chartColor} onChange={event=>changeChartColor(event.target.value)} aria-label="Kolor wykresu"/><span style={{backgroundColor:chartColor}}/><strong>{chartColor.toUpperCase()}</strong></label><button type="button" onClick={()=>changeChartColor(DEFAULT_CHART_COLOR)}>Przywróć zielony</button></section>
         <section className="sidebar-style-settings"><div><strong>Zwinięty sidebar</strong><small>Wybierz wygląd paska widocznego po zwinięciu menu.</small></div><div role="group" aria-label="Wygląd zwiniętego sidebara">{(["rail","island"] as SidebarStyle[]).map(style=><button type="button" key={style} className={sidebarStyle===style?"active":""} aria-pressed={sidebarStyle===style} onClick={()=>changeSidebarStyle(style)}><i className={`sidebar-mode-preview ${style}`}/><span><strong>{style==="rail"?"Zwykły pasek":"Wysepka"}</strong><small>{style==="rail"?"Przyklejony do lewej krawędzi":"Zaokrąglona i odsunięta od krawędzi"}</small></span></button>)}</div></section>
         <p className="copy-settings-section-title">Zakres kopiowanych danych</p>
         <div className="copy-settings-toolbar"><p>Ustawienia zapisują się na tym urządzeniu. Główny przycisk kopiuje raport od razu.</p><div><button type="button" onClick={()=>saveCopySettings({...defaultPortfolioCopySettings})}>Włącz wszystko</button><button type="button" onClick={()=>saveCopySettings(Object.fromEntries(portfolioCopyOptions.map(option=>[option.key,false])) as PortfolioCopySettings)}>Wyłącz wszystko</button></div></div>

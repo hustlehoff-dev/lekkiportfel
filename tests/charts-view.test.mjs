@@ -40,9 +40,10 @@ test("chart provider identifiers reject URL and query injection", () => {
 });
 
 test("charts view exposes search, periods, source and responsive dark mode", async () => {
-  const [page, dashboard] = await Promise.all([
+  const [page, dashboard, chartPage] = await Promise.all([
     readFile(new URL("app/wykresy/charts-view.tsx", root), "utf8"),
     readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/wykresy/page.tsx", root), "utf8"),
   ]);
   const route = await readFile(new URL("app/api/charts/route.ts", root), "utf8");
   const css = await readFile(new URL("app/wykresy/charts.css", root), "utf8");
@@ -50,7 +51,16 @@ test("charts view exposes search, periods, source and responsive dark mode", asy
   assert.match(page, /chartPeriods\.map/);
   assert.match(page, /Źródło/);
   assert.match(page, /<PriceChart data=\{data\} period=\{period\}/);
-  assert.match(dashboard, /window\.location\.assign\("\/wykresy"\)/);
+  assert.match(dashboard, /selectView\("wykresy"\)/);
+  assert.doesNotMatch(dashboard, /window\.location\.assign\("\/wykresy"\)/);
+  assert.doesNotMatch(dashboard, /router\.push\("\/wykresy"\)/);
+  assert.match(dashboard, /type AppView = "pulpit"\|"wykresy"/);
+  assert.match(dashboard, /view==="wykresy"&&<ChartsView chartColor=\{chartColor\}\/>/);
+  assert.match(chartPage, /<PortfolioApp initialView="wykresy"/);
+  assert.match(page, /<AssetIcon/);
+  assert.match(page, /--user-chart-color/);
+  assert.match(dashboard, /type="color" value=\{chartColor\}/);
+  assert.match(dashboard, /lekkiportfel-chart-color/);
   assert.match(route, /api\.coingecko\.com\/api\/v3\/coins/);
   assert.match(route, /query1\.finance\.yahoo\.com\/v8\/finance\/chart/);
   assert.match(route, /query2\.finance\.yahoo\.com\/v1\/finance\/search/);
@@ -67,4 +77,5 @@ test("charts view exposes search, periods, source and responsive dark mode", asy
   assert.match(css, /data-color-theme="dark"\] \.charts-shell/);
   assert.match(css, /@media \(max-width: 960px\)/);
   assert.match(css, /grid-template-columns: repeat\(5, minmax\(0,1fr\)\)/);
+  assert.match(css, /\.market-chart\.negative \{ color: var\(--user-chart-color\); \}/);
 });

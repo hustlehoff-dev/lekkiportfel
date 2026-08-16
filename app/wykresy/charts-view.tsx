@@ -1,23 +1,16 @@
 "use client";
-/* eslint-disable @next/next/no-html-link-for-pages */
 
 import {
   ArrowDownRight,
   ArrowUpRight,
-  CalendarDays,
-  History,
-  LineChart,
   LoaderCircle,
-  Moon,
-  ReceiptText,
   RefreshCw,
   Search,
-  Sun,
-  WalletCards,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { chartPeriods, featuredChartInstruments, type ChartInstrument, type ChartPeriod } from "../../lib/market-charts";
+import { AssetIcon } from "../components/asset-icon";
 
 type ChartPoint = { time: number; value: number };
 type ChartPayload = {
@@ -118,7 +111,7 @@ function PriceChart({ data, period }: { data: ChartPayload; period: ChartPeriod 
   </div>;
 }
 
-export default function ChartsView() {
+export default function ChartsView({ chartColor = "#67b58f" }: { chartColor?: string }) {
   const [instrument, setInstrument] = useState<ChartInstrument>(featuredChartInstruments[0]);
   const [period, setPeriod] = useState<ChartPeriod>("1M");
   const [data, setData] = useState<ChartPayload | null>(null);
@@ -128,7 +121,6 @@ export default function ChartsView() {
   const [results, setResults] = useState<ChartInstrument[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [theme, setTheme] = useState<"lekka" | "dark">("lekka");
   const searchRef = useRef<HTMLInputElement>(null);
 
   const loadChart = useCallback(async (selected: ChartInstrument, selectedPeriod: ChartPeriod, signal?: AbortSignal) => {
@@ -157,17 +149,6 @@ export default function ChartsView() {
   }, [instrument, period, loadChart]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      const saved = window.localStorage.getItem("lekkiportfel-theme");
-      const next = saved === "dark" ? "dark" : "lekka";
-      setTheme(next);
-      document.documentElement.dataset.colorTheme = next;
-      document.documentElement.dataset.portfolioTheme = "lekka";
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
     if (query.trim().length < 2) return;
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
@@ -192,48 +173,27 @@ export default function ChartsView() {
     setSearchOpen(false);
   };
 
-  const toggleTheme = () => {
-    const next = theme === "dark" ? "lekka" : "dark";
-    setTheme(next);
-    document.documentElement.dataset.colorTheme = next;
-    window.localStorage.setItem("lekkiportfel-theme", next);
-  };
-
   const movement = data?.periodChange ?? null;
   const positive = (movement ?? 0) >= 0;
 
-  return <main className="charts-shell">
-    <aside className="market-sidebar">
-      <a className="market-brand" href="/"><span><WalletCards size={19}/></span><strong>LEKKIPORTFEL<small>cały majątek</small></strong></a>
-      <nav aria-label="Główna nawigacja">
-        <a href="/"><CalendarDays size={18}/><span>Pulpit</span></a>
-        <a className="active" href="/wykresy" aria-current="page"><LineChart size={18}/><span>Wykresy</span></a>
-        <a href="/dywidendy"><ArrowUpRight size={18}/><span>Dywidendy</span></a>
-        <a href="/podatki"><ReceiptText size={18}/><span>Podatki</span></a>
-        <a href="/historia"><History size={18}/><span>Historia</span></a>
-      </nav>
-      <p>Notowania mogą być opóźnione względem rynku.</p>
-    </aside>
-
+  return <div className="charts-shell charts-embedded" style={{ "--user-chart-color": chartColor } as CSSProperties}>
     <section className="charts-content">
       <header className="charts-topbar">
-        <div><p>Rynek</p><h1>Wykresy</h1></div>
         <div className="charts-search-wrap">
           <label className="charts-search"><Search size={18}/><input ref={searchRef} value={query} onFocus={() => setSearchOpen(true)} onChange={event => { const next=event.target.value; setQuery(next); if(next.trim().length<2){setResults([]);setSearching(false)} setSearchOpen(true); }} placeholder="Szukaj BTC, spółki, ETF-u lub indeksu…" aria-label="Szukaj instrumentu"/>{searching ? <LoaderCircle className="spin" size={17}/> : query ? <button onClick={() => { setQuery(""); setResults([]); searchRef.current?.focus(); }} aria-label="Wyczyść wyszukiwanie"><X size={16}/></button> : null}</label>
           {searchOpen && query.trim().length >= 2 && <div className="charts-search-results">
-            {searching && !results.length ? <p>Szukam instrumentów…</p> : results.length ? results.map(result => <button key={result.key} onClick={() => chooseInstrument(result)}><span>{result.symbol.slice(0, 4)}</span><div><strong>{result.symbol}</strong><small>{result.name} · {result.exchange}</small></div></button>) : <p>Brak wyników. Spróbuj nazwy lub symbolu z giełdy.</p>}
+            {searching && !results.length ? <p>Szukam instrumentów…</p> : results.length ? results.map(result => <button key={result.key} onClick={() => chooseInstrument(result)}><AssetIcon symbol={result.symbol} name={result.name} assetClass={result.kind === "crypto" ? "Krypto" : "Akcje"} className="chart-result-icon"/><div><strong>{result.symbol}</strong><small>{result.name} · {result.exchange}</small></div></button>) : <p>Brak wyników. Spróbuj nazwy lub symbolu z giełdy.</p>}
           </div>}
         </div>
-        <button className="charts-theme" onClick={toggleTheme} aria-label={theme === "dark" ? "Włącz jasny motyw" : "Włącz ciemny motyw"}>{theme === "dark" ? <Sun size={18}/> : <Moon size={18}/>}</button>
       </header>
 
       <section className="charts-heading"><div><p>Notowania i indeksy</p><h2>Sprawdź, co dzieje się na rynku</h2><span>Aktualna cena i historia bez przeładowywania pulpitu.</span></div><div className="quote-live"><i/><span>{loading ? "Aktualizuję" : "Notowania aktualne"}</span></div></section>
 
-      <div className="featured-instruments" role="group" aria-label="Popularne instrumenty">{featuredChartInstruments.map(item => <button key={item.key} className={item.key === instrument.key ? "active" : ""} onClick={() => chooseInstrument(item)}><strong>{item.symbol}</strong><span>{item.name}</span></button>)}</div>
+      <div className="featured-instruments" role="group" aria-label="Popularne instrumenty">{featuredChartInstruments.map(item => <button key={item.key} className={item.key === instrument.key ? "active" : ""} onClick={() => chooseInstrument(item)}><AssetIcon symbol={item.symbol} name={item.name} assetClass={item.kind === "crypto" ? "Krypto" : "Akcje"} className="featured-chart-icon"/><span><strong>{item.symbol}</strong><small>{item.name}</small></span></button>)}</div>
 
       <section className="chart-card">
         <header className="quote-header">
-          <div className="quote-identity"><span>{instrument.symbol.slice(0, 4)}</span><div><h2>{instrument.name}</h2><p>{instrument.symbol} · {instrument.exchange}</p></div></div>
+          <div className="quote-identity"><AssetIcon symbol={instrument.symbol} name={instrument.name} assetClass={instrument.kind === "crypto" ? "Krypto" : "Akcje"} className="quote-chart-icon"/><div><h2>{instrument.name}</h2><p>{instrument.symbol} · {instrument.exchange}</p></div></div>
           {data && <div className="quote-price"><strong>{formatPrice(data.price, data.currency)}</strong><span className={positive ? "up" : "down"}>{positive ? <ArrowUpRight size={16}/> : <ArrowDownRight size={16}/>} {formatPercent(movement)} <small>{periodNames[period]}</small></span></div>}
         </header>
         <div className="period-picker" role="group" aria-label="Okres wykresu">{chartPeriods.map(item => <button key={item} className={item === period ? "active" : ""} aria-pressed={item === period} onClick={() => setPeriod(item)}>{item}</button>)}</div>
@@ -246,5 +206,5 @@ export default function ChartsView() {
         {data && !loading && <footer className="quote-footer"><span>Zmiana 24h <strong className={(data.change24h ?? 0) >= 0 ? "up" : "down"}>{formatPercent(data.change24h)}</strong></span><span>Ostatnia aktualizacja <strong>{new Intl.DateTimeFormat("pl-PL", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(data.updatedAt))}</strong></span><span>Źródło <strong>{data.provider}{data.stale ? " · zapisane" : ""}</strong></span></footer>}
       </section>
     </section>
-  </main>;
+  </div>;
 }

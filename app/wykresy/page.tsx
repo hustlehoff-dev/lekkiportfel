@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import ChartsView from "./charts-view";
-import "./charts.css";
+import PortfolioApp from "../page";
 
 export const metadata: Metadata = {
   title: "Wykresy rynkowe — LekkiPortfel",
@@ -8,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function WykresyPage() {
-  return <ChartsView />;
+  return <PortfolioApp initialView="wykresy" />;
 }
