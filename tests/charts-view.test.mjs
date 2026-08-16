@@ -69,7 +69,8 @@ test("charts view exposes portfolio positions, shared search, periods and respon
   assert.match(dashboard, /Szukaj aktywa, spółki, ETF-u lub indeksu/);
   assert.match(dashboard, /topbar-search-results/);
   assert.match(page, /Twoje pozycje/);
-  assert.match(page, /chart-position-label/);
+  assert.match(page, /chart-position-rule/);
+  assert.match(page, /positionLines/);
   assert.match(page, /onTogglePrivacy/);
   assert.match(page, /chartPeriods\.map/);
   assert.match(page, /Źródło/);

@@ -22,6 +22,18 @@ export type ChartHolding = {
   costKnown: boolean;
 };
 
+export type ChartPositionLine = {
+  id: string;
+  instrumentKey: string;
+  account: string;
+  openedAt?: string;
+  quantity: number;
+  value: number;
+  cost: number;
+  costKnown: boolean;
+  entryPricePln: number;
+};
+
 type PrivacyMode = "visible" | "money" | "all";
 
 type ChartPoint = { time: number; value: number };
@@ -82,11 +94,12 @@ async function jsonResponse<T>(response: Response): Promise<T> {
   return body;
 }
 
-function PriceChart({ data, period, holding, formatMoney, formatPortfolioPercent }: { data: ChartPayload; period: ChartPeriod; holding: ChartHolding | null; formatMoney: (value: number, digits?: number) => string; formatPortfolioPercent: (value: number, digits?: number, showSign?: boolean) => string }) {
+function PriceChart({ data, period, positions, formatMoney, formatPortfolioPercent }: { data: ChartPayload; period: ChartPeriod; positions: ChartPositionLine[]; formatMoney: (value: number, digits?: number) => string; formatPortfolioPercent: (value: number, digits?: number, showSign?: boolean) => string }) {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const chart = useMemo(() => {
     const points = data.points;
-    const values = points.map(point => point.value);
+    const positionPrices = positions.map(position => position.entryPricePln).filter(value => Number.isFinite(value) && value > 0);
+    const values = [...points.map(point => point.value), ...positionPrices];
     const min = Math.min(...values);
     const max = Math.max(...values);
     const padding = Math.max((max - min) * .12, max * .002);
@@ -100,14 +113,24 @@ function PriceChart({ data, period, holding, formatMoney, formatPortfolioPercent
     }));
     const line = coords.map((point, index) => `${index ? "L" : "M"}${point.x.toFixed(2)},${point.y.toFixed(2)}`).join(" ");
     const area = coords.length ? `${line} L1000,400 L0,400 Z` : "";
-    return { coords, line, area, floor, ceiling };
-  }, [data]);
+    const rawPositions = positions.map((position, index) => ({
+      ...position,
+      index: index + 1,
+      y: 380 - (position.entryPricePln - floor) / span * 340,
+    })).sort((a, b) => a.y - b.y);
+    const minLabelGap = Math.min(44, 350 / Math.max(1, rawPositions.length - 1));
+    const laidOutPositions = rawPositions.map((position, index) => ({ ...position, labelY: Math.max(24, index ? position.y : Math.max(24, position.y)) }));
+    for (let index = 1; index < laidOutPositions.length; index += 1) laidOutPositions[index].labelY = Math.max(laidOutPositions[index].labelY, laidOutPositions[index - 1].labelY + minLabelGap);
+    const overflow = (laidOutPositions.at(-1)?.labelY || 0) - 365;
+    if (overflow > 0) for (const position of laidOutPositions) position.labelY -= overflow;
+    for (let index = laidOutPositions.length - 2; index >= 0; index -= 1) laidOutPositions[index].labelY = Math.min(laidOutPositions[index].labelY, laidOutPositions[index + 1].labelY - minLabelGap);
+    return { coords, line, area, floor, ceiling, positions: laidOutPositions };
+  }, [data, positions]);
   const active = hoverIndex === null ? chart.coords.at(-1) : chart.coords[hoverIndex];
   const positive = (data.periodChange ?? 0) >= 0;
   const formatDate = (timestamp: number) => new Intl.DateTimeFormat("pl-PL", period === "1D" || period === "1T" ? { weekday: "short", hour: "2-digit", minute: "2-digit" } : period === "1M" || period === "3M" ? { day: "2-digit", month: "short" } : { day: "2-digit", month: "short", year: "numeric" }).format(new Date(timestamp));
 
-  return <div className={`market-chart ${positive ? "positive" : "negative"} ${holding ? "has-holding" : ""}`}>
-    {holding && <div className="chart-position-label"><span>Twoja pozycja</span><strong>{formatMoney(holding.value, 0)}</strong><small>{new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 6 }).format(holding.quantity)} szt.{holding.costKnown ? <b className={holding.value - holding.cost >= 0 ? "up" : "down"}>{holding.value - holding.cost >= 0 ? "+" : ""}{formatMoney(holding.value - holding.cost, 0)} · {holding.cost > 0 ? formatPortfolioPercent((holding.value - holding.cost) / holding.cost * 100, 1, true) : "—"}</b> : <b>brak kosztu</b>}</small></div>}
+  return <div className={`market-chart ${positive ? "positive" : "negative"} ${positions.length ? "has-positions" : ""} ${positions.length > 12 ? "dense-positions" : ""}`}>
     <div className="chart-axis" aria-hidden="true"><span>{formatAxis(chart.ceiling, data.currency)}</span><span>{formatAxis((chart.ceiling + chart.floor) / 2, data.currency)}</span><span>{formatAxis(chart.floor, data.currency)}</span></div>
     <svg viewBox="0 0 1000 400" preserveAspectRatio="none" role="img" aria-label={`Wykres ${data.instrument.name}, okres ${periodNames[period]}`} onPointerMove={event => {
       const bounds = event.currentTarget.getBoundingClientRect();
@@ -119,12 +142,13 @@ function PriceChart({ data, period, holding, formatMoney, formatPortfolioPercent
       <path className="chart-area" d={chart.area}/><path className="chart-line" d={chart.line}/>
       {active && <g className="chart-cursor"><line x1={active.x} x2={active.x} y1="20" y2="390"/><circle cx={active.x} cy={active.y} r="7"/></g>}
     </svg>
+    {chart.positions.length > 0 && <div className="chart-position-lines" aria-label={`${chart.positions.length} otwartych pozycji`}>{chart.positions.map(position => {const profit=position.value-position.cost;return <div className="chart-position-entry" key={position.id}><i className="chart-position-rule" style={{top:`${position.y/4}%`}}><span>{position.index}</span></i><div className="chart-position-line-label" style={{top:`${position.labelY/4}%`}}><span>#{position.index} · {position.account}{position.openedAt?` · ${new Intl.DateTimeFormat("pl-PL",{day:"2-digit",month:"short",year:"2-digit"}).format(new Date(position.openedAt))}`:""}</span><strong>{new Intl.NumberFormat("pl-PL",{maximumFractionDigits:6}).format(position.quantity)} szt. · {formatMoney(position.value,0)}</strong><small className={profit>=0?"up":"down"}>{position.costKnown?<>{profit>=0?"+":""}{formatMoney(profit,0)} · {position.cost>0?formatPortfolioPercent(profit/position.cost*100,1,true):"—"}</>:"brak kosztu"}</small></div></div>})}</div>}
     {active && <div className="chart-tooltip" style={{ left: `${active.x / 10}%` }}><strong>{formatPrice(active.value, data.currency)}</strong><span>{formatDate(active.time)}</span></div>}
     <div className="chart-dates" aria-hidden="true"><span>{chart.coords[0] ? formatDate(chart.coords[0].time) : ""}</span><span>{chart.coords.at(-1) ? formatDate(chart.coords.at(-1)!.time) : ""}</span></div>
   </div>;
 }
 
-export default function ChartsView({ chartColor = "#67b58f", displayCurrency = "PLN", fxRates, holdings = [], selectedInstrument = null, onInstrumentSelect, privacyMode = "visible", onTogglePrivacy, formatMoney, formatPortfolioPercent }: { chartColor?: string; displayCurrency?: ChartDisplayCurrency; fxRates: ChartFxRates; holdings?: ChartHolding[]; selectedInstrument?: ChartInstrument | null; onInstrumentSelect?: (instrument: ChartInstrument) => void; privacyMode?: PrivacyMode; onTogglePrivacy?: () => void; formatMoney: (value: number, digits?: number) => string; formatPortfolioPercent: (value: number, digits?: number, showSign?: boolean) => string }) {
+export default function ChartsView({ chartColor = "#67b58f", displayCurrency = "PLN", fxRates, holdings = [], positionLines = [], selectedInstrument = null, onInstrumentSelect, privacyMode = "visible", onTogglePrivacy, formatMoney, formatPortfolioPercent }: { chartColor?: string; displayCurrency?: ChartDisplayCurrency; fxRates: ChartFxRates; holdings?: ChartHolding[]; positionLines?: ChartPositionLine[]; selectedInstrument?: ChartInstrument | null; onInstrumentSelect?: (instrument: ChartInstrument) => void; privacyMode?: PrivacyMode; onTogglePrivacy?: () => void; formatMoney: (value: number, digits?: number) => string; formatPortfolioPercent: (value: number, digits?: number, showSign?: boolean) => string }) {
   const [fallbackInstrument, setFallbackInstrument] = useState<ChartInstrument>(featuredChartInstruments[0]);
   const instrument = selectedInstrument || fallbackInstrument;
   const [period, setPeriod] = useState<ChartPeriod>("1M");
@@ -177,7 +201,7 @@ export default function ChartsView({ chartColor = "#67b58f", displayCurrency = "
       points: data.points.map(point => ({ ...point, value: point.value * factor })),
     };
   }, [data, displayCurrency, fxRates]);
-  const selectedHolding = useMemo(() => holdings.find(holding => holding.instrument.key === instrument.key) || null, [holdings, instrument.key]);
+  const selectedPositionLines = useMemo(() => positionLines.filter(position => position.instrumentKey === instrument.key).map(position => ({...position,entryPricePln:position.entryPricePln/(fxRates[displayCurrency]||1)})), [displayCurrency, fxRates, instrument.key, positionLines]);
 
   return <div className="charts-shell charts-embedded" style={{ "--user-chart-color": chartColor } as CSSProperties}>
     <section className="charts-content">
@@ -197,7 +221,7 @@ export default function ChartsView({ chartColor = "#67b58f", displayCurrency = "
           {loading && <div className="chart-state"><LoaderCircle className="spin" size={26}/><strong>Pobieram notowania…</strong></div>}
           {!loading && error && !data && <div className="chart-state error"><strong>{error}</strong><button onClick={() => void loadChart(instrument, period)}><RefreshCw size={15}/> Spróbuj ponownie</button></div>}
           {!loading && error && data && <div className="chart-cache-warning"><strong>{error}</strong><button onClick={() => void loadChart(instrument, period)}><RefreshCw size={15}/> Odśwież</button></div>}
-          {!loading && presentedData && <PriceChart data={presentedData} period={period} holding={selectedHolding} formatMoney={formatMoney} formatPortfolioPercent={formatPortfolioPercent}/>}
+          {!loading && presentedData && <PriceChart data={presentedData} period={period} positions={selectedPositionLines} formatMoney={formatMoney} formatPortfolioPercent={formatPortfolioPercent}/>}
         </div>
         {data && !loading && <footer className="quote-footer"><span>Zmiana 24h <strong className={(data.change24h ?? 0) >= 0 ? "up" : "down"}>{formatPercent(data.change24h)}</strong></span><span>Ostatnia aktualizacja <strong>{new Intl.DateTimeFormat("pl-PL", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(data.updatedAt))}</strong></span><span>Źródło <strong>{data.provider}{data.stale ? " · zapisane" : ""}</strong></span></footer>}
       </section>
