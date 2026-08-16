@@ -1,3 +1,5 @@
+import { calculateMonthlyPerformance, type PerformanceFlow } from "../../../lib/portfolio-performance";
+
 type OpenLot = {
   symbol: string;
   quantity: number;
@@ -135,8 +137,9 @@ export async function POST(request: Request) {
     const currentMonth = monthKey(new Date());
     const startMonth = monthKey(startDate);
     const months = monthsBetween(startMonth, currentMonth);
-    const gain = new Map(months.map(month => [month, 0]));
-    const capital = new Map(months.map(month => [month, 0]));
+    const openingValue = new Map(months.map(month => [month, 0]));
+    const closingValue = new Map(months.map(month => [month, 0]));
+    const flows = new Map(months.map(month => [month, [] as PerformanceFlow[]]));
     const missing: string[] = [];
     const symbols = [...new Set(transactions.filter(item=>monthKey(item.openDate)!==monthKey(item.closeDate||new Date())).map(item => item.symbol))];
     const histories = new Map<string, Map<string, number>>();
@@ -167,11 +170,17 @@ export async function POST(request: Request) {
       const currentValue = !transaction.closeDate && live?.quantity ? live.value * transaction.quantity / live.quantity : transaction.finalValue;
       let previousValue = transaction.purchaseValue;
       for (const month of relevant) {
-        capital.set(month, (capital.get(month) || 0) + transaction.purchaseValue);
+        const isFirst = month === first;
         const isLast = month === last;
         const marketValue = history ? (atOrBefore(history, month) ?? previousValue / transaction.quantity) * transaction.quantity : previousValue;
         const nextValue = isLast ? (transaction.closeDate ? transaction.finalValue : currentValue) : marketValue;
-        gain.set(month, (gain.get(month) || 0) + nextValue - previousValue);
+        if (!isFirst) openingValue.set(month, (openingValue.get(month) || 0) + previousValue);
+        if (isFirst) flows.get(month)!.push({ date: transaction.openDate, amount: transaction.purchaseValue });
+        if (isLast && transaction.closeDate) {
+          flows.get(month)!.push({ date: transaction.closeDate, amount: -transaction.finalValue });
+        } else {
+          closingValue.set(month, (closingValue.get(month) || 0) + nextValue);
+        }
         previousValue = nextValue;
       }
     }
@@ -186,15 +195,22 @@ export async function POST(request: Request) {
       const previousKey = previousMonth.toISOString().slice(0, 7);
       const currentBenchmark = atOrBefore(benchmark, month);
       const previousBenchmark = atOrBefore(benchmark, previousKey) || (benchmarkKeys.length ? benchmark.get(benchmarkKeys[0]) : undefined);
-      const investedCapital = capital.get(month) || 0;
-      const capitalGain = gain.get(month) || 0;
+      const monthly = calculateMonthlyPerformance({
+        month,
+        openingValue: openingValue.get(month) || 0,
+        closingValue: closingValue.get(month) || 0,
+        flows: flows.get(month) || [],
+      });
       return {
         month,
         label: new Intl.DateTimeFormat("pl-PL", { month: "short", year: "2-digit", timeZone: "UTC" }).format(new Date(`${month}-01T00:00:00Z`)).replace(" ", " ’"),
-        capitalGain,
-        portfolioPct: investedCapital ? capitalGain / investedCapital * 100 : 0,
+        capitalGain: monthly.capitalGain,
+        portfolioPct: monthly.portfolioPct,
         benchmarkPct: currentBenchmark && previousBenchmark ? (currentBenchmark / previousBenchmark - 1) * 100 : 0,
-        investedCapital,
+        investedCapital: monthly.investedCapital,
+        openingValue: monthly.openingValue,
+        closingValue: monthly.closingValue,
+        netFlow: monthly.netFlow,
       };
     });
 
@@ -202,7 +218,9 @@ export async function POST(request: Request) {
       points,
       benchmark: { symbol: "^GSPC", name: "S&P 500 (PLN)" },
       missing: [...new Set(missing)],
-      methodology: "Miesięczna zmiana wartości każdej partii od ceny zakupu do ceny zamknięcia miesiąca; sprzedaże kończą się rzeczywistą wartością sprzedaży z XTB. Benchmark uwzględnia kurs USD/PLN.",
+      methodologyCode: "modified-dietz-monthly",
+      quality: missing.length ? "partial" : "complete",
+      methodology: "Miesięczna stopa zwrotu Modified Dietz: wartość na początku i końcu miesiąca skorygowana o zakupy i sprzedaże ważone datą przepływu. Sprzedaże kończą się rzeczywistą wartością z raportu, a benchmark uwzględnia kurs USD/PLN.",
     }, { headers: { "cache-control": "no-store" } });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Nie udało się policzyć historii portfela" }, { status: 500 });

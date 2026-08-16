@@ -3458,6 +3458,56 @@ html[data-color-theme="dark"] .price-status button:hover { color: #dce4e9; borde
 html[data-color-theme="dark"] .live-dot { background: #67b58f; box-shadow: none; }
 html[data-color-theme="dark"] .notice { background: #17231e; color: #c9ded2; border-color: #31483d; }
 
+html[data-portfolio-theme="lekka"] .price-status {
+  width: max-content;
+  max-width: 100%;
+  min-height: 34px;
+  margin: 10px 0 0 auto;
+  padding: 6px 8px 6px 10px;
+  display: flex;
+  border-radius: 999px;
+  box-shadow: none;
+}
+.price-status.stale .live-dot,
+.price-status.partial .live-dot { background: #d2aa62; }
+.price-status.error .live-dot { background: #c66f6a; }
+.price-status.stale strong,
+.price-status.partial strong { color: #8a6419; }
+.price-status.error strong { color: #a53f3b; }
+.price-status button span { display: inline; }
+html[data-color-theme="dark"] .price-status.stale strong,
+html[data-color-theme="dark"] .price-status.partial strong { color: #d9aa55; }
+html[data-color-theme="dark"] .price-status.error strong { color: #df817b; }
+
+@media (max-width: 560px) {
+  html[data-portfolio-theme="lekka"] .price-status { min-height: 30px; margin-top: 8px; padding: 5px 7px 5px 9px; }
+  html[data-portfolio-theme="lekka"] .price-status small,
+  html[data-portfolio-theme="lekka"] .price-status button span { display: none; }
+  html[data-portfolio-theme="lekka"] .price-status button { width: 26px; height: 24px; padding: 0; justify-content: center; }
+}
+
+@media (max-width: 960px) {
+  html[data-portfolio-theme="lekka"] .primary-metrics > .value-card,
+  html[data-portfolio-theme="lekka"] .primary-metrics > .metric-card {
+    height: 106px;
+    min-height: 106px;
+  }
+  html[data-portfolio-theme="lekka"] .primary-metrics > .value-card > .result-coverage {
+    grid-column: 2;
+    grid-row: 4;
+    display: block;
+    margin: 0;
+    overflow: visible;
+    white-space: normal;
+    font-size: 8px;
+    line-height: 10px;
+  }
+}
+
+@media (max-width: 560px) {
+  html[data-portfolio-theme="lekka"] .primary-metrics > .value-card > .result-coverage { grid-column: 1; }
+}
+
 html[data-color-theme="dark"] .value-card,
 html[data-color-theme="dark"] .metric-card,
 html[data-color-theme="dark"] .panel,
@@ -3479,6 +3529,9 @@ html[data-color-theme="dark"] .metric-icon.yellow { background: #19231f; color: 
 html[data-color-theme="dark"] .profit-pill { color: #79c69f; background: rgba(103,181,143,.09); border-color: #2f5141; }
 html[data-color-theme="dark"] .profit-pill.negative { color: #e18b85; background: rgba(223,124,118,.08); border-color: #5d3835; }
 html[data-color-theme="dark"] .micro { border-color: #252f36; }
+
+.value-card.result-partial .result-coverage { color: #9a6700; font-weight: 700; }
+html[data-color-theme="dark"] .value-card.result-partial .result-coverage { color: #d9aa55; }
 
 html[data-color-theme="dark"] .segmented { background: #0d1215; border-color: #263138; }
 html[data-color-theme="dark"] .segmented button { color: #84919a; }

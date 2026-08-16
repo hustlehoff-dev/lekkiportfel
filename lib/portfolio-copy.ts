@@ -24,7 +24,7 @@ type CopyPosition={symbol:string;name:string;sector:string;assetClass:string;qua
 type CopyCashEvent={date:string;type:string;symbol:string;amount:number;account?:string;comment?:string;instrument?:string};
 type CopyTrade={date:string;symbol:string;side:string;volume:number;result:number;account?:string;openDate?:string;openPrice?:number;closePrice?:number;purchaseValue?:number;saleValue?:number;commission?:number;swap?:number;rollover?:number;comment?:string};
 type CopyCrypto={date:string;type:string;symbol:string;name:string;quantity:number;toSymbol?:string;toQuantity?:number;amount:number;amountPln?:number;currency:string;nbpRate:number;nbpDate?:string;fee:number;feePln?:number;account:string;note?:string};
-type CopyPerformancePoint={month:string;label:string;capitalGain:number;portfolioPct:number;benchmarkPct:number;investedCapital:number};
+type CopyPerformancePoint={month:string;label:string;capitalGain:number;portfolioPct:number;benchmarkPct:number;investedCapital:number;openingValue?:number;closingValue?:number;netFlow?:number};
 type CopyForecast={date:string;symbol:string;gross:number;net:number;confidence:string};
 
 export type PortfolioCopyInput={
@@ -81,8 +81,9 @@ export function buildPortfolioCopy(input:PortfolioCopyInput,settings:PortfolioCo
       `- Wartość portfela: ${money(totalValue)}`,
       `- Znany koszt nabycia: ${money(openResult.cost)}`,
       `- Wartość aktywów objętych wynikiem: ${money(openResult.value)}`,
-      `- Wynik niezrealizowany: ${openResult.included.length?`${money(openResult.profit)} (${openResult.cost?percent(openResult.profit/openResult.cost*100):"—"})`:"brak danych"}`,
-      `- Pozycje bez kosztu nabycia: ${openResult.excluded.length?openResult.excluded.map(item=>item.symbol).join(", "):"brak"}`,
+      `- Pokrycie kosztami: ${decimal(openResult.coveragePercent,2)}% wartości portfela${openResult.isComplete?" · pełny wynik":" · wynik częściowy"}`,
+      `- Wynik niezrealizowany: ${openResult.included.length?`${money(openResult.profit)} (${openResult.returnPercent==null?"—":percent(openResult.returnPercent)})`:"brak danych"}`,
+      `- Pozycje bez kosztu nabycia: ${openResult.missingCostSymbols.length?openResult.missingCostSymbols.join(", "):"brak"}`,
       `- Wynik zrealizowany: ${money(realized)}`,
       `- Dywidendy brutto: ${money(divGross)}`,
       `- Dywidendy netto: ${money(divNet)}`,
@@ -107,8 +108,8 @@ export function buildPortfolioCopy(input:PortfolioCopyInput,settings:PortfolioCo
   if(settings.performance){
     lines.push("",`## Wyniki miesięczne vs ${input.benchmarkName}`);
     lines.push(input.performance.length?table(
-      ["Miesiąc","Wynik","Portfel","Benchmark","Zaangażowany kapitał"],
-      input.performance.map(item=>[item.label,money(item.capitalGain),percent(item.portfolioPct),percent(item.benchmarkPct),money(item.investedCapital)]),
+      ["Miesiąc","Wynik","Portfel","Benchmark","Wartość początkowa","Przepływy","Wartość końcowa"],
+      input.performance.map(item=>[item.label,money(item.capitalGain),percent(item.portfolioPct),percent(item.benchmarkPct),item.openingValue==null?"—":money(item.openingValue),item.netFlow==null?"—":money(item.netFlow),item.closingValue==null?"—":money(item.closingValue)]),
     ):"Brak danych do obliczenia historii wyników.");
   }
 
