@@ -7,7 +7,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   BellRing,
-  CalendarDays,
   CheckCircle2,
   ChevronDown,
   CircleHelp,
@@ -20,6 +19,7 @@ import {
   History,
   Info,
   ImagePlus,
+  LayoutDashboard,
   LineChart,
   LockKeyhole,
   LogOut,
@@ -40,6 +40,7 @@ import {
   Trash2,
   Upload,
   UserCheck,
+  HandCoins,
   WalletCards,
   X,
 } from "lucide-react";
@@ -539,12 +540,12 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
     <aside className="sidebar">
       <div className="brand"><span className="brand-mark"><WalletCards size={19} strokeWidth={2}/></span><span>LEKKIPORTFEL<small>cały majątek</small></span><button type="button" className="sidebar-collapse-button" onClick={toggleSidebar} aria-label={sidebarCollapsed?"Rozwiń sidebar":"Zwiń sidebar"} title={sidebarCollapsed?"Rozwiń sidebar":"Zwiń sidebar"}><ChevronDown size={17}/></button></div>
       <nav className="primary-nav" aria-label="Główna nawigacja">
-        <button className={view==="pulpit"?"active":""} onClick={()=>selectView("pulpit")} title="Pulpit" aria-label="Pulpit"><span><CalendarDays size={18} strokeWidth={1.9}/></span>Pulpit</button>
-        <button className={view==="wykresy"?"active":""} onClick={()=>selectView("wykresy")} title="Wykresy" aria-label="Wykresy"><span><LineChart size={18} strokeWidth={1.9}/></span>Wykresy</button>
-        <button className={view==="dywidendy"?"active":""} onClick={()=>selectView("dywidendy")} title="Dywidendy" aria-label="Dywidendy"><span><ArrowUpRight size={18} strokeWidth={1.9}/></span>Dywidendy</button>
-        <button className={view==="podatki"?"active":""} onClick={()=>selectView("podatki")} title="Podatki" aria-label="Podatki"><span><ReceiptText size={18} strokeWidth={1.9}/></span>Podatki</button>
-        <button className={view==="historia"?"active":""} onClick={()=>selectView("historia")} title="Historia konta" aria-label="Historia konta"><span><History size={18} strokeWidth={1.9}/></span>Historia</button>
-        <button className={mobileMoreOpen?"mobile-more active":"mobile-more"} onClick={()=>setMobileMoreOpen(open=>!open)}><span><Ellipsis size={20} strokeWidth={2.1}/></span>Więcej</button>
+        <button className={view==="pulpit"?"active":""} onClick={()=>selectView("pulpit")} title="Pulpit" aria-label="Pulpit"><span className="nav-icon"><LayoutDashboard size={19} strokeWidth={1.9}/></span><span className="nav-label">Pulpit</span></button>
+        <button className={view==="wykresy"?"active":""} onClick={()=>selectView("wykresy")} title="Wykresy" aria-label="Wykresy"><span className="nav-icon"><LineChart size={19} strokeWidth={1.9}/></span><span className="nav-label">Wykresy</span></button>
+        <button className={view==="dywidendy"?"active":""} onClick={()=>selectView("dywidendy")} title="Dywidendy" aria-label="Dywidendy"><span className="nav-icon"><HandCoins size={19} strokeWidth={1.9}/></span><span className="nav-label">Dywidendy</span></button>
+        <button className={view==="podatki"?"active":""} onClick={()=>selectView("podatki")} title="Podatki" aria-label="Podatki"><span className="nav-icon"><ReceiptText size={19} strokeWidth={1.9}/></span><span className="nav-label">Podatki</span></button>
+        <button className={view==="historia"?"active":""} onClick={()=>selectView("historia")} title="Historia konta" aria-label="Historia konta"><span className="nav-icon"><History size={19} strokeWidth={1.9}/></span><span className="nav-label">Historia</span></button>
+        <button className={mobileMoreOpen?"mobile-more active":"mobile-more"} onClick={()=>setMobileMoreOpen(open=>!open)}><span className="nav-icon"><Ellipsis size={20} strokeWidth={2.1}/></span><span className="nav-label">Więcej</span></button>
       </nav>
       <nav className="help-nav" aria-label="Pomoc">
         <button className={view==="faq"?"active":""} onClick={()=>selectView("faq")} title="Najczęstsze pytania" aria-label="Najczęstsze pytania"><span><CircleHelp size={18} strokeWidth={1.9}/></span>Najczęstsze pytania</button>

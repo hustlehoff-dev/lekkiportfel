@@ -3212,6 +3212,14 @@ html[data-color-theme="dark"] .app-shell.sidebar-island .sidebar-collapse-button
 html[data-color-theme="dark"] .app-shell.sidebar-rail .sidebar nav button::after,
 html[data-color-theme="dark"] .app-shell.sidebar-island .sidebar nav button::after { border-color: #344149; background: #10161a; color: #edf3f6; box-shadow: 0 8px 24px rgba(0,0,0,.36); }
 
+html[data-portfolio-theme="lekka"] .sidebar .primary-nav > button > .nav-label {
+  width: auto;
+  justify-self: start;
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
 /* One stable five-item navigation dock on every mobile view. */
 @media (max-width: 960px) {
   html[data-portfolio-theme="lekka"] .app-shell .sidebar,
@@ -3246,27 +3254,37 @@ html[data-color-theme="dark"] .app-shell.sidebar-island .sidebar nav button::aft
     padding: 3px 1px 2px;
     display: grid !important;
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: 21px 13px;
+    grid-template-rows: minmax(0, 1fr);
     justify-items: center;
     align-items: center;
-    gap: 2px;
+    gap: 0;
     border-radius: 13px;
-    font-size: 8px;
+    font-size: 0;
     line-height: 1;
     letter-spacing: -.01em;
     white-space: nowrap;
   }
 
-  html[data-portfolio-theme="lekka"] .app-shell .sidebar .primary-nav > button > span {
-    width: 25px;
-    height: 21px;
+  html[data-portfolio-theme="lekka"] .app-shell .sidebar .primary-nav > button > .nav-icon {
+    width: 34px;
+    height: 34px;
     display: grid;
     place-items: center;
+    color: inherit;
   }
 
-  html[data-portfolio-theme="lekka"] .app-shell .sidebar .primary-nav > button > span svg {
-    width: 18px;
-    height: 18px;
+  html[data-portfolio-theme="lekka"] .app-shell .sidebar .primary-nav > button > .nav-icon svg {
+    width: 27px;
+    height: 27px;
+    stroke-width: 1.85;
+  }
+
+  html[data-portfolio-theme="lekka"] .app-shell .sidebar .primary-nav > button > .nav-label {
+    display: none;
+  }
+
+  html[data-portfolio-theme="lekka"] .app-shell .sidebar .primary-nav > button.active > .nav-icon {
+    transform: scale(1.04);
   }
 
   html[data-portfolio-theme="lekka"] .app-shell .sidebar .primary-nav > button.mobile-more {
