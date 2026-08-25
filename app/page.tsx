@@ -540,10 +540,10 @@ export default function Home({initialView="pulpit"}:{initialView?:AppView}={}){
       <div className="brand"><span className="brand-mark"><WalletCards size={19} strokeWidth={2}/></span><span>LEKKIPORTFEL<small>cały majątek</small></span><button type="button" className="sidebar-collapse-button" onClick={toggleSidebar} aria-label={sidebarCollapsed?"Rozwiń sidebar":"Zwiń sidebar"} title={sidebarCollapsed?"Rozwiń sidebar":"Zwiń sidebar"}><ChevronDown size={17}/></button></div>
       <nav className="primary-nav" aria-label="Główna nawigacja">
         <button className={view==="pulpit"?"active":""} onClick={()=>selectView("pulpit")} title="Pulpit" aria-label="Pulpit"><span><CalendarDays size={18} strokeWidth={1.9}/></span>Pulpit</button>
-        <button className={`desktop-history ${view==="wykresy"?"active":""}`} onClick={()=>selectView("wykresy")} title="Wykresy" aria-label="Wykresy"><span><LineChart size={18} strokeWidth={1.9}/></span>Wykresy</button>
+        <button className={view==="wykresy"?"active":""} onClick={()=>selectView("wykresy")} title="Wykresy" aria-label="Wykresy"><span><LineChart size={18} strokeWidth={1.9}/></span>Wykresy</button>
         <button className={view==="dywidendy"?"active":""} onClick={()=>selectView("dywidendy")} title="Dywidendy" aria-label="Dywidendy"><span><ArrowUpRight size={18} strokeWidth={1.9}/></span>Dywidendy</button>
         <button className={view==="podatki"?"active":""} onClick={()=>selectView("podatki")} title="Podatki" aria-label="Podatki"><span><ReceiptText size={18} strokeWidth={1.9}/></span>Podatki</button>
-        <button className={`desktop-history ${view==="historia"?"active":""}`} onClick={()=>selectView("historia")} title="Historia konta" aria-label="Historia konta"><span><History size={18} strokeWidth={1.9}/></span>Historia konta</button>
+        <button className={view==="historia"?"active":""} onClick={()=>selectView("historia")} title="Historia konta" aria-label="Historia konta"><span><History size={18} strokeWidth={1.9}/></span>Historia</button>
         <button className={mobileMoreOpen?"mobile-more active":"mobile-more"} onClick={()=>setMobileMoreOpen(open=>!open)}><span><Ellipsis size={20} strokeWidth={2.1}/></span>Więcej</button>
       </nav>
       <nav className="help-nav" aria-label="Pomoc">

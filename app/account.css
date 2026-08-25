@@ -3212,6 +3212,74 @@ html[data-color-theme="dark"] .app-shell.sidebar-island .sidebar-collapse-button
 html[data-color-theme="dark"] .app-shell.sidebar-rail .sidebar nav button::after,
 html[data-color-theme="dark"] .app-shell.sidebar-island .sidebar nav button::after { border-color: #344149; background: #10161a; color: #edf3f6; box-shadow: 0 8px 24px rgba(0,0,0,.36); }
 
+/* One stable five-item navigation dock on every mobile view. */
+@media (max-width: 960px) {
+  html[data-portfolio-theme="lekka"] .app-shell .sidebar,
+  html[data-portfolio-theme="lekka"] .app-shell.sidebar-full .sidebar,
+  html[data-portfolio-theme="lekka"] .app-shell.sidebar-rail .sidebar,
+  html[data-portfolio-theme="lekka"] .app-shell.sidebar-island .sidebar {
+    position: fixed;
+    inset: auto 8px calc(6px + env(safe-area-inset-bottom)) 8px;
+    z-index: 110;
+    width: auto;
+    max-width: none;
+    height: 60px;
+    min-height: 60px;
+    padding: 5px;
+    display: block;
+    overflow: visible;
+    border-radius: 18px;
+  }
+
+  html[data-portfolio-theme="lekka"] .app-shell .sidebar .primary-nav {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 2px;
+  }
+
+  html[data-portfolio-theme="lekka"] .app-shell .sidebar .primary-nav > button,
+  html[data-portfolio-theme="lekka"] .app-shell .sidebar .primary-nav > button:not(.active) {
+    min-width: 0;
+    min-height: 48px;
+    padding: 3px 1px 2px;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 21px 13px;
+    justify-items: center;
+    align-items: center;
+    gap: 2px;
+    border-radius: 13px;
+    font-size: 8px;
+    line-height: 1;
+    letter-spacing: -.01em;
+    white-space: nowrap;
+  }
+
+  html[data-portfolio-theme="lekka"] .app-shell .sidebar .primary-nav > button > span {
+    width: 25px;
+    height: 21px;
+    display: grid;
+    place-items: center;
+  }
+
+  html[data-portfolio-theme="lekka"] .app-shell .sidebar .primary-nav > button > span svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  html[data-portfolio-theme="lekka"] .app-shell .sidebar .primary-nav > button.mobile-more {
+    display: none !important;
+  }
+
+  html[data-portfolio-theme="lekka"] .app-shell .sidebar .brand,
+  html[data-portfolio-theme="lekka"] .app-shell .sidebar .help-nav,
+  html[data-portfolio-theme="lekka"] .app-shell .sidebar .sidebar-footer {
+    display: none !important;
+  }
+}
+
 html[data-color-theme="dark"] .dividend-list-intro { color: #829087; }
 html[data-color-theme="dark"] .grouped-dividend-list,
 html[data-color-theme="dark"] .dividend-group { border-color: #26352c; }
