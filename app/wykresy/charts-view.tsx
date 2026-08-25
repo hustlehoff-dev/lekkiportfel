@@ -88,6 +88,29 @@ function formatPercent(value: number | null) {
   return `${value >= 0 ? "+" : ""}${new Intl.NumberFormat("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)}%`;
 }
 
+function changeBetween(points: ChartPoint[], duration: number | null) {
+  const valid = points.filter(point => Number.isFinite(point.time) && Number.isFinite(point.value) && point.value > 0).sort((a, b) => a.time - b.time);
+  const last = valid.at(-1);
+  if (!last || valid.length < 2) return null;
+  const first = duration === null
+    ? valid[0]
+    : valid.findLast(point => point.time <= last.time - duration) || valid[0];
+  return first?.value ? (last.value / first.value - 1) * 100 : null;
+}
+
+function periodSummary(short: ChartPayload | null, long: ChartPayload | null): Partial<Record<ChartPeriod, number | null>> {
+  const day = 24 * 60 * 60_000;
+  return {
+    "1D": short ? changeBetween(short.points, day) : undefined,
+    "1T": short ? changeBetween(short.points, null) : undefined,
+    "1M": long ? changeBetween(long.points, 30 * day) : undefined,
+    "3M": long ? changeBetween(long.points, 90 * day) : undefined,
+    "1R": long ? changeBetween(long.points, 365 * day) : undefined,
+    "5L": long ? changeBetween(long.points, 1825 * day) : undefined,
+    MAX: long ? changeBetween(long.points, null) : undefined,
+  };
+}
+
 async function jsonResponse<T>(response: Response): Promise<T> {
   const body = await response.json() as T & { error?: string };
   if (!response.ok) throw new Error(body.error || "Nie udało się pobrać danych");
@@ -155,6 +178,7 @@ export default function ChartsView({ chartColor = "#67b58f", displayCurrency = "
   const [data, setData] = useState<ChartPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [periodChanges, setPeriodChanges] = useState<Partial<Record<ChartPeriod, number | null>>>({});
 
   const loadChart = useCallback(async (selected: ChartInstrument, selectedPeriod: ChartPeriod, signal?: AbortSignal) => {
     const saved = readSavedChart(selected, selectedPeriod);
@@ -180,6 +204,36 @@ export default function ChartsView({ chartColor = "#67b58f", displayCurrency = "
     const timer = window.setTimeout(() => void loadChart(instrument, period, controller.signal), 0);
     return () => { window.clearTimeout(timer); controller.abort(); };
   }, [instrument, period, loadChart]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const cached = Object.fromEntries(chartPeriods.flatMap(item => {
+      const saved = readSavedChart(instrument, item);
+      return saved ? [[item, saved.periodChange] as const] : [];
+    })) as Partial<Record<ChartPeriod, number | null>>;
+    setPeriodChanges(cached);
+    const fetchAnchor = async (anchor: ChartPeriod) => {
+      const params = new URLSearchParams({ action: "history", kind: instrument.kind, id: instrument.providerId, symbol: instrument.symbol, name: instrument.name, exchange: instrument.exchange, period: anchor });
+      try {
+        const payload = await fetch(`/api/charts?${params}`, { signal: controller.signal }).then(jsonResponse<ChartPayload>);
+        saveChart(instrument, anchor, payload);
+        return payload;
+      } catch {
+        return readSavedChart(instrument, anchor);
+      }
+    };
+    const timer = window.setTimeout(() => {
+      void Promise.all([fetchAnchor("1T"), fetchAnchor("MAX")]).then(([short, long]) => {
+        if (!controller.signal.aborted) setPeriodChanges(current => ({ ...periodSummary(short, long), ...current }));
+      });
+    }, 180);
+    return () => { window.clearTimeout(timer); controller.abort(); };
+  }, [instrument]);
+
+  useEffect(() => {
+    if (!data || data.instrument.key !== instrument.key) return;
+    setPeriodChanges(current => ({ ...current, [period]: data.periodChange }));
+  }, [data, instrument.key, period]);
 
   const chooseInstrument = (next: ChartInstrument) => {
     setFallbackInstrument(next);
@@ -216,7 +270,7 @@ export default function ChartsView({ chartColor = "#67b58f", displayCurrency = "
           <div className="quote-identity"><AssetIcon symbol={instrument.symbol} name={instrument.name} assetClass={instrument.kind === "crypto" ? "Krypto" : "Akcje"} className="quote-chart-icon"/><div><h2>{instrument.name}</h2><p>{instrument.symbol} · {instrument.exchange}</p></div></div>
           {presentedData && <div className="quote-price"><strong>{formatPrice(presentedData.price, presentedData.currency)}</strong><span className={positive ? "up" : "down"}>{positive ? <ArrowUpRight size={16}/> : <ArrowDownRight size={16}/>} {formatPercent(movement)} <small>{periodNames[period]}</small></span></div>}
         </header>
-        <div className="period-picker" role="group" aria-label="Okres wykresu">{chartPeriods.map(item => <button key={item} className={item === period ? "active" : ""} aria-pressed={item === period} onClick={() => setPeriod(item)}>{item}</button>)}</div>
+        <div className="period-picker" role="group" aria-label="Okres wykresu">{chartPeriods.map(item => {const delta=periodChanges[item];return <button key={item} className={item === period ? "active" : ""} aria-label={`${periodNames[item]}${delta === undefined ? ", wynik jest pobierany" : `, zmiana ${formatPercent(delta)}`}`} aria-pressed={item === period} onClick={() => setPeriod(item)}><span>{item}</span><small className={delta === undefined ? "loading" : (delta ?? 0) >= 0 ? "up" : "down"}>{delta === undefined ? "···" : formatPercent(delta)}</small></button>})}</div>
         <div className="chart-stage" aria-live="polite">
           {loading && <div className="chart-state"><LoaderCircle className="spin" size={26}/><strong>Pobieram notowania…</strong></div>}
           {!loading && error && !data && <div className="chart-state error"><strong>{error}</strong><button onClick={() => void loadChart(instrument, period)}><RefreshCw size={15}/> Spróbuj ponownie</button></div>}

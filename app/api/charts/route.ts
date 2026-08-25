@@ -260,7 +260,7 @@ export async function GET(request: Request) {
       try {
         return await cryptoHistory(instrument, period);
       } catch (error) {
-        if (!(error instanceof QuoteSourceError) || error.status !== 429) throw error;
+        if (!(error instanceof QuoteSourceError) || ![401, 403, 429].includes(error.status)) throw error;
         const yahooInstrument = { ...instrument, providerId: `${instrument.symbol.toUpperCase()}-USD` };
         const fallback = await marketHistory(yahooInstrument, period);
         return { ...fallback, instrument };

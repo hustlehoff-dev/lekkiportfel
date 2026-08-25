@@ -194,8 +194,12 @@
 .up { color: #318965 !important; }
 .down { color: #c44c52 !important; }
 
-.period-picker { display: flex; gap: 4px; margin: 0 24px 7px; padding: 4px; border: 1px solid #edf0f3; border-radius: 9px; background: #f8fafc; }
-.period-picker button { min-width: 42px; height: 29px; flex: 0 0 auto; padding: 0 9px; border: 0; border-radius: 6px; background: transparent; color: #667085; font-size: 9px; font-weight: 700; }
+.period-picker { display: flex; gap: 4px; margin: 0 24px 7px; padding: 4px; overflow-x: auto; border: 1px solid #edf0f3; border-radius: 9px; background: #f8fafc; scrollbar-width: none; }
+.period-picker::-webkit-scrollbar { display: none; }
+.period-picker button { min-width: 58px; height: 42px; flex: 1 0 58px; display: grid; grid-template-rows: auto auto; place-content: center; gap: 3px; padding: 4px 7px; border: 0; border-radius: 7px; background: transparent; color: #667085; font-size: 9px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.period-picker button span { line-height: 1; }
+.period-picker button small { color: #98a2b3; font-size: 7.5px; font-weight: 750; line-height: 1; }
+.period-picker button small.loading { letter-spacing: .08em; }
 .period-picker button:hover { color: #344054; }
 .period-picker button.active { background: #fff; color: var(--charts-accent-ink); box-shadow: inset 0 0 0 1px var(--charts-accent-border), 0 1px 5px rgba(16, 24, 40, .1); }
 .chart-stage { position: relative; min-height: 410px; padding: 5px 24px 0; }
