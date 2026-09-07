@@ -380,6 +380,24 @@ h2, h3, h4, strong, b { color: #e8edf1; }
 .allocation-expand:hover { border-color: #45555e; color: #edf3f6; }
 .allocation-expand svg { transition: transform .16s ease; }
 .allocation-expand.open svg { transform: rotate(180deg); }
+.allocation-bars { margin-top: 20px; padding-top: 18px; border-top: 1px solid #252f36; }
+.allocation-bars-head,.allocation-bars-list > button { display: grid; grid-template-columns: minmax(88px,1fr) minmax(180px,2.6fr) 50px; align-items: center; gap: 13px; }
+.allocation-bars-head { min-height: 24px; margin-bottom: 5px; color: #718089; font-size: 7px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+.allocation-bars-head > strong { font-weight: 750; }
+.allocation-bars-scale { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; }
+.allocation-bars-scale i { font-style: normal; }
+.allocation-bars-list { display: grid; gap: 3px; }
+.allocation-bars-list > button { min-height: 38px; padding: 4px 0; border: 0; border-radius: 6px; background: transparent; color: #87939b; text-align: left; transition: opacity .14s ease, background .14s ease; }
+.allocation-bars-list > button:hover,.allocation-bars-list > button:focus-visible,.allocation-bars-list > button.active { background: #182126; outline: none; }
+.allocation-bars-list:has(> button.active) > button:not(.active) { opacity: .38; }
+.allocation-bar-label { min-width: 0; padding-left: 7px; }
+.allocation-bar-label strong,.allocation-bar-label small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.allocation-bar-label strong { color: #cbd5da; font-size: 9px; font-weight: 650; }
+.allocation-bar-label small { margin-top: 2px; color: #697780; font-size: 7.5px; font-variant-numeric: tabular-nums; }
+.allocation-bar-track { position: relative; height: 13px; overflow: hidden; border-radius: 3px; background-color: #182126; background-image: linear-gradient(to right,transparent calc(25% - 1px),#2a353b 25%,transparent calc(25% + 1px)),linear-gradient(to right,transparent calc(50% - 1px),#2a353b 50%,transparent calc(50% + 1px)),linear-gradient(to right,transparent calc(75% - 1px),#2a353b 75%,transparent calc(75% + 1px)); }
+.allocation-bar-track > i { display: block; min-width: 2px; height: 100%; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); transition: width .24s ease, filter .14s ease; }
+.allocation-bars-list > button:hover .allocation-bar-track > i,.allocation-bars-list > button.active .allocation-bar-track > i { filter: brightness(1.18); }
+.allocation-bars-list > button > b { padding-right: 7px; color: #d8e1e5; font-size: 9px; font-weight: 650; text-align: right; font-variant-numeric: tabular-nums; }
 .arrow-button { width: 30px; height: 30px; background: #161d21; border-color: #2b373e; border-radius: 7px; color: #98a5ad; }
 .arrow-button:hover { border-color: #4b5b64; color: #e0e7eb; }
 .forecast-list > div { padding: 10px 2px; border-color: #252f35; }
@@ -586,6 +604,14 @@ footer, .content footer > span { color: #68757e; }
   .allocation-body { grid-template-columns: 1fr; justify-items: center; gap: 18px; }
   .allocation-table-wrap { width: 100%; }
   .allocation-table.expanded { max-height: 320px; }
+  .allocation-bars { width: 100%; margin-top: 17px; padding-top: 15px; }
+  .allocation-bars-head,.allocation-bars-list > button { grid-template-columns: 76px minmax(0,1fr) 42px; gap: 8px; }
+  .allocation-bars-head { font-size: 6px; }
+  .allocation-bars-scale i:nth-child(even) { display: none; }
+  .allocation-bar-label { padding-left: 4px; }
+  .allocation-bar-label strong { font-size: 8px; }
+  .allocation-bar-track { height: 12px; }
+  .allocation-bars-list > button > b { padding-right: 4px; font-size: 8px; }
 }
 
 /* LekkaFaktura-inspired light interface. The dark theme above remains intact. */
@@ -723,6 +749,16 @@ html[data-portfolio-theme="lekka"] .allocation-name strong,
 html[data-portfolio-theme="lekka"] .allocation-table > button > b { color: #344054; }
 html[data-portfolio-theme="lekka"] .allocation-expand { background: #fff; color: #475569; border-color: #e2e8f0; }
 html[data-portfolio-theme="lekka"] .allocation-expand:hover { background: #fff9da; color: #101828; border-color: #ead675; }
+html[data-portfolio-theme="lekka"] .allocation-bars { border-color: #edf0f3; }
+html[data-portfolio-theme="lekka"] .allocation-bars-head { color: #98a2b3; }
+html[data-portfolio-theme="lekka"] .allocation-bars-list > button { color: #667085; }
+html[data-portfolio-theme="lekka"] .allocation-bars-list > button:hover,
+html[data-portfolio-theme="lekka"] .allocation-bars-list > button:focus-visible,
+html[data-portfolio-theme="lekka"] .allocation-bars-list > button.active { background: #fff9da; }
+html[data-portfolio-theme="lekka"] .allocation-bar-label strong,
+html[data-portfolio-theme="lekka"] .allocation-bars-list > button > b { color: #344054; }
+html[data-portfolio-theme="lekka"] .allocation-bar-label small { color: #98a2b3; }
+html[data-portfolio-theme="lekka"] .allocation-bar-track { background-color: #f2f4f7; background-image: linear-gradient(to right,transparent calc(25% - 1px),#dce1e7 25%,transparent calc(25% + 1px)),linear-gradient(to right,transparent calc(50% - 1px),#dce1e7 50%,transparent calc(50% + 1px)),linear-gradient(to right,transparent calc(75% - 1px),#dce1e7 75%,transparent calc(75% + 1px)); }
 html[data-portfolio-theme="lekka"] .arrow-button { background: #fff; border-color: #e2e8f0; color: #475569; }
 html[data-portfolio-theme="lekka"] .arrow-button:hover { border-color: #f7c400; color: #0f1722; }
 html[data-portfolio-theme="lekka"] .forecast-list > div,
