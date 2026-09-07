@@ -24,7 +24,7 @@ type CopyPosition={symbol:string;name:string;sector:string;assetClass:string;qua
 type CopyCashEvent={date:string;type:string;symbol:string;amount:number;account?:string;comment?:string;instrument?:string};
 type CopyTrade={date:string;symbol:string;side:string;volume:number;result:number;account?:string;openDate?:string;openPrice?:number;closePrice?:number;purchaseValue?:number;saleValue?:number;commission?:number;swap?:number;rollover?:number;comment?:string};
 type CopyCrypto={date:string;type:string;symbol:string;name:string;quantity:number;toSymbol?:string;toQuantity?:number;amount:number;amountPln?:number;currency:string;nbpRate:number;nbpDate?:string;fee:number;feePln?:number;account:string;note?:string};
-type CopyPerformancePoint={month:string;label:string;capitalGain:number;portfolioPct:number;benchmarkPct:number;investedCapital:number;openingValue?:number;closingValue?:number;netFlow?:number};
+type CopyPerformancePoint={month:string;label:string;capitalGain:number;portfolioPct:number;benchmarkPct:number|null;investedCapital:number;openingValue?:number;closingValue?:number;netFlow?:number};
 type CopyForecast={date:string;symbol:string;gross:number;net:number;confidence:string};
 
 export type PortfolioCopyInput={
@@ -109,7 +109,7 @@ export function buildPortfolioCopy(input:PortfolioCopyInput,settings:PortfolioCo
     lines.push("",`## Wyniki miesięczne vs ${input.benchmarkName}`);
     lines.push(input.performance.length?table(
       ["Miesiąc","Wynik","Portfel","Benchmark","Wartość początkowa","Przepływy","Wartość końcowa"],
-      input.performance.map(item=>[item.label,money(item.capitalGain),percent(item.portfolioPct),percent(item.benchmarkPct),item.openingValue==null?"—":money(item.openingValue),item.netFlow==null?"—":money(item.netFlow),item.closingValue==null?"—":money(item.closingValue)]),
+      input.performance.map(item=>[item.label,money(item.capitalGain),percent(item.portfolioPct),item.benchmarkPct===null?"—":percent(item.benchmarkPct),item.openingValue==null?"—":money(item.openingValue),item.netFlow==null?"—":money(item.netFlow),item.closingValue==null?"—":money(item.closingValue)]),
     ):"Brak danych do obliczenia historii wyników.");
   }
 

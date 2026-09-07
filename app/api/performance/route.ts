@@ -161,7 +161,16 @@ export async function POST(request: Request) {
       positionValue.set(key, current);
     }
 
-    for (const transaction of transactions) {
+    // A multi-month position without market history cannot be split into monthly
+    // gains. Carrying its purchase cost until today would incorrectly dump the
+    // entire lifetime result into the current month.
+    const performanceTransactions = transactions.filter(transaction => {
+      const first = monthKey(transaction.openDate);
+      const last = transaction.closeDate ? monthKey(transaction.closeDate) : currentMonth;
+      return first === last || histories.has(transaction.symbol);
+    });
+
+    for (const transaction of performanceTransactions) {
       const first = monthKey(transaction.openDate);
       const last = transaction.closeDate ? monthKey(transaction.closeDate) : currentMonth;
       const relevant = months.filter(month => month >= first && month <= last);
@@ -189,7 +198,9 @@ export async function POST(request: Request) {
     try { benchmark = await historyPln("^GSPC", startDate); }
     catch { missing.push("^GSPC"); }
     const benchmarkKeys = [...benchmark.keys()].sort();
-    const points = months.map(month => {
+    const coveredStart = performanceTransactions.map(item => item.openDate).sort()[0];
+    const coveredMonths = coveredStart ? monthsBetween(monthKey(coveredStart), currentMonth) : [];
+    const points = coveredMonths.map(month => {
       const previousMonth = new Date(`${month}-01T00:00:00Z`);
       previousMonth.setUTCMonth(previousMonth.getUTCMonth() - 1);
       const previousKey = previousMonth.toISOString().slice(0, 7);
@@ -206,7 +217,7 @@ export async function POST(request: Request) {
         label: new Intl.DateTimeFormat("pl-PL", { month: "short", year: "2-digit", timeZone: "UTC" }).format(new Date(`${month}-01T00:00:00Z`)).replace(" ", " ’"),
         capitalGain: monthly.capitalGain,
         portfolioPct: monthly.portfolioPct,
-        benchmarkPct: currentBenchmark && previousBenchmark ? (currentBenchmark / previousBenchmark - 1) * 100 : 0,
+        benchmarkPct: currentBenchmark && previousBenchmark ? (currentBenchmark / previousBenchmark - 1) * 100 : null,
         investedCapital: monthly.investedCapital,
         openingValue: monthly.openingValue,
         closingValue: monthly.closingValue,
@@ -218,6 +229,7 @@ export async function POST(request: Request) {
       points,
       benchmark: { symbol: "^GSPC", name: "S&P 500 (PLN)" },
       missing: [...new Set(missing)],
+      excludedTransactions: transactions.length - performanceTransactions.length,
       methodologyCode: "modified-dietz-monthly",
       quality: missing.length ? "partial" : "complete",
       methodology: "Miesięczna stopa zwrotu Modified Dietz: wartość na początku i końcu miesiąca skorygowana o zakupy i sprzedaże ważone datą przepływu. Sprzedaże kończą się rzeczywistą wartością z raportu, a benchmark uwzględnia kurs USD/PLN.",
