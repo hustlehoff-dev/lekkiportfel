@@ -34,8 +34,11 @@ type Position = {
 
 type YahooSeries = {
   currency: string;
-  prices: Map<string, number>;
+  daily: Map<string, number>;
+  monthly: Map<string, number>;
 };
+
+type PlnSeries = Pick<YahooSeries, "daily" | "monthly">;
 
 const suffixes: Array<[string, string]> = [
   [".PL", ".WA"], [".UK", ".L"], [".DK", ".CO"], [".NL", ".AS"],
@@ -45,6 +48,7 @@ const suffixes: Array<[string, string]> = [
 
 const cache = new Map<string, { expires: number; value: Promise<YahooSeries> }>();
 const monthKey = (value: string | Date) => new Date(value).toISOString().slice(0, 7);
+const dayKey = (value: string | Date) => new Date(value).toISOString().slice(0, 10);
 
 function yahooSymbol(input: string) {
   const symbol = input.trim().toUpperCase();
@@ -67,13 +71,13 @@ function monthsBetween(start: string, end: string) {
 }
 
 async function yahooHistory(symbol: string, start: string) {
-  const cacheKey = `${symbol}:${start.slice(0, 7)}`;
+  const cacheKey = `${symbol}:${start.slice(0, 10)}:daily`;
   const hit = cache.get(cacheKey);
   if (hit && hit.expires > Date.now()) return hit.value;
   const request = (async () => {
     const period1 = Math.floor(new Date(`${start}T00:00:00Z`).getTime() / 1000) - 75 * 86400;
     const period2 = Math.floor(Date.now() / 1000) + 3 * 86400;
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?period1=${period1}&period2=${period2}&interval=1mo&events=history`;
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?period1=${period1}&period2=${period2}&interval=1d&events=history`;
     const response = await fetch(url, { headers: { accept: "application/json", "user-agent": "LekkiPortfel/1.0" } });
     if (!response.ok) throw new Error(`${symbol}: HTTP ${response.status}`);
     const body = await response.json() as {
@@ -82,13 +86,18 @@ async function yahooHistory(symbol: string, start: string) {
     const result = body.chart?.result?.[0];
     const timestamps = result?.timestamp ?? [];
     const closes = result?.indicators?.quote?.[0]?.close ?? [];
-    const prices = new Map<string, number>();
+    const daily = new Map<string, number>();
+    const monthly = new Map<string, number>();
     timestamps.forEach((timestamp, index) => {
       const close = closes[index];
-      if (typeof close === "number" && Number.isFinite(close) && close > 0) prices.set(monthKey(new Date(timestamp * 1000)), close);
+      if (typeof close === "number" && Number.isFinite(close) && close > 0) {
+        const date = new Date(timestamp * 1000);
+        daily.set(dayKey(date), close);
+        monthly.set(monthKey(date), close);
+      }
     });
-    if (!prices.size) throw new Error(`${symbol}: brak historii`);
-    return { currency: String(result?.meta?.currency || "PLN"), prices };
+    if (!daily.size) throw new Error(`${symbol}: brak historii`);
+    return { currency: String(result?.meta?.currency || "PLN"), daily, monthly };
   })();
   cache.set(cacheKey, { expires: Date.now() + 15 * 60_000, value: request });
   try {
@@ -108,14 +117,20 @@ function atOrBefore(prices: Map<string, number>, month: string) {
 async function historyPln(inputSymbol: string, start: string) {
   const series = await yahooHistory(yahooSymbol(inputSymbol), start);
   const currency = series.currency === "GBp" ? "GBP" : series.currency.toUpperCase();
-  if (currency === "PLN") return series.prices;
+  if (currency === "PLN") return { daily: series.daily, monthly: series.monthly };
   const fx = await yahooHistory(`${currency}PLN=X`, start);
-  const result = new Map<string, number>();
-  for (const [month, price] of series.prices) {
-    const rate = atOrBefore(fx.prices, month);
-    if (rate) result.set(month, price * rate * (series.currency === "GBp" ? 0.01 : 1));
+  const multiplier = series.currency === "GBp" ? 0.01 : 1;
+  const daily = new Map<string, number>();
+  const monthly = new Map<string, number>();
+  for (const [day, price] of series.daily) {
+    const rate = atOrBefore(fx.daily, day);
+    if (rate) daily.set(day, price * rate * multiplier);
   }
-  return result;
+  for (const [month, price] of series.monthly) {
+    const rate = atOrBefore(fx.monthly, month);
+    if (rate) monthly.set(month, price * rate * multiplier);
+  }
+  return { daily, monthly };
 }
 
 export async function POST(request: Request) {
@@ -142,7 +157,7 @@ export async function POST(request: Request) {
     const flows = new Map(months.map(month => [month, [] as PerformanceFlow[]]));
     const missing: string[] = [];
     const symbols = [...new Set(transactions.filter(item=>monthKey(item.openDate)!==monthKey(item.closeDate||new Date())).map(item => item.symbol))];
-    const histories = new Map<string, Map<string, number>>();
+    const histories = new Map<string, PlnSeries>();
 
     for (let index = 0; index < symbols.length; index += 6) {
       const batch = symbols.slice(index, index + 6);
@@ -181,7 +196,7 @@ export async function POST(request: Request) {
       for (const month of relevant) {
         const isFirst = month === first;
         const isLast = month === last;
-        const marketValue = history ? (atOrBefore(history, month) ?? previousValue / transaction.quantity) * transaction.quantity : previousValue;
+        const marketValue = history ? (atOrBefore(history.monthly, month) ?? previousValue / transaction.quantity) * transaction.quantity : previousValue;
         const nextValue = isLast ? (transaction.closeDate ? transaction.finalValue : currentValue) : marketValue;
         if (!isFirst) openingValue.set(month, (openingValue.get(month) || 0) + previousValue);
         if (isFirst) flows.get(month)!.push({ date: transaction.openDate, amount: transaction.purchaseValue });
@@ -194,18 +209,18 @@ export async function POST(request: Request) {
       }
     }
 
-    let benchmark = new Map<string, number>();
+    let benchmark: PlnSeries = { daily: new Map(), monthly: new Map() };
     try { benchmark = await historyPln("^GSPC", startDate); }
     catch { missing.push("^GSPC"); }
-    const benchmarkKeys = [...benchmark.keys()].sort();
+    const benchmarkKeys = [...benchmark.monthly.keys()].sort();
     const coveredStart = performanceTransactions.map(item => item.openDate).sort()[0];
     const coveredMonths = coveredStart ? monthsBetween(monthKey(coveredStart), currentMonth) : [];
     const points = coveredMonths.map(month => {
       const previousMonth = new Date(`${month}-01T00:00:00Z`);
       previousMonth.setUTCMonth(previousMonth.getUTCMonth() - 1);
       const previousKey = previousMonth.toISOString().slice(0, 7);
-      const currentBenchmark = atOrBefore(benchmark, month);
-      const previousBenchmark = atOrBefore(benchmark, previousKey) || (benchmarkKeys.length ? benchmark.get(benchmarkKeys[0]) : undefined);
+      const currentBenchmark = atOrBefore(benchmark.monthly, month);
+      const previousBenchmark = atOrBefore(benchmark.monthly, previousKey) || (benchmarkKeys.length ? benchmark.monthly.get(benchmarkKeys[0]) : undefined);
       const monthly = calculateMonthlyPerformance({
         month,
         openingValue: openingValue.get(month) || 0,
@@ -225,8 +240,81 @@ export async function POST(request: Request) {
       };
     });
 
+    const currentDay = dayKey(new Date());
+    const shortStartCursor = new Date(`${currentDay}T00:00:00Z`);
+    shortStartCursor.setUTCDate(shortStartCursor.getUTCDate() - 100);
+    const shortStart = shortStartCursor.toISOString().slice(0, 10);
+    const coveredDay = coveredStart ? dayKey(coveredStart) : currentDay;
+    const dailyStart = coveredDay > shortStart ? coveredDay : shortStart;
+    const dailyKeySet = new Set<string>([currentDay]);
+    for (const history of histories.values()) {
+      for (const day of history.daily.keys()) if (day >= dailyStart && day <= currentDay) dailyKeySet.add(day);
+    }
+    for (const day of benchmark.daily.keys()) if (day >= dailyStart && day <= currentDay) dailyKeySet.add(day);
+    for (const transaction of performanceTransactions) {
+      const openDay = dayKey(transaction.openDate);
+      const closeDay = transaction.closeDate ? dayKey(transaction.closeDate) : null;
+      if (openDay >= dailyStart && openDay <= currentDay) dailyKeySet.add(openDay);
+      if (closeDay && closeDay >= dailyStart && closeDay <= currentDay) dailyKeySet.add(closeDay);
+    }
+    const dailyKeys = [...dailyKeySet].filter(day => day >= dailyStart && day <= currentDay).sort();
+    const dailyOpening = new Map(dailyKeys.map(day => [day, 0]));
+    const dailyClosing = new Map(dailyKeys.map(day => [day, 0]));
+    const dailyFlows = new Map(dailyKeys.map(day => [day, [] as PerformanceFlow[]]));
+
+    for (const transaction of performanceTransactions) {
+      const openDay = dayKey(transaction.openDate);
+      const closeDay = transaction.closeDate ? dayKey(transaction.closeDate) : currentDay;
+      const relevant = dailyKeys.filter(day => day >= dailyStart && day >= openDay && day <= closeDay);
+      if (!relevant.length) continue;
+      const history = histories.get(transaction.symbol);
+      const live = positionValue.get(`${transaction.account || ""}:${transaction.symbol}`);
+      const currentValue = !transaction.closeDate && live?.quantity ? live.value * transaction.quantity / live.quantity : transaction.finalValue;
+      const beforeFirst = new Date(`${relevant[0]}T00:00:00Z`);
+      beforeFirst.setUTCDate(beforeFirst.getUTCDate() - 1);
+      let previousValue = openDay < relevant[0] && history
+        ? (atOrBefore(history.daily, beforeFirst.toISOString().slice(0, 10)) ?? transaction.purchaseValue / transaction.quantity) * transaction.quantity
+        : transaction.purchaseValue;
+      for (const day of relevant) {
+        const isFirst = day === openDay;
+        const isLast = day === closeDay;
+        const marketValue = history ? (atOrBefore(history.daily, day) ?? previousValue / transaction.quantity) * transaction.quantity : previousValue;
+        const nextValue = isLast ? (transaction.closeDate ? transaction.finalValue : currentValue) : marketValue;
+        if (!isFirst) dailyOpening.set(day, (dailyOpening.get(day) || 0) + previousValue);
+        if (isFirst) dailyFlows.get(day)!.push({ date: transaction.openDate, amount: transaction.purchaseValue });
+        if (isLast && transaction.closeDate) dailyFlows.get(day)!.push({ date: transaction.closeDate, amount: -transaction.finalValue });
+        else dailyClosing.set(day, (dailyClosing.get(day) || 0) + nextValue);
+        previousValue = nextValue;
+      }
+    }
+
+    const dailyPoints = dailyKeys.map(day => {
+      const previousDay = new Date(`${day}T00:00:00Z`);
+      previousDay.setUTCDate(previousDay.getUTCDate() - 1);
+      const opening = dailyOpening.get(day) || 0;
+      const closing = dailyClosing.get(day) || 0;
+      const dayFlows = dailyFlows.get(day) || [];
+      const netFlow = dayFlows.reduce((sum, flow) => sum + flow.amount, 0);
+      const capitalGain = closing - opening - netFlow;
+      const investedCapital = opening + dayFlows.reduce((sum, flow) => sum + Math.max(0, flow.amount), 0);
+      const currentBenchmark = benchmark.daily.get(day);
+      const previousBenchmark = atOrBefore(benchmark.daily, previousDay.toISOString().slice(0, 10));
+      return {
+        month: day,
+        label: new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${day}T00:00:00Z`)),
+        capitalGain,
+        portfolioPct: investedCapital > 0 ? capitalGain / investedCapital * 100 : 0,
+        benchmarkPct: currentBenchmark && previousBenchmark ? (currentBenchmark / previousBenchmark - 1) * 100 : null,
+        investedCapital,
+        openingValue: opening,
+        closingValue: closing,
+        netFlow,
+      };
+    });
+
     return Response.json({
       points,
+      dailyPoints,
       benchmark: { symbol: "^GSPC", name: "S&P 500 (PLN)" },
       missing: [...new Set(missing)],
       excludedTransactions: transactions.length - performanceTransactions.length,

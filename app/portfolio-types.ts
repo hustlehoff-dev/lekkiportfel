@@ -16,7 +16,7 @@ export type ClosedTrade = { id:string; positionId?:string; instrument?:string; p
 export type CryptoTransaction = CryptoTaxTransaction & { id:string; symbol:string; name:string; quantity:number; toSymbol?:string; toName?:string; toQuantity?:number; amount:number; currency:string; nbpRate:number; nbpDate?:string; fee:number; account:string; provider?:string; note?:string };
 export type PortfolioData = { positions:Position[]; cash:CashEvent[]; trades:ClosedTrade[]; lots?:OpenLot[]; taxLosses?:Record<string,LossSetting>; cryptoTransactions?:CryptoTransaction[]; cryptoCostOverrides?:Record<string,number>; source:string };
 export type PerformancePoint = { month:string; label:string; capitalGain:number; portfolioPct:number; benchmarkPct:number|null; investedCapital:number; openingValue?:number; closingValue?:number; netFlow?:number };
-export type PerformanceResponse = { points:PerformancePoint[]; benchmark:{symbol:string;name:string}; missing:string[]; methodology:string; methodologyCode?:string; quality?:"complete"|"partial"; excludedTransactions?:number };
+export type PerformanceResponse = { points:PerformancePoint[]; dailyPoints?:PerformancePoint[]; benchmark:{symbol:string;name:string}; missing:string[]; methodology:string; methodologyCode?:string; quality?:"complete"|"partial"; excludedTransactions?:number };
 
 export const viewPaths:Record<AppView,string>={pulpit:"/",wykresy:"/wykresy",dywidendy:"/dywidendy",podatki:"/podatki",historia:"/historia",faq:"/faq",bezpieczenstwo:"/bezpieczenstwo"};
 export function viewFromPath(pathname:string):AppView{return (Object.entries(viewPaths).find(([,path])=>path===pathname)?.[0] as AppView|undefined)||"pulpit"}
