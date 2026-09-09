@@ -212,6 +212,9 @@
 @keyframes chart-spin { to { transform: rotate(360deg); } }
 
 .market-chart { position: relative; height: 400px; margin-left: 70px; color: var(--user-chart-color); }
+.market-chart.dense-positions { height: var(--position-chart-height, 400px); }
+.market-chart.dense-positions svg,
+.market-chart.dense-positions .chart-position-lines { height: calc(var(--position-chart-height, 400px) - 40px); }
 .market-chart.negative { color: var(--user-chart-color); }
 .market-chart svg { width: 100%; height: 360px; overflow: visible; touch-action: pan-y; }
 .chart-grid line { stroke: #edf0f3; stroke-width: 1; vector-effect: non-scaling-stroke; }
@@ -226,11 +229,11 @@
 .chart-position-lines { position: absolute; z-index: 2; top: 0; right: 0; left: 0; height: 360px; pointer-events: none; }
 .chart-position-entry { display: contents; }
 .chart-position-rule { position: absolute; right: 0; left: 0; height: 0; border-top: 1px dashed color-mix(in srgb, var(--user-chart-color) 78%, transparent); opacity: .86; }
-.chart-position-rule > span { position: absolute; top: 0; right: 2px; width: 16px; height: 16px; display: grid; place-items: center; border: 1px solid var(--charts-accent-border); border-radius: 50%; background: #fff; color: var(--charts-accent-ink); font-size: 7px; font-style: normal; font-weight: 850; transform: translateY(-50%); }
-.chart-position-line-label { position: absolute; z-index: 4; left: 5px; min-height: 16px; display: flex; align-items: center; gap: 4px; padding: 2px 5px; border: 1px solid var(--charts-accent-border); border-radius: 5px; background: color-mix(in srgb, #fff 94%, var(--user-chart-color)); color: #101828; box-shadow: 0 4px 12px rgba(16,24,40,.07); transform: translateY(-50%); white-space: nowrap; }
-.chart-position-line-label > span { color: #667085; font-size: 6px; font-weight: 800; letter-spacing: .02em; text-transform: uppercase; }
-.chart-position-line-label > strong { color: #101828; font-size: 6.5px; font-variant-numeric: tabular-nums; }
-.chart-position-line-label > small { font-size: 6.5px; font-weight: 800; }
+.chart-position-rule > span { position: absolute; top: 0; right: 2px; width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid var(--charts-accent-border); border-radius: 50%; background: #fff; color: var(--charts-accent-ink); font-size: 12px; font-style: normal; font-weight: 850; transform: translateY(-50%); }
+.chart-position-line-label { position: absolute; z-index: 4; left: 7px; min-height: 32px; display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--charts-accent-border); border-radius: 7px; background: color-mix(in srgb, #fff 94%, var(--user-chart-color)); color: #101828; box-shadow: 0 4px 12px rgba(16,24,40,.07); transform: translateY(-50%); white-space: nowrap; }
+.chart-position-line-label > span { color: #667085; font-size: 12px; font-weight: 800; letter-spacing: .02em; text-transform: uppercase; }
+.chart-position-line-label > strong { color: #101828; font-size: 13px; font-variant-numeric: tabular-nums; }
+.chart-position-line-label > small { font-size: 13px; font-weight: 800; }
 .market-chart.has-positions .chart-tooltip { top: 4px; }
 .chart-dates { position: absolute; right: 0; bottom: 6px; left: 0; display: flex; justify-content: space-between; color: #98a2b3; font-size: 8px; }
 .quote-footer { display: flex; align-items: center; gap: 28px; padding: 12px 24px; border-top: 1px solid #edf0f3; background: #fbfcfd; color: #98a2b3; font-size: 9px; }
@@ -339,13 +342,11 @@ html[data-color-theme="dark"] .chart-cache-warning { border-color: #5c4825; back
   .chart-axis { width: 43px; inset-right: calc(100% + 8px); }
   .chart-tooltip { top: 5px; min-width: 92px; }
   .chart-position-lines { height: 286px; }
-  .market-chart.dense-positions { height: 400px; }
-  .market-chart.dense-positions svg,
-  .market-chart.dense-positions .chart-position-lines { height: 366px; }
-  .chart-position-line-label { left: 3px; min-height: 14px; gap: 3px; padding: 1px 4px; }
-  .chart-position-line-label > span { font-size: 5.5px; }
+  .chart-position-rule > span { width: 24px; height: 24px; font-size: 10px; }
+  .chart-position-line-label { left: 3px; min-height: 29px; gap: 6px; padding: 5px 7px; }
+  .chart-position-line-label > span { font-size: 10px; }
   .chart-position-line-label > strong,
-  .chart-position-line-label > small { font-size: 5.8px; }
+  .chart-position-line-label > small { font-size: 11px; }
   .chart-state { min-height: 300px; }
   .quote-footer { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; padding: 11px 15px; }
   .quote-footer span:last-child { display: none; }

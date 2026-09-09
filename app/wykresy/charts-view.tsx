@@ -153,7 +153,9 @@ function PriceChart({ data, period, positions, formatMoney, formatPortfolioPerce
   const positive = (data.periodChange ?? 0) >= 0;
   const formatDate = (timestamp: number) => new Intl.DateTimeFormat("pl-PL", period === "1D" || period === "1T" ? { weekday: "short", hour: "2-digit", minute: "2-digit" } : period === "1M" || period === "3M" ? { day: "2-digit", month: "short" } : { day: "2-digit", month: "short", year: "numeric" }).format(new Date(timestamp));
 
-  return <div className={`market-chart ${positive ? "positive" : "negative"} ${positions.length ? "has-positions" : ""} ${positions.length > 12 ? "dense-positions" : ""}`}>
+  const chartStyle = positions.length > 12 ? ({ "--position-chart-height": `${positions.length * 36 + 40}px` } as CSSProperties) : undefined;
+
+  return <div className={`market-chart ${positive ? "positive" : "negative"} ${positions.length ? "has-positions" : ""} ${positions.length > 12 ? "dense-positions" : ""}`} style={chartStyle}>
     <div className="chart-axis" aria-hidden="true"><span>{formatAxis(chart.ceiling, data.currency)}</span><span>{formatAxis((chart.ceiling + chart.floor) / 2, data.currency)}</span><span>{formatAxis(chart.floor, data.currency)}</span></div>
     <svg viewBox="0 0 1000 400" preserveAspectRatio="none" role="img" aria-label={`Wykres ${data.instrument.name}, okres ${periodNames[period]}`} onPointerMove={event => {
       const bounds = event.currentTarget.getBoundingClientRect();
