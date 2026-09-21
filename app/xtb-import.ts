@@ -1,4 +1,4 @@
-import type { PortfolioData, Sector } from "./portfolio-types";
+import type { CashEvent, ClosedTrade, PortfolioData, Position, Sector } from "./portfolio-types";
 import { norm, num } from "./portfolio-helpers";
 
 const iso=(date:Date)=>date.toISOString().slice(0,10);
@@ -23,3 +23,29 @@ export function parseRows(rows:unknown[][],sheetName:string,target:PortfolioData
 }
 
 export function csvRows(text:string):string[][]{const lines=text.replace(/^\uFEFF/,"").split(/\r?\n/).filter(Boolean);const delimiter=(lines[0]?.match(/;/g)?.length??0)>(lines[0]?.match(/,/g)?.length??0)?";":",";return lines.map(line=>{const result:string[]=[];let cell="",quoted=false;for(let i=0;i<line.length;i++){const char=line[i];if(char==='"'&&line[i+1]==='"'){cell+='"';i++}else if(char==='"')quoted=!quoted;else if(char===delimiter&&!quoted){result.push(cell);cell=""}else cell+=char}result.push(cell);return result})}
+
+const mergeKey=(parts:unknown[])=>parts.map(value=>String(value??"").trim()).join("\u001f");
+const accountOf=(item:{account?:string})=>String(item.account||"PLN").trim().toUpperCase();
+const isXtbItem=(item:{account?:string;provider?:string;manual?:boolean})=>!item.manual&&(item.provider==="XTB"||(!item.provider&&/^(PLN|IKE|IKZE)$/i.test(item.account||"PLN")));
+const positionKey=(item:Position)=>mergeKey([accountOf(item),item.symbol.toUpperCase()]);
+const cashKey=(item:CashEvent)=>item.sourceId?mergeKey(["source",accountOf(item),item.sourceId]):mergeKey([accountOf(item),item.positionId,item.date,norm(item.type),item.symbol.toUpperCase(),item.amount,item.comment]);
+const tradeKey=(item:ClosedTrade)=>mergeKey([accountOf(item),item.positionId,item.openDate,item.date,item.symbol.toUpperCase(),norm(item.side),item.volume,item.purchaseValue,item.saleValue,item.result]);
+function mergeUnique<T>(existing:T[],incoming:T[],key:(item:T)=>string){const merged=new Map<string,T>();for(const item of existing)merged.set(key(item),item);for(const item of incoming)merged.set(key(item),item);return[...merged.values()]}
+
+export function mergeXtbImport(current:PortfolioData,incoming:PortfolioData,accounts:Iterable<string>):PortfolioData{
+  const importedAccounts=new Set([...accounts].map(account=>account.trim().toUpperCase()));
+  const replacesAccount=(item:{account?:string;provider?:string;manual?:boolean})=>isXtbItem(item)&&importedAccounts.has(accountOf(item));
+  const currentPositions=new Map(current.positions.filter(replacesAccount).map(position=>[positionKey(position),position]));
+  const importedPositions=incoming.positions.map(position=>{
+    const previous=currentPositions.get(positionKey(position));
+    return previous?{...previous,...position,id:previous.id,sector:previous.sector,image:previous.image,priceId:previous.priceId,marketPrice:previous.marketPrice,priceUpdatedAt:previous.priceUpdatedAt,priceProvider:previous.priceProvider,priceChangePct:previous.priceChangePct,priceQuality:previous.priceQuality}:position;
+  });
+  return{
+    ...current,
+    positions:[...current.positions.filter(item=>!replacesAccount(item)),...importedPositions],
+    cash:mergeUnique(current.cash,incoming.cash,cashKey),
+    trades:mergeUnique(current.trades,incoming.trades,tradeKey),
+    lots:[...(current.lots||[]).filter(item=>!replacesAccount(item)),...(incoming.lots||[])],
+    source:incoming.source,
+  };
+}

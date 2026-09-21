@@ -22,6 +22,7 @@
 .DS_Store
 *.pem
 /*.zip
+/1771110/
 
 # debug
 npm-debug.log*
